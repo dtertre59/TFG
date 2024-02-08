@@ -49,6 +49,7 @@ Control de un brazo robotico utilizando registros más la implementación de una
 2. Camara:
     https://github.com/luxonis/depthai.git
     https://github.com/luxonis/depthai-python.git
+    https://github.com/luxonis/blobconverter.git
 
 3. deep learning, OpenVINO
     https://github.com/openvinotoolkit/open_model_zoo.git
@@ -60,7 +61,11 @@ OpenVINO™ is an open-source toolkit for optimizing and deploying AI inference.
 
 Open Model Zoo repository: This repository includes optimized deep learning models and a set of demos to expedite development of high-performance deep learning inference applications. Use these free pre-trained models instead of training your own models to speed-up the development and production deployment process.
 
+## Luxonis
 
+High‑resolution cameras with depth vision and on‑chip machine learning.
+
+https://docs.luxonis.com/projects/sdk/en/latest/features/ai_models/
 
 
 
