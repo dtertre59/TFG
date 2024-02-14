@@ -10,22 +10,38 @@ import numpy as np
 pipeline = dai.Pipeline()
 
 # First, we want the Color camera as the output
-cam_rgb = pipeline.create(dai.node.ColorCamera)
-# cam_rgb.setPreviewSize(300, 300)  # 300x300 will be the preview frame size, available as 'preview' output of the node
-# cam_rgb.setInterleaved(False)
+cam_rgb = pipeline.createColorCamera()
+# cam_rgb.setPreviewSize()  # 300x300 will be the preview frame size, available as 'preview' output of the node
+cam_rgb.setInterleaved(False)
+
+# OTRAS CAMARAS
+monoLeft = pipeline.create(dai.node.MonoCamera)
+monoRight = pipeline.create(dai.node.MonoCamera)
+# AJUSTES
+monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_480_P)
+monoLeft.setCamera("left")
+monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_480_P)
+monoRight.setCamera("right")
+
 
 # Next, we want a neural network that will produce the detections
-detection_nn = pipeline.create(dai.node.MobileNetSpatialDetectionNetwork)
+detection_nn = pipeline.createMobileNetDetectionNetwork()
 # Blob is the Neural Network file, compiled for MyriadX. It contains both the definition and weights of the model
 # We're using a blobconverter tool to retreive the MobileNetSSD blob automatically from OpenVINO Model Zoo
 detection_nn.setBlobPath(blobconverter.from_zoo(name='face-detection-retail-0004', shaves=6))
 # Next, we filter out the detections that are below a confidence threshold. Confidence can be anywhere between <0..1>
 detection_nn.setConfidenceThreshold(0.5)
+
+
 # Next, we link the camera 'preview' output to the neural network detection input, so that it can produce detections
 cam_rgb.preview.link(detection_nn.input)
+# monoLeft.out.link(stereo.left)
+# monoRight.out.link(stereo.right)
+
 
 # XLinkOut is a "way out" from the device. Any data you want to transfer to host need to be send via XLink
 xout_rgb = pipeline.createXLinkOut()
+
 # For the rgb camera output, we want the XLink stream to be named "rgb"
 xout_rgb.setStreamName("rgb")
 # Linking camera preview to XLink input, so that the frames will be sent to host
