@@ -17,6 +17,6 @@
 	</recipe>
 
 	<recipe key="watchdog">
-		<field name="input_int_register_0" type="INT32"/>
+		<field name="input_bit_register_127" type="BOOL"/>
 	</recipe>
 </rtde_config>

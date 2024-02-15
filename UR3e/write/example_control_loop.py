@@ -25,7 +25,6 @@
 import sys
 import time
 
-sys.path.append("..")
 import logging
 
 import rtde.rtde as rtde
@@ -62,6 +61,7 @@ while connection_state != None:
 print('connected to the robot')
 
 
+
 # get controller version
 con.get_controller_version()
 
@@ -82,8 +82,6 @@ setp.input_double_register_3 = 0
 setp.input_double_register_4 = 0
 setp.input_double_register_5 = 0
 
-# The function "rtde_set_watchdog" in the "rtde_control_loop.urp" creates a 1 Hz watchdog
-watchdog.input_int_register_0 = 0
 
 
 def setp_to_list(sp):
@@ -105,6 +103,10 @@ if not con.send_start():
 
 # control loop
 # move_completed = True
+    
+# The function "rtde_set_watchdog" in the "rtde_control_loop.urp" creates a 1 Hz watchdog
+watchdog.input_bit_register_127 = True
+# print(watchdog.__dict__)
 
 while True:
     # print('inicio  del bucle')
@@ -112,7 +114,7 @@ while True:
     state = con.receive()
     # print(state.__dict__)
     # input(setp.__dict__)
-    print(state.output_int_register_0)
+    # print(state.output_int_register_0)
     if state is None:
         print('state None')
         break
@@ -125,11 +127,10 @@ while True:
     if state.output_int_register_0 == 0:
         # new_setp = setp1 if setp_to_list(setp) == setp2 else setp2
         list_to_setp(setp, setp1) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
-        print("New pose = " + str(setp1))
+        # print("New pose = " + str(setp1))
         # send new setpoint
         a = con.send(setp)
         # print(a) # True -> enviado correctamente
-
     # kick watchdog
     con.send(watchdog)
 
