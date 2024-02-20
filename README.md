@@ -53,6 +53,9 @@ Control de un brazo robotico utilizando registros más la implementación de una
 
 3. deep learning, OpenVINO
     https://github.com/openvinotoolkit/open_model_zoo.git
+    
+4. procesamientode imagenes, show, modelos ai (sample/dnn)
+	https://github.com/opencv/opencv.git
 
 
 ## OpenVINO toolkit
@@ -66,6 +69,8 @@ Open Model Zoo repository: This repository includes optimized deep learning mode
 High‑resolution cameras with depth vision and on‑chip machine learning.
 
 https://docs.luxonis.com/projects/sdk/en/latest/features/ai_models/
+
+## Redes Neuronales
 
 
 
