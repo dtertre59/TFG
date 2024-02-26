@@ -2,7 +2,7 @@ from ultralytics import YOLO
 import cv2
 
 # Load a model
-model = YOLO('yolov8n.pt')  # pretrained YOLOv8n model
+model = YOLO('./yolov8n.pt')  # pretrained YOLOv8n model
 
 # # Run batched inference on a list of images
 # results = model(['bus.jpg'])  # return a list of Results objects
@@ -18,7 +18,7 @@ model = YOLO('yolov8n.pt')  # pretrained YOLOv8n model
 
 
 # Read an image using OpenCV
-img = cv2.imread('bus.jpg')
+img = cv2.imread('./images/bus.jpg')
 img_resize= cv2.resize(img, (400,int(img.shape[0]*400/img.shape[1])))
 
 # Run inference on the img
