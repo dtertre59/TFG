@@ -52,13 +52,13 @@ for r in results:
 
     # identificacion de objetos
     ol = r.boxes.cls.numpy().tolist() # primero convertimos el tensor a array y luego el array a una lista
-    print(ol)
+    print('objetos: ',ol)
     # encontramos la posicion de la primera persona -> identificador 0 -> lo vemos en el diccionario de la red
     pos = ol.index(2)
-    print(pos)
+    print('posicion: ',pos)
     # coordenadas
     coordenadas = r.boxes.xyxy[pos].numpy().tolist()
-    print(coordenadas)
+    print('coordenadas: ',coordenadas)
 
     # con opencv dibujamos recuadro
     cv2.imshow('Iimagen', img_resize)
