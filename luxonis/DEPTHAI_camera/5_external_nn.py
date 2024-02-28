@@ -25,7 +25,7 @@ cam_rgb.preview.link(xout_rgb.input)
 
 
 # Load nn model 
-nn_model = YOLO('DEPTHAI_camera/models/yolov8n_square_v1.pt')  # pretrained YOLOv8n model
+nn_model = YOLO('./models/yolov8n_square_v1.pt')  # pretrained YOLOv8n model
 
 
 
