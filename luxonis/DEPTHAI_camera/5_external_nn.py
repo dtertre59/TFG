@@ -27,6 +27,12 @@ cam_rgb.preview.link(xout_rgb.input)
 # Load nn model 
 nn_model = YOLO('./models/yolov8n_square_v1.pt')  # pretrained YOLOv8n model
 
+# colores para el modelo
+objects_colors = {
+    'circle': (0,0,255),
+    'hexagon': (0,255,0),
+    'scuare': (255,0,0) # va con q pero hay que cambiarlo en la red neuronal
+}
 
 
 
@@ -35,18 +41,29 @@ def process_detections(frame):
 
     for detection in detections:
         # identificación de objetos
-        ol = detection.boxes.cls.numpy().tolist()
-        if ol:
-            print('objetos: ', ol)
+        objects = detection.boxes.cls.numpy().tolist()
+        # diccionario de nombres
+        names = detection.names
+        if objects:
+            # print('Nombres: ', names)
+            # print('objetos: ', objects)
             # encontramos la posición del cuadrado
-            pos = ol.index(2)
-            print(pos)
+            # pos = ol.index(2)
+            # print(pos)
             # coordenadas
-            coordenadas = detection.boxes.xyxy[pos].numpy().tolist()
-            print(coordenadas)
-            # Dibujar el rectángulo en la imagen
-            cv2.rectangle(img=frame, pt1=(int(coordenadas[0]), int(coordenadas[1])),
-                          pt2=(int(coordenadas[2]), int(coordenadas[3])), color=(0, 255, 0), thickness=2)
+            for index, object in enumerate(objects):
+                # coodenadas de cada objeto
+                coordinates = detection.boxes.xyxy[index].numpy().tolist()
+                # nombre del objeto detectado
+                object_name = names[object]
+                # color asociado
+                object_color = objects_colors[object_name]
+                # Escribir el nombre encima del rectángulo
+                cv2.putText(frame, object_name, (int(coordinates[0]), int(coordinates[1]) - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.9, object_color, 2)
+                # Dibujar el rectángulo en la imagen
+                cv2.rectangle(img=frame, pt1=(int(coordinates[0]), int(coordinates[1])),
+                            pt2=(int(coordinates[2]), int(coordinates[3])), color=object_color, thickness=2)
     return frame
             
 
