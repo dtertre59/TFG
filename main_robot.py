@@ -105,23 +105,23 @@ def robot_control_loop(con: rtde.RTDE, setp, watchdog, vector):
             # print(a) # True -> enviado correctamente
         # kick watchdog
         con.send(watchdog)
+        print('wait')
+        time.sleep(5)
         break
 
 
-def gripper_control(con: rtde.RTDE,watchdog, gripper, gripper_on: bool):
-    gripper.input_bit_register_126 = True
-    if not con.send_start(): # ES NECESARIO???????????????????????????????????????
+def gripper_control(con: rtde.RTDE, gripper, gripper_on: bool):
+    # hace falta -> SI pero no se por qué
+    if not con.send_start():
         sys.exit()
-    # move_completed = True
+    
     # The function "rtde_set_watchdog" in the "rtde_control_loop.urp" creates a 1 Hz watchdog
     # watchdog.input_bit_register_127 = True
-    
+    gripper.input_bit_register_126 = gripper_on
+
     while True:
         # receive the current state; recivimos los datos que tenemo en el .xml state
         state = con.receive()
-        # print(state.__dict__)
-        # input(setp.__dict__)
-        # print(state.output_int_register_0)
         if state is None:
             print('state None')
             break
@@ -129,6 +129,7 @@ def gripper_control(con: rtde.RTDE,watchdog, gripper, gripper_on: bool):
             print('programa funcionando el local')
             break
         con.send(gripper)
+        break
     return
 
 
@@ -146,11 +147,18 @@ def main2():
 
     gripper_on = True
     while True:
-        gripper_control(con, watchdog, gripper=gripper, gripper_on=gripper_on)
-        break
+        input('change')
+        gripper_control(con, gripper=gripper, gripper_on=gripper_on)
+        time.sleep(1.5)
+        if gripper_on == False:
+            gripper_on = True
+        else:
+            gripper_on = False
+        
 
     con.send_pause()
     con.disconnect()
+
 
 
 
@@ -185,4 +193,4 @@ def main():
             vector = p_inicial
         robot_control_loop(con, setp, watchdog, vector)
 
-main2()
+# main2()
