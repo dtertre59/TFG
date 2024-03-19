@@ -19,4 +19,8 @@
 	<recipe key="watchdog">
 		<field name="input_bit_register_127" type="BOOL"/>
 	</recipe>
+
+	<recipe key="gripper">
+		<field name="input_bit_register_126" type="BOOL"/>
+	</recipe>
 </rtde_config>

@@ -4,7 +4,7 @@ import threading
 import cv2
 import depthai
 import numpy as np
-
+from pathlib import Path
 from ultralytics import YOLO
 
 # Pipeline tells DepthAI what operations to perform when running - you define all of the resources used and flows here
@@ -25,7 +25,7 @@ cam_rgb.preview.link(xout_rgb.input)
 
 
 # Load nn model 
-nn_model = YOLO('./models/yolov8n_square_v1.pt')  # pretrained YOLOv8n model
+nn_model = YOLO(f'{Path(__file__).parent}/models/yolov8n_square_v1.pt')  # pretrained YOLOv8n model
 
 # colores para el modelo
 objects_colors = {
@@ -76,7 +76,7 @@ def main():
         # From this point, the Device will be in "running" mode and will start sending data via XLink
 
         # To consume the device results, we get two output queues from the device, with stream names we assigned earlier
-        q_rgb = device.getOutputQueue("rgb",  maxSize=4, blocking=False)
+        q_rgb = device.getOutputQueue("rgb",  maxSize=4, blocking=False) # COLA SIN BLOQUEO
 
         # Here, some of the default values are defined. Frame will be an image from "rgb" stream, detections will contain nn results
         frame = None
@@ -102,5 +102,5 @@ def main():
                 break
 
 
-if __name__=='__main__':
-    main()
+# if __name__=='__main__':
+#     main()

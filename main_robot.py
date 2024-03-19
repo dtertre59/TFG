@@ -33,6 +33,7 @@ def setup_robot(con: rtde.RTDE, config_file: str):
     state_names, state_types = conf.get_recipe("state")
     setp_names, setp_types = conf.get_recipe("setp")
     watchdog_names, watchdog_types = conf.get_recipe("watchdog")
+    gripper_names, gripper_types = conf.get_recipe("gripper")
     # print(state_names, state_types, setp_names, setp_types, watchdog_names, watchdog_types)
         
     # get controller version
@@ -42,6 +43,7 @@ def setup_robot(con: rtde.RTDE, config_file: str):
     con.send_output_setup(state_names, state_types)
     setp = con.send_input_setup(setp_names, setp_types)
     watchdog = con.send_input_setup(watchdog_names, watchdog_types)
+    gripper = con.send_input_setup(gripper_names, gripper_types)
 
     # Setpoints to move the robot to
     # setp1 = [-0.13787, -0.29821, 0.03, -2.21176, -2.21104, 0.01494]
@@ -54,7 +56,7 @@ def setup_robot(con: rtde.RTDE, config_file: str):
     setp.input_double_register_4 = 0
     setp.input_double_register_5 = 0
 
-    return setp, watchdog
+    return setp, watchdog, gripper
 
 
 def setp_to_list(sp):
@@ -72,7 +74,7 @@ def list_to_setp(sp, list):
 
 def robot_control_loop(con: rtde.RTDE, setp, watchdog, vector):
 
-       # start data synchronization
+    # start data synchronization
     if not con.send_start(): # ES NECESARIO???????????????????????????????????????
         sys.exit()
     # move_completed = True
@@ -106,7 +108,32 @@ def robot_control_loop(con: rtde.RTDE, setp, watchdog, vector):
         break
 
 
-if __name__ == "__main__":
+def gripper_control(con: rtde.RTDE,watchdog, gripper, gripper_on: bool):
+    gripper.input_bit_register_126 = True
+    if not con.send_start(): # ES NECESARIO???????????????????????????????????????
+        sys.exit()
+    # move_completed = True
+    # The function "rtde_set_watchdog" in the "rtde_control_loop.urp" creates a 1 Hz watchdog
+    # watchdog.input_bit_register_127 = True
+    
+    while True:
+        # receive the current state; recivimos los datos que tenemo en el .xml state
+        state = con.receive()
+        # print(state.__dict__)
+        # input(setp.__dict__)
+        # print(state.output_int_register_0)
+        if state is None:
+            print('state None')
+            break
+        if state.output_int_register_0 == 1:
+            print('programa funcionando el local')
+            break
+        con.send(gripper)
+    return
+
+
+
+def main2():
     # GOLBAL VARIABLES
     ROBOT_HOST = '192.168.10.222' # "localhost"
     ROBOT_PORT = 30004
@@ -115,7 +142,28 @@ if __name__ == "__main__":
     # setp1 = [-0.13787, -0.29821, 0.03, -2.21176, -2.21104, 0.01494]
 
     con = connect_robot(host=ROBOT_HOST, port=ROBOT_PORT)
-    setp, watchdog = setup_robot(con=con, config_file=config_filename)
+    setp, watchdog, gripper = setup_robot(con=con, config_file=config_filename)
+
+    gripper_on = True
+    while True:
+        gripper_control(con, watchdog, gripper=gripper, gripper_on=gripper_on)
+        break
+
+    con.send_pause()
+    con.disconnect()
+
+
+
+def main():
+    # GOLBAL VARIABLES
+    ROBOT_HOST = '192.168.10.222' # "localhost"
+    ROBOT_PORT = 30004
+    config_filename = "control_loop_configuration.xml"
+
+    # setp1 = [-0.13787, -0.29821, 0.03, -2.21176, -2.21104, 0.01494]
+
+    con = connect_robot(host=ROBOT_HOST, port=ROBOT_PORT)
+    setp, watchdog, gripper = setup_robot(con=con, config_file=config_filename)
     vector = []
 
     while True:
@@ -137,7 +185,4 @@ if __name__ == "__main__":
             vector = p_inicial
         robot_control_loop(con, setp, watchdog, vector)
 
-
-    con.send(watchdog)
-    con.send_pause()
-    con.disconnect()
+main2()
