@@ -13,6 +13,7 @@ p_limite_12 = [0.218, -0.425, 0.560, 1.111, 1.352, -1.342]
 p_limite_21 = [-0.152, -0.425, 0.146, 1.111, 1.352, -1.342]
 p_limite_22 = [0.218, -0.425, 0.146, 1.111, 1.352, -1.342]
 
+# robot connection
 def connect_robot(host: str, port: str)-> rtde.RTDE:
     con = rtde.RTDE(hostname=host,port=port)
 
@@ -24,6 +25,7 @@ def connect_robot(host: str, port: str)-> rtde.RTDE:
     print('connected to the robot')
     return con
 
+# robot setup
 def setup_robot(con: rtde.RTDE, config_file: str):
 
     logging.getLogger().setLevel(logging.INFO)
@@ -58,58 +60,76 @@ def setup_robot(con: rtde.RTDE, config_file: str):
 
     return setp, watchdog, gripper
 
+# init robot
+def init_robot():
+    ROBOT_HOST = '192.168.10.222' # "localhost"
+    ROBOT_PORT = 30004
+    config_filename = "control_loop_configuration.xml"
 
+    # setp1 = [-0.13787, -0.29821, 0.03, -2.21176, -2.21104, 0.01494]
+
+    con = connect_robot(host=ROBOT_HOST, port=ROBOT_PORT)
+    setp, watchdog, gripper = setup_robot(con=con, config_file=config_filename)
+
+    return con, setp, watchdog, gripper
+
+# funcion de trasformacion
 def setp_to_list(sp):
     sp_list = []
     for i in range(0, 6):
         sp_list.append(sp.__dict__["input_double_register_%i" % i])
     return sp_list
 
-
+# funcion de transformacion inversa
 def list_to_setp(sp, list):
     for i in range(0, 6):
         sp.__dict__["input_double_register_%i" % i] = list[i]
     return sp
 
-
-def robot_control_loop(con: rtde.RTDE, setp, watchdog, vector):
-
+# movimiento del robot
+def robot_move(con: rtde.RTDE, setp, watchdog, vector):
+    """ Si el watchdog == 1 -> el robot se esta moviendo"""
     # start data synchronization
-    if not con.send_start(): # ES NECESARIO???????????????????????????????????????
+    if not con.send_start():
         sys.exit()
-    # move_completed = True
-    # The function "rtde_set_watchdog" in the "rtde_control_loop.urp" creates a 1 Hz watchdog
-    watchdog.input_bit_register_127 = True
+    
+    move_completed = False
 
-    while True:
-        # receive the current state; recivimos los datos que tenemo en el .xml state
+    # The function "rtde_set_watchdog" in the "rtde_control_loop.urp" creates a 1 Hz watchdog
+    watchdog.input_bit_register_127 = 0
+
+    init = 1
+    while move_completed == False:
+        # receive the current state; recibimos los datos que tenemo en el .xml state
         state = con.receive()
-        # print(state.__dict__)
-        # input(setp.__dict__)
-        # print(state.output_int_register_0)
+        robot_aviable = state.output_int_register_1
+        print(robot_aviable)
+
         if state is None:
             print('state None')
             break
         
-        if state.output_int_register_0 == 1:
-            print('programa funcionando el local')
-            break
-        
+
         # do something...
-        if state.output_int_register_0 == 0:
-            # new_setp = setp1 if setp_to_list(setp) == setp2 else setp2
-            # print("New pose = " + str(setp1))
-            # send new setpoint
+        if move_completed == False and robot_aviable == 1 and init == 1:
+            # print('inicio')
+            # print('Programa en funcionamiento')
             list_to_setp(setp, vector) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
-            a = con.send(setp)
-            # print(a) # True -> enviado correctamente
+            con.send(setp)
+            time.sleep(0.5)
+            init = 0
+            
+
+        # No se ha movido, esta parado en la misma posicion
+        elif init == 0 and robot_aviable == 1:
+            # print('salida')
+            move_completed = True
+
         # kick watchdog
         con.send(watchdog)
-        print('wait')
-        time.sleep(5)
-        break
+    return
 
-
+# control del gripper
 def gripper_control(con: rtde.RTDE, gripper, gripper_on: bool):
     # hace falta -> SI pero no se por qué
     if not con.send_start():
@@ -131,33 +151,6 @@ def gripper_control(con: rtde.RTDE, gripper, gripper_on: bool):
         con.send(gripper)
         break
     return
-
-
-
-def main2():
-    # GOLBAL VARIABLES
-    ROBOT_HOST = '192.168.10.222' # "localhost"
-    ROBOT_PORT = 30004
-    config_filename = "control_loop_configuration.xml"
-
-    # setp1 = [-0.13787, -0.29821, 0.03, -2.21176, -2.21104, 0.01494]
-
-    con = connect_robot(host=ROBOT_HOST, port=ROBOT_PORT)
-    setp, watchdog, gripper = setup_robot(con=con, config_file=config_filename)
-
-    gripper_on = True
-    while True:
-        input('change')
-        gripper_control(con, gripper=gripper, gripper_on=gripper_on)
-        time.sleep(1.5)
-        if gripper_on == False:
-            gripper_on = True
-        else:
-            gripper_on = False
-        
-
-    con.send_pause()
-    con.disconnect()
 
 
 
@@ -191,6 +184,40 @@ def main():
             vector = p_limite_22
         else:
             vector = p_inicial
-        robot_control_loop(con, setp, watchdog, vector)
+        robot_move(con, setp, watchdog, vector)
 
-# main2()
+def main2():
+    # GOLBAL VARIABLES
+    ROBOT_HOST = '192.168.10.222' # "localhost"
+    ROBOT_PORT = 30004
+    config_filename = "control_loop_configuration.xml"
+
+    # setp1 = [-0.13787, -0.29821, 0.03, -2.21176, -2.21104, 0.01494]
+
+    con = connect_robot(host=ROBOT_HOST, port=ROBOT_PORT)
+    setp, watchdog, gripper = setup_robot(con=con, config_file=config_filename)
+
+    gripper_on = True
+    while True:
+        input('change')
+        gripper_control(con, gripper=gripper, gripper_on=gripper_on)
+        time.sleep(1.5)
+        if gripper_on == False:
+            gripper_on = True
+        else:
+            gripper_on = False
+
+def main3():
+    POS_INIT = [0.128, -0.298, 0.180, 3.1415, 0.2617, 0]
+    POS_FIN = [0.128, -0.298, 0.100, 3.1415, 0.2617, 0]
+
+
+    con, setp, watchdog, gripper = init_robot()
+
+    while True:
+        robot_move(con, setp,watchdog, vector=POS_INIT)
+        input('FIN INIT')
+        robot_move(con, setp,watchdog, vector=POS_FIN)
+        input('FIN FIN')
+
+# main3()
