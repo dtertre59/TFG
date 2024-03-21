@@ -39,11 +39,12 @@ class Positions():
     POS_PIECE_2_I = [BORDE_TAKE_X, BORDE_TAKE_Y_2, MOVE_Z, RX, RY, RZ]
     POS_PIECE_2_F = [BORDE_TAKE_X, BORDE_TAKE_Y_2, TAKE_Z, RX, RY, RZ]
 
-    POS_PUZZLE_SQUARE_I = [BORDE_RELEASE_X, BORDE_RELEASE_Y_SQUARE, MOVE_Z, RX, RY, RZ]
-    POS_PUZZLE_SQUARE_F = [BORDE_RELEASE_X, BORDE_RELEASE_Y_SQUARE, RELEASE_Z, RX, RY, RZ]
 
     POS_PUZZLE_CIRCLE_I = [BORDE_RELEASE_X, BORDE_RELEASE_Y_CIRCLE, MOVE_Z, RX, RY, RZ]
     POS_PUZZLE_CIRCLE_F = [BORDE_RELEASE_X, BORDE_RELEASE_Y_CIRCLE, RELEASE_Z, RX, RY, RZ]
+
+    POS_PUZZLE_SQUARE_I = [BORDE_RELEASE_X, BORDE_RELEASE_Y_SQUARE, MOVE_Z, RX, RY, RZ]
+    POS_PUZZLE_SQUARE_F = [BORDE_RELEASE_X, BORDE_RELEASE_Y_SQUARE, RELEASE_Z, RX, RY, RZ]
     
 
 
@@ -80,20 +81,20 @@ def move_robot():
 def main():
     # ----- PARTE DE CAMARA -----
 
-    # # adquirimos piezas
-    # pieces = nn.streaming_with__nn()
-    # if not pieces:
-    #     return 
-    # # vemos piezas detectadas y en que posiciones se encuentran
-    # order = 0
-    # for piece in pieces:
-    #     print(order, ': ',piece.__dict__)
-    #     order += 1
+    # adquirimos piezas
+    pieces = nn.streaming_with__nn()
+    if not pieces:
+        return 
+    # vemos piezas detectadas y en que posiciones se encuentran
+    order = 0
+    for piece in pieces:
+        print(order, ': ',piece.__dict__)
+        order += 1
     
-
-    piece1 = Piece(name='scuare', coordinates=(2,0,0), color=(255,0,0))
-    piece2 = Piece(name='circle', coordinates=(4,0,0), color=(0,255,0))
-    pieces = [piece1, piece2]
+    # ------ Sin camara ------
+    # piece1 = Piece(name='scuare', coordinates=(2,0,0), color=(255,0,0))
+    # piece2 = Piece(name='circle', coordinates=(4,0,0), color=(0,255,0))
+    # pieces = [piece1, piece2]
 
     input('FIN DE LA CAMARA, COMIENZO DE LOS MOVIMIENTOS DEL ROBOT')
     # ----- PARTE DE ROBOT -----
@@ -115,12 +116,14 @@ def main():
 
     order = 0
     for piece in pieces:
-        print(order)
         if piece.name == 'scuare':
             piece.name = 'square'
 
+        print('Pieza: ',piece.__dict__)
+        
         # vectores de posicion
-        if order == 0:
+        print('Position: ', order + 1)
+        if order == 0:       
             vector_i = Positions.POS_PIECE_1_I
             vector_f = Positions.POS_PIECE_1_F
         elif order == 1:
@@ -130,9 +133,11 @@ def main():
 
         # vectores de puzzle
         if piece.name == 'circle':
+            print('CIRCLE')
             vector_p_i = Positions.POS_PUZZLE_CIRCLE_I
             vector_p_f = Positions.POS_PUZZLE_CIRCLE_F
         elif piece.name == 'square':
+            print('SQUARE')
             vector_p_i = Positions.POS_PUZZLE_SQUARE_I
             vector_p_f = Positions.POS_PUZZLE_SQUARE_F
         

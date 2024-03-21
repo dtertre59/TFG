@@ -71,6 +71,8 @@ High‑resolution cameras with depth vision and on‑chip machine learning.
 https://docs.luxonis.com/projects/sdk/en/latest/features/ai_models/
 
 ## Redes Neuronales
-
+YOLO_v8 de ukltralitics la que he entrenado con mis propo¡ias fotos
+he utilizado roboflow para el etiquetado y exportacion de imagenes
+Google colab para ejecutar el script de entrenado de la red
 
 

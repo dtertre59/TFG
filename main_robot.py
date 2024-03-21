@@ -103,7 +103,7 @@ def robot_move(con: rtde.RTDE, setp, watchdog, vector):
         # receive the current state; recibimos los datos que tenemo en el .xml state
         state = con.receive()
         robot_aviable = state.output_int_register_1
-        print(robot_aviable)
+        # print(robot_aviable)
 
         if state is None:
             print('state None')
@@ -125,6 +125,7 @@ def robot_move(con: rtde.RTDE, setp, watchdog, vector):
             # print('salida')
             move_completed = True
 
+        time.sleep(0.2)
         # kick watchdog
         con.send(watchdog)
     return
@@ -150,6 +151,7 @@ def gripper_control(con: rtde.RTDE, gripper, gripper_on: bool):
             break
         con.send(gripper)
         break
+    time.sleep(1)
     return
 
 
