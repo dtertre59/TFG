@@ -66,7 +66,8 @@ with dai.Device(pipeline) as device:
     vis.create_window()
     pcd = o3d.geometry.PointCloud()
     
-    coordinateFrame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=1000, origin=[0,0,0])
+    # Eje de coordenadas
+    coordinateFrame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=400, origin=[0,0,0])
     vis.add_geometry(coordinateFrame)
     vis.add_geometry(pcd)
 
@@ -92,10 +93,10 @@ with dai.Device(pipeline) as device:
             vis.update_geometry(pcd)
 
             # SEGUNDO METODO
-            point_cloud = o3d.geometry.PointCloud()
-            point_cloud.points = o3d.utility.Vector3dVector(points)
-            # Visualizar la nube de puntos
-            o3d.visualization.draw_geometries([point_cloud])
+            # point_cloud = o3d.geometry.PointCloud()
+            # point_cloud.points = o3d.utility.Vector3dVector(points)
+            # # Visualizar la nube de puntos
+            # o3d.visualization.draw_geometries([point_cloud])
 
         
         vis.poll_events()
