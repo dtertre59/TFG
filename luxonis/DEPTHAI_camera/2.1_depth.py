@@ -15,21 +15,40 @@ import cv2
 pipeline = depthai.Pipeline()
 
 # First, we want the Color camera as the output
-cam_rgb = pipeline.createColorCamera()
-cam_rgb.setPreviewSize(300, 300)  # 300x300 will be the preview frame size, available as 'preview' output of the node
-cam_rgb.setInterleaved(False)
+cam_rgb = pipeline.create(depthai.node.ColorCamera)
+# cam_rgb.setPreviewSize(300, 300)  # 300x300 will be the preview frame size, available as 'preview' output of the node
+# cam_rgb.setInterleaved(False)
+cam_rgb.setResolution(depthai.ColorCameraProperties.SensorResolution.THE_1080_P)
+cam_rgb.setBoardSocket(depthai.CameraBoardSocket.CAM_A)
 
 monoLeft = pipeline.create(depthai.node.MonoCamera)
 monoRight = pipeline.create(depthai.node.MonoCamera)
 
 depth = pipeline.create(depthai.node.StereoDepth)
 
-# # Better handling for occlusions:
-# depth.setLeftRightCheck(False)
-# # Closer-in minimum depth, disparity range is doubled:
-# depth.setExtendedDisparity(False)
+depth.setDefaultProfilePreset(depthai.node.StereoDepth.PresetMode.HIGH_DENSITY)
+depth.initialConfig.setMedianFilter(depthai.MedianFilter.MEDIAN_OFF)
+
+# Better handling for occlusions:
+depth.setLeftRightCheck(False)
+# Closer-in minimum depth, disparity range is doubled:
+depth.setExtendedDisparity(True) # True -> mejorar la percepción de objetos cercanos
 # # Better accuracy for longer distance, fractional disparity 32-levels:
-# depth.setSubpixel(False)
+depth.setSubpixel(False) # -> intermpolacion -> mejora en zonas distantes
+
+
+# setting node configs
+depth.setDefaultProfilePreset(depthai.node.StereoDepth.PresetMode.HIGH_DENSITY)
+depth.initialConfig.setMedianFilter(depthai.MedianFilter.MEDIAN_OFF)
+# Align depth map to the perspective of RGB camera, on which inference is done
+depth.setDepthAlign(depthai.CameraBoardSocket.CAM_A)
+depth.setOutputSize(monoLeft.getResolutionWidth(), monoLeft.getResolutionHeight())
+
+config = depth.initialConfig.get()
+config.postProcessing.thresholdFilter.minRange = 100
+config.postProcessing.thresholdFilter.maxRange = 1000
+depth.initialConfig.set(config)
+
 
 monoLeft.setResolution(depthai.MonoCameraProperties.SensorResolution.THE_480_P)
 monoLeft.setCamera("left")
@@ -48,11 +67,6 @@ xout_rgb.setStreamName("rgb")
 xoutDepth.setStreamName("depth")
 
 
-# setting node configs
-depth.setDefaultProfilePreset(depthai.node.StereoDepth.PresetMode.HIGH_DENSITY)
-# Align depth map to the perspective of RGB camera, on which inference is done
-depth.setDepthAlign(depthai.CameraBoardSocket.CAM_A)
-depth.setOutputSize(monoLeft.getResolutionWidth(), monoLeft.getResolutionHeight())
 
 
 # Linking camera preview to XLink input, so that the frames will be sent to host
