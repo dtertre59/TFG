@@ -18,4 +18,6 @@ lines = [[0, 1], [0, 2], [0, 3]]  # Conexiones entre los puntos (origen, x) (ori
 line_set = o3d.geometry.LineSet()
 line_set.points = o3d.utility.Vector3dVector(points)
 line_set.lines = o3d.utility.Vector2iVector(lines)
+
+
 o3d.visualization.draw_geometries_with_editing([pointcloud])
