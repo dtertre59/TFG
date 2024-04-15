@@ -13,7 +13,7 @@ def demo_crop_geometry():
     print("4) Press 'C' to get a selected geometry and to save it")
     print("5) Press 'F' to switch to freeview mode")
     # pcd = o3d.read_point_cloud("../../TestData/ICP/cloud_bin_0.pcd")
-    pcd = o3d.io.read_point_cloud("clouds/rand_0.ply")
+    pcd = o3d.io.read_point_cloud("point_clouds/clouds/square_lab_1.ply")
     o3d.visualization.draw_geometries_with_editing([pcd])
 
 def draw_registration_result(source, target, transformation):
