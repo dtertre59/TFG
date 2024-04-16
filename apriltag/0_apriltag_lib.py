@@ -1,18 +1,22 @@
 import apriltag
 import cv2
 
+width = 1920
+height = 1080
 
 # extraccion de la imagen
 img = cv2.imread('apriltag/assets/apriltag_1.png', cv2.IMREAD_COLOR)
+# Redimensiona la imagen utilizando la interpolación de área de OpenCV
+img = cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
 img_grayscale = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 # parametros de la camara
 # focal
-fx = 1
-fy = 1
-# center (resolution/2)
-cx = 2
-cy = 2
+fx = 0.00337 # 3.37mm
+fy = fx
+# center (resolution/2) -> 1920x1080
+cx = width/2
+cy = height/2
 
 camera_params = [fx, fy, cx, cy]
 
@@ -29,7 +33,7 @@ detections = detector.detect(img_grayscale)
 detection = detections[0]
 
 # conseguimos matriz de transformacion
-transformation_matrix, initial_error, final_error = detector.detection_pose(detection, camera_params=camera_params)
+transformation_matrix, initial_error, final_error = detector.detection_pose(detection, camera_params=camera_params, tag_size=0.085)
 
 print('T: ', transformation_matrix)
 
