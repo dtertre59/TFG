@@ -29,13 +29,21 @@ cv2.waitKey(0)
 # ------------------- #
 
 
-# ----- import point cloud ----- # 
+# ----- import point cloud ----- #  
+
+# GITHUB: https://github.com/davizinho5/TFG_TFM_ETSIDI
+
 pointcloud = o3d.io.read_point_cloud(str(Path(__file__).resolve().parent / 'clouds' / f'{name}.ply'))
+pointcloud = pointcloud.select_by_index(list(range(485120+580,485120+580+105)) + (list(range(485120+1280+580,485120+1280+580+105))))
 points = np.asarray(pointcloud.points)
 # invertimos puntos respecto al eje x porque esta en espejo
 points[:,0] *= -1
 
+p = points[0:100000]
+#p.append(points[485120:704000])
 pointcloud.points = o3d.utility.Vector3dVector(points)
+
+
 
 
 # ----- eje de coordenadas para la visualizacion ----- # 
@@ -57,6 +65,16 @@ axis.lines = o3d.utility.Vector2iVector(axis_lines)
 axis.colors = o3d.utility.Vector3dVector(axis_colors)
 # ---------------------------------------------------- # 
 
+
+o3d.visualization.draw_geometries([pointcloud, axis])
+
+
+
+
+
+
+
+
 # ----- Crear cubo 3d ----- # 
 # Definir una caja delimitadora (en este ejemplo, se define manualmente)
 min_bound = [0, 0, 0]  # Límites mínimos de la caja
@@ -72,11 +90,13 @@ bbox_mesh.paint_uniform_color([1, 0, 0])  # Color rojo
 # ----------------------------# 
 
 # ----- Crear un cubo solo lineas en Open3D ----- #
+
 width = pixel_max[0] - pixel_min[0]
 height = pixel_max[1] - pixel_min[1]
 # resolucion de la cam
 width = resolution[1]
 height = resolution[0]
+
 camera_mesh = o3d.geometry.TriangleMesh.create_box(width=width, height=height, depth=900)
 # Mover la caja delimitadora a una nueva posición
 new_pos = np.array([-width/2, -height/2, 0])  # Nueva posición deseada
@@ -89,39 +109,39 @@ line_camera_mesh.paint_uniform_color([0, 0, 0])  # Color de las aristas
 # ------------------------------------- # 
 
 # ----- Cortar nube de puntos ----- #
-points = np.asarray(pointcloud.points)
-colors = np.asarray(pointcloud.colors)
+# points = np.asarray(pointcloud.points)
+# colors = np.asarray(pointcloud.colors)
 
-# Definir el umbrales
-umbral_x_max = 30
-umbral_x_min = -40
-umbral_y_max = -10
-umbral_y_min = -90
-umbral_z_max = 490
-umbral_z_min = 440
+# # Definir el umbrales
+# umbral_x_max = 30
+# umbral_x_min = -40
+# umbral_y_max = -10
+# umbral_y_min = -90
+# umbral_z_max = 490
+# umbral_z_min = 440
 
 
 
-# Filtrar los puntos basados en la coordenada x
-points_filt = points[(points[:, 0] <= umbral_x_max) & (points[:, 0] >= umbral_x_min)]
-colors_filt = colors[(points[:, 0] <= umbral_x_max) & (points[:, 0] >= umbral_x_min)]
+# # Filtrar los puntos basados en la coordenada x
+# points_filt = points[(points[:, 0] <= umbral_x_max) & (points[:, 0] >= umbral_x_min)]
+# colors_filt = colors[(points[:, 0] <= umbral_x_max) & (points[:, 0] >= umbral_x_min)]
 
-#filtro y
-points_filt_2 = points_filt[(points_filt[:, 1] <= umbral_y_max) & (points_filt[:, 1] >= umbral_y_min)]
-colors_filt_2 = colors_filt[(points_filt[:, 1] <= umbral_y_max) & (points_filt[:, 1] >= umbral_y_min)]
+# #filtro y
+# points_filt_2 = points_filt[(points_filt[:, 1] <= umbral_y_max) & (points_filt[:, 1] >= umbral_y_min)]
+# colors_filt_2 = colors_filt[(points_filt[:, 1] <= umbral_y_max) & (points_filt[:, 1] >= umbral_y_min)]
 
-#filtro z
-points_filt_3 = points_filt_2[(points_filt_2[:, 2] <= umbral_z_max) & (points_filt_2[:, 2] >= umbral_z_min)]
-colors_filt_3 = colors_filt_2[(points_filt_2[:, 2] <= umbral_z_max) & (points_filt_2[:, 2] >= umbral_z_min)]
+# #filtro z
+# points_filt_3 = points_filt_2[(points_filt_2[:, 2] <= umbral_z_max) & (points_filt_2[:, 2] >= umbral_z_min)]
+# colors_filt_3 = colors_filt_2[(points_filt_2[:, 2] <= umbral_z_max) & (points_filt_2[:, 2] >= umbral_z_min)]
 
-# Crear una nueva nube de puntos con los puntos filtrados
-pointcloud_filt = o3d.geometry.PointCloud()
-pointcloud_filt.points = o3d.utility.Vector3dVector(points_filt_3)
-pointcloud_filt.colors = o3d.utility.Vector3dVector(colors_filt_3)
+# # Crear una nueva nube de puntos con los puntos filtrados
+# pointcloud_filt = o3d.geometry.PointCloud()
+# pointcloud_filt.points = o3d.utility.Vector3dVector(points_filt_3)
+# pointcloud_filt.colors = o3d.utility.Vector3dVector(colors_filt_3)
 
 
 # ----- VISUALIZACIONES ----- #  
 # o3d.visualization.draw_geometries_with_editing([pointcloud])
-o3d.visualization.draw_geometries([pointcloud, axis, line_camera_mesh, bbox_mesh])
+# o3d.visualization.draw_geometries([pointcloud, axis, line_camera_mesh, bbox_mesh])
 # o3d.visualization.draw_geometries([pointcloud_filt, axis, line_camera_mesh])
 cv2.destroyAllWindows()

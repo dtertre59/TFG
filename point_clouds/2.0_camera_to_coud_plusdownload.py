@@ -138,8 +138,13 @@ with device:
 
         # Nube de puntos
         if inPointCloud:
+            # resolucion pixeles = 1280*720
+            # hei = inPointCloud.getHeight()
+            # wid = inPointCloud.getWidth()
+            # print('width: ', wid, '       height: ', hei)
             # asignamos puntos
             points = inPointCloud.getPoints().astype(np.float64)
+            # print(points[7200:14399])
             pcd.points = o3d.utility.Vector3dVector(points)
             # asignamos colores
             colors = (cvRGBFrame.reshape(-1, 3) / 255.0).astype(np.float64)
