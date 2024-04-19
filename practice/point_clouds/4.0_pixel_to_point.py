@@ -144,6 +144,11 @@ axis.colors = o3d.utility.Vector3dVector(axis_colors)
 points_filt_2 = np.asarray(pointcloud.points)
 colors_filt_2 = np.asarray(pointcloud.colors)
 
+
+# o3d.io.write_point_cloud('practice/point_clouds/clouds/square_lab_2_crop.ply', pointcloud)
+
+
+
 # # Definir el umbrales
 # umbral_x_max = 30
 # umbral_x_min = -40

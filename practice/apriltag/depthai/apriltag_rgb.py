@@ -79,15 +79,17 @@ with dai.Device(pipeline) as device:
             bottomLeft = aprilTag.bottomLeft
 
             center = (int((topLeft.x + bottomRight.x) / 2), int((topLeft.y + bottomRight.y) / 2))
+            x_axis = (int((topRight.x + bottomRight.x)/2), int((topRight.y + bottomRight.y)/2))
+            y_axis = (int((topLeft.x + topRight.x)/2), int((topLeft.y + topRight.y)/2))
 
             # cv2.line(frame, (int(topLeft.x), int(topLeft.y)), (int(topRight.x), int(topRight.y)), colorz, 2, cv2.LINE_AA, 0)
             # cv2.line(frame, (int(topRight.x), int(topRight.y)), (int(bottomRight.x), int(bottomRight.y)), colory, 2, cv2.LINE_AA, 0)
             # Eje x
             colorx = (0, 0, 255) # rojo
-            cv2.line(frame, (int(bottomLeft.x), int(bottomLeft.y)), (int(bottomRight.x), int(bottomRight.y)), colorx, 2, cv2.LINE_AA, 0)
+            cv2.line(frame, center, x_axis, colorx, 2, cv2.LINE_AA, 0)
             # Eje y
             colory = (0, 255, 0) # verde
-            cv2.line(frame, (int(bottomLeft.x), int(bottomLeft.y)), (int(topLeft.x), int(topLeft.y)), colory, 2, cv2.LINE_AA, 0)
+            cv2.line(frame, center, y_axis, colory, 2, cv2.LINE_AA, 0)
 
             idStr = "ID: " + str(aprilTag.id)
             cv2.putText(frame, idStr, center, cv2.FONT_HERSHEY_TRIPLEX, 0.5, color)

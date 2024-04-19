@@ -5,6 +5,8 @@ import argparse
 import logging
 import sys
 
+from pathlib import Path
+
 from datetime import datetime as datetime
 import time
 
@@ -70,6 +72,7 @@ args = parser.parse_args()
 args.host = "192.168.10.222" # ip del robot
 # el puerto ya ha sido cambiado
 
+args.config = str(Path(__file__).resolve().parent / 'record_configuration.xml')
 
 if args.verbose:
     logging.basicConfig(level=logging.INFO)

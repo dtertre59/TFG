@@ -5,9 +5,9 @@ import time
 
 import rtde.rtde as rtde
 
-import main_robot as robot
-import main_nn as nn
-from main_nn import Piece
+import mains.main_robot as robot
+import mains.main_nn as nn
+from mains.main_nn import Piece
 
 
 class Positions():
