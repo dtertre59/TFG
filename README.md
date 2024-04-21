@@ -76,3 +76,7 @@ he utilizado roboflow para el etiquetado y exportacion de imagenes
 Google colab para ejecutar el script de entrenado de la red
 
 
+## apriltag 
+
+la libreria apriltag no puede instalarse en windows
+
