@@ -10,11 +10,15 @@ from mpl_toolkits.mplot3d import Axes3D
 #                         [0, 0, 0, 1]])
 
 # Supongamos que pose_matrix es tu matriz de transformación
-pose_matrix = np.array([[ 0.98949365, -0.02275008,  0.14277518, -0.04343225],
-                        [-0.11622167,  0.46221815,  0.87911712,  0.04289319],
-                        [-0.08599327, -0.88647438,  0.45471787,  1.52128815],
-                        [ 0,         0,          0,          1        ]])
+# pose_matrix = np.array([[ 0.98949365, -0.02275008,  0.14277518, -0.04343225],
+#                         [-0.11622167,  0.46221815,  0.87911712,  0.04289319],
+#                         [-0.08599327, -0.88647438,  0.45471787,  1.52128815],
+#                         [ 0,         0,          0,          1        ]])
 
+pose_matrix = np.array([[ 0.98949412, -0.02267868,  0.1427833, -0.04347489],
+                        [-0.11625551,  0.46227919,  0.87908055,  0.04290879],
+                        [-0.08594214, -0.88644437,  0.45478602,  1.5226692 ],
+                        [ 0.,          0.,          0.,          1.        ]])
 # # Ángulos de rotación en radianes
 # theta_x = np.pi / 2  # Por ejemplo, 45 grados en el eje X
 # theta_y = np.pi / 2  # Por ejemplo, 30 grados en el eje Y
@@ -50,14 +54,14 @@ pose_matrix = np.array([[ 0.98949365, -0.02275008,  0.14277518, -0.04343225],
 
 # reinvertimos orientacion eje z
 # Matriz de reflexión en el plano XY para invertir la dirección del eje Z
-M_xy = np.array([[1, 0, 0, 0],
-                 [0, 1, 0, 0],
-                 [0, 0, 1, 0],
-                 [0, 0, 0, 1]])
+# M_xy = np.array([[1, 0, 0, 0],
+#                  [0, 1, 0, 0],
+#                  [0, 0, 1, 0],
+#                  [0, 0, 0, 1]])
 
 
 # Aplicar la reflexión en el plano XY a la matriz de rotación alrededor del eje Z
-pose_matrix = np.dot(M_xy, pose_matrix)
+# pose_matrix = np.dot(M_xy, pose_matrix)
 
 
 # Extraer la parte de rotación y traslación de la matriz de transformación
@@ -73,10 +77,10 @@ inverse_pose_t = inverse_pose_matrix[:3, 3]
 
 
 # Definir ejes base
-axis = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])  # Ejes unitarios
-# print('Ejes base: ',axis)
+# axis = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])  # Ejes unitarios
+# # print('Ejes base: ',axis)
 
-print('M TRANSFORMACION: ', pose_matrix)
+# print('M TRANSFORMACION: ', pose_matrix)
 
 class Transf():
     def __init__(self,t, ref, comp, n_axis):
@@ -85,6 +89,10 @@ class Transf():
         self.comp = comp
         self.n_axis = n_axis
 
+
+
+# Definir ejes base
+axis = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])  # Ejes unitarios
 
 
 # ----- CALCULOPS RESPECTO A LA CAMARA -----
@@ -119,7 +127,11 @@ print("Posición de la cámara con respecto al AprilTag:", camera_position)
 n_axis = np.dot(inverse_pose_R, axis.T).T
 
 data_april = Transf(inverse_pose_matrix, apriltag_position, camera_position, n_axis)
-#------------------------------------------
+# #------------------------------------------
+
+# Crear la figura y los ejes en 3D
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
 
 # Crear la figura y los ejes en 3D
 fig1 = plt.figure()
@@ -153,16 +165,42 @@ def paint_3d(ax , ref_p, comp_p, n_axis):
         counter += 1
 
     # union del ref con el otro
-    length = 1
-    ax.quiver(points[0][0], points[0][1], points[0][2], points[1][0], points[1][1], points[1][2], length=length, color='k')
+    # Dibujar la línea que conecta los puntos
+    ax.plot([points[0][0], points[1][0]], [points[0][1], points[1][1]], [points[0][2], points[1][2]], color='y', label='Línea')
+
     # Mostrar leyenda
     ax.legend()
     return
 
+def paint_3d_rep(ax, t):
+    axis = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])  # Ejes unitarios
+    point = t[:3, 3]
+    print('Point: ',point)
+    # transformacion de ejes
+    axis = np.dot(pose_R, axis.T).T
+    # point
+    ax.scatter(point[0], point[1], point[2], c='b', marker='o', label='Ref')
+    # axis
+    ax.quiver(point[0], point[1], point[2], axis[0][0], axis[0][1], axis[0][2], length=0.5, color='r')  # Eje X (rojo)
+    ax.quiver(point[0], point[1], point[2], axis[1][0], axis[1][1], axis[1][2], length=0.5, color='g')  # Eje Y (verde)
+    ax.quiver(point[0], point[1], point[2], axis[2][0], axis[2][1], axis[2][2], length=0.5, color='b')  # Eje Z (azul)
+
+# paint_3d(ax1, data_cam.ref, data_cam.comp, data_cam.n_axis)
+# paint_3d(ax2, data_april.ref, data_april.comp, data_april.n_axis)
 
 
-paint_3d(ax1, data_cam.ref, data_cam.comp, data_cam.n_axis)
-paint_3d(ax2, data_april.ref, data_april.comp, data_april.n_axis)
+
+
+# puntos de referencia
+ax.scatter(2, 2, 2, c='k', marker='o')
+ax.scatter(-2, -2, -2, c='k', marker='o')
+# camera = ref point
+# Crear una matriz identidad 4x4
+t_camera = np.eye(4)
+
+
+paint_3d_rep(ax, t_camera)
+paint_3d_rep(ax, pose_matrix)
 
 # Cambiar el título de la figura
 fig1.suptitle('Sistema de ref: camara')

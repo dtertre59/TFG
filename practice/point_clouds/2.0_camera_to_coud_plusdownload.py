@@ -164,8 +164,9 @@ with device:
         key = cv2.waitKey(1)
         if key == ord('d'):
             print('export point cloud and rgb photo')
-            o3d.io.write_point_cloud(str(directory / 'clouds' / 'square_lab_2.ply'), pcd)
-            cv2.imwrite(filename=str(directory / 'assets' / 'square_lab_2.png'), img=frameRGB)
+            name = 'apriltags_4.png'
+            # o3d.io.write_point_cloud(str(directory / 'clouds' / 'square_lab_2.ply'), pcd)
+            cv2.imwrite(filename=str(directory / 'assets' / name), img=frameRGB)
         
         if key == ord('q'):
             break

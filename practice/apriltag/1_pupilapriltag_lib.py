@@ -11,9 +11,9 @@ height = 720
 
 # parametros de la camara
 # focal
-fx = 3008.92857 #pixeles. 0.00337 # 3.37mm
+fx = 3008.92857 #pixeles. 0.00337 # 3.37mm *1.12um
 fy = fx
-# center (resolution/2) -> 1920x1080
+# center (resolution/2) -> 1280x720
 cx = width/2
 cy = height/2
 
