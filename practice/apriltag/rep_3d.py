@@ -5,15 +5,15 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 
-
+# INIT 3d representation
 def init_3d_rep():
     # Crear la figura y los ejes en 3D
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
     # puntos de referencia
-    ax.scatter(1, 1, 1, c='k', marker='o')
-    ax.scatter(-1, -1, 0, c='k', marker='o')
+    ax.scatter(1, 1, 1, c='w', marker='o')
+    ax.scatter(-1, -1, 1, c='w', marker='o')
     # camera = ref point
     # Crear una matriz identidad 4x4
     t_i = np.eye(4)
@@ -21,13 +21,15 @@ def init_3d_rep():
 
     return fig, ax, t_i
 
-def end_3d_rep(fig, ax, name: str = ''):
+# SHOW 3d representatios
+def show_3d_rep(fig, ax, name: str = ''):
     # Cambiar el título de la figura
     fig.suptitle(name)
     ax.legend()
 
     plt.show()
 
+# PRINT 3D representation
 def print_3d_rep(ax, t, scale: float = 1, c: str = 'k', pointname: str = None, ax_ref: bool = False):
     axis = np.array([[scale, 0, 0], [0, scale, 0], [0, 0, scale]])  # Ejes unitarios
     if ax_ref == True:
@@ -130,5 +132,5 @@ def points_distance(point1: np.array, point2: np.array) -> float:
 # print_3d_rep(ax, t_camera, c='c')
 # print_3d_rep(ax, pose_matrix, 'r')
 
-# end_3d_rep('Sistema de Referencia: Camara')
+# show_3d_rep('Sistema de Referencia: Camara')
 

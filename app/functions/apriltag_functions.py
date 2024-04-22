@@ -1,49 +1,50 @@
-import apriltag
+# import apriltag
 import cv2
 from pathlib import Path
 import numpy as np
 
-width = 1280
-height = 720
+import pupil_apriltags as apriltag
 
-directory = Path(__file__).resolve().parent.parent
+from models.camera import CameraConfig, ApriltagConfig, Apriltag
 
 
-# parametros de la camara
-# focal
-fx = 0.00337 # 3.37mm
-fy = fx
-# center (resolution/2) -> 1920x1080
-cx = width/2
-cy = height/2
-
-camera_params = [fx, fy, cx, cy]
-
-tag_size = 0.0085
+# INIT detector
+def init_detector(families: str = "tag36h11") -> apriltag.Detector:
+    return apriltag.Detector(families=families)
 
 # GET detections
-def get_apriltrag_detections(frame) -> list:
-    # detector
-    detector = apriltag.Detector()
-
-    # opciones del detector
-    # print(detector.options.__dict__)
-
-    # detecciones apriltags de la imagen
-    detections = detector.detect(frame)
-    return detector, detections
-
-# GET detection POSE
-def get_detection_pose(detector: apriltag.Detector, detection, camera_params, tag_size):
+def get_detections(detector: apriltag.Detector, frame: np.ndarray, camera_config: CameraConfig, apriltag_config: ApriltagConfig) -> list[apriltag.Detection]:
+    camera_params = [camera_config.f.x, camera_config.f.y, camera_config.c.x, camera_config.c.y]
     # conseguimos matriz de transformacion
-    transformation_matrix, initial_error, final_error = detector.detection_pose(detection, camera_params=camera_params, tag_size=tag_size)
+    detections = detector.detect(frame, True, camera_params=camera_params, tag_size=apriltag_config.size)
+    return detections
+
+# GET apriltag center and corners
+def get_center_corners(detection: apriltag.Detection) -> tuple:
     center = detection.center.astype(int)
     corners = detection.corners.astype(int)
-    return  transformation_matrix, center, corners
+    return center, corners
+
+# GET Transformation matrix
+def get_transformation_matrix(detection: apriltag.Detection) -> np.array:
+    # Combinar matriz de rotación y vector de traslación en una matriz de transformación homogénea
+    T = np.hstack((detection.pose_R, detection.pose_t))
+    T = np.vstack((T, [0, 0, 0, 1]))
+    return T
+
+# GET april
+def get_april(detection: apriltag.Detection, apriltag_config: ApriltagConfig) -> Apriltag:
+    center, corners = get_center_corners(detection)
+    T = get_transformation_matrix(detection)
+    # ap = Apriltag(detection.tag_id, family=detection.tag_family, size=apriltag_config.size, c)
+    return
+
+
+
 
 
 # Paint axis
-def paint_apriltag_axis(frame, center, corners):
+def paint_apriltag_axis(frame: np.ndarray, center: np.ndarray, corners: np.ndarray):
     # print(detections)
     color_white = (255, 255, 255)
     color_black = (0,0,0)
@@ -67,26 +68,37 @@ def paint_apriltag_axis(frame, center, corners):
     #  Dibujar centro en la imagen
     cv2.circle(frame, tuple(center), 3, color_black, -1)
 
-    # Mostrar la imagen con el rectángulo y el centro marcados
-    cv2.imshow('AprilTag', frame)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
 
 
 
 
 
-# PRUEBAS
 
-# extraccion de la imagen
-img = cv2.imread(str(directory / 'assets'/'apriltag_1.png'), cv2.IMREAD_COLOR)
+# -------------------- PRUEBAS --------------------------------
+
+# CONFIG
+camera_config = CameraConfig(width=1280, height=720, fx= 3008.92857, fy=3008.92857)
+apriltag_config = ApriltagConfig(family='tag36h11', size=0.015)
+
+# ADD IMAGE
+img = cv2.imread(str(Path(__file__).resolve().parent.parent / 'assets'/'apriltags_6.png'), cv2.IMREAD_COLOR)
 # Redimensiona la imagen utilizando la interpolación de área de OpenCV
-img = cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
+img = cv2.resize(img, (camera_config.resolution.x, camera_config.resolution.y), interpolation=cv2.INTER_AREA)
 img_grayscale = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+# DETECION
+detector = init_detector(families=apriltag_config.family)
+detections = get_detections(detector, img_grayscale, camera_config, apriltag_config)
 
-detector, detections = get_apriltrag_detections(frame = img_grayscale)
+# PAINT IMAGE
+for detection in detections:
+    center, corners = get_center_corners(detection)
+    paint_apriltag_axis(img, center, corners)
 
-t, center, corners = get_detection_pose(detector, detections[0], camera_params, tag_size)
 
-paint_apriltag_axis(img, center, corners)
+print(get_transformation_matrix(detections[1]))
+
+# Mostrar la imagen con el rectángulo y el centro marcados
+cv2.imshow('AprilTag', img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

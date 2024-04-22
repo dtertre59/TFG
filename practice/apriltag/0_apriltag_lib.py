@@ -121,7 +121,7 @@ rep_3d.print_3d_rep(ax, ts[0], axis_scale, 'r',ax_ref=False)
 
 #     rep_3d.print_3d_rep(ax, t, axis_scale, 'r',ax_ref=False)
 
-rep_3d.end_3d_rep(fig, ax, 'Sistema de Referencia: Camara')
+rep_3d.show_3d_rep(fig, ax, 'Sistema de Referencia: Camara')
 
 # --------------------------------- # 
 # ----- CALCULO DE DISTANCIAS ----- # 
@@ -139,7 +139,7 @@ rep_3d.print_line(ax2, a1, a2)
 distance = rep_3d.points_distance(a1, a2)
 print('distancia entre puntos: ', distance)
 
-rep_3d.end_3d_rep(fig2, ax2, '3-1')
+rep_3d.show_3d_rep(fig2, ax2, '3-1')
 
 
 
