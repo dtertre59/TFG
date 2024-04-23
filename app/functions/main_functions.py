@@ -2,7 +2,7 @@ import numpy as np
 from pathlib import Path
 import cv2
 
-import depthai_functions as daif
+# import depthai_functions as daif
 import apriltag_functions as atf
 import transformations_functions as trf
 
@@ -16,18 +16,15 @@ camera_config = CameraConfig(width=1280, height=720, fx= 3008.92857, fy=3008.928
 apriltag_config = ApriltagConfig(family='tag36h11', size=0.015)
 
 
-
 # ROBOT POSE -> Vector6D [X, Y, Z, RX, RY, RZ] # mm, rad
 APRILTAG_POSE = np.array([-0.016, -0.320, 0.017, 2.099, 2.355, -0.017])
 
 ROBOT_BASE = np.array([0, 0, 0])
 
 
-def frame_to_pos() -> list[np.ndarray]:
-    frame = daif.get_camera_frame()
-    if frame is None:
-        print('No frame')
-        return 
+# ----- FUNCTIONS ----- #
+
+def frame_to_pos(frame: np.ndarray) -> list[np.ndarray]:
     
     # Aqui tenemos imagen sin analizar
     # Redimensiona la imagen utilizando la interpolación de área de OpenCV
@@ -97,7 +94,20 @@ def move_robot_to_point(point: np.ndarray):
 # ----- CODIGO ----- # 
 
 def main():
-    reference_apriltag_t, pieze_t = frame_to_pos()
+    
+    # 1. adquirimos frame de la camara
+
+    # frame = daif.get_camera_frame()
+    # if frame is None:
+    #     print('No frame')
+    #     return 
+    
+    # 1. adquirimos imagen descargada si no estamos utilizando la camara
+    frame = cv2.imread(str(Path(__file__).resolve().parent.parent / 'assets' / 'apriltags_1.png'), cv2.IMREAD_COLOR)
+
+
+    # 
+    reference_apriltag_t, pieze_t = frame_to_pos(frame)
 
     prob, pcam, pref, ppieze = pos_to_robot_points(reference_apriltag_t, pieze_t)
 
@@ -125,5 +135,7 @@ def main():
 
     trf.show_3d_rep(fig, ax, 'Sistema de Referencia: Robot')
 
+
+# ----- PRUEBAS ----- # 
 main()
 
