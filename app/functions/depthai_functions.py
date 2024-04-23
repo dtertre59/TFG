@@ -40,7 +40,7 @@ sync.out.link(xOut.input)
 xOut.setStreamName("out")
 
 
-def get_camera_frame():
+def get_camera_frame() -> np.ndarray|None:
 
     with device:
         device.startPipeline(pipeline)
@@ -68,7 +68,7 @@ def get_camera_frame():
             if key == ord('d'):
                 print('export point cloud and rgb photo')
                 directory = Path(__file__).resolve().parent.parent
-                cv2.imwrite(filename=str(directory / 'assets' / 'apriltag_1.png'), img=frameRGB)
+                cv2.imwrite(filename=str(directory / 'assets' / 'apriltags_1.png'), img=frameRGB)
             
             if key == ord('q'):
 

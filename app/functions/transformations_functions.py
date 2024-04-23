@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 
 # POINT reference system transformation 
-def point_tansf(T: np.ndarray, point: np.ndarray) -> np.array:
+def point_tansf(T: np.ndarray, point: np.ndarray) -> np.ndarray:
     # Agrega una coordenada homogénea al punto
     h_point= np.append(point, 1)
     # Multiplica la matriz de transformación por el punto homogéneo
@@ -18,7 +18,7 @@ def point_tansf(T: np.ndarray, point: np.ndarray) -> np.array:
 
 
 # POINTS disctance
-def points_distance(point1: np.array, point2: np.array) -> float:
+def points_distance(point1: np.ndarray, point2: np.ndarray) -> float:
     # 1. forma -> trigonometria
     # point = point2 - point1
     # point *= point
@@ -93,9 +93,7 @@ def print_point(ax, point, name: str, c: str = 'k'):
     ax.scatter(point[0], point[1], point[2], c=c, marker='o', label=name)
 
 # POINT + AXIS
-def print_point_with_axis(ax, point, name, c: str = 'k', scale: float = 1):
-    axis = np.array([[scale, 0, 0], [0, scale, 0], [0, 0, scale]])  # Ejes unitarios
-
+def print_point_with_axis(ax, point, axis, name, c: str = 'k'):
     ax.scatter(point[0], point[1], point[2], c=c, marker='o', label=name)
     print_axis(ax, point, axis)
 
@@ -104,31 +102,53 @@ def print_line(ax, point1, point2, c: str = 'y'):
     ax.plot([point1[0],point2[0]], [point1[1], point2[1]], [point1[2], point2[2]], color=c)
 
 
+
+
+
+
 #-------------------PRUEBAS ----------------------------
 
 
-t_april1_to_camera = np.array([[-0.95688569, -0.23952592, -0.16430795,  0.13719614],
-                     [ 0.05192871, -0.69762885,  0.71457498,  0.03184161],
-                     [-0.28578519,  0.67523428,  0.67998933,  0.70670315],
-                     [ 0.,          0.,          0.,          1.        ]])
+# t_april1_to_camera = np.array([[-0.95688569, -0.23952592, -0.16430795,  0.13719614],
+#                      [ 0.05192871, -0.69762885,  0.71457498,  0.03184161],
+#                      [-0.28578519,  0.67523428,  0.67998933,  0.70670315],
+#                      [ 0.,          0.,          0.,          1.        ]])
 
-t_camera_to_april1 = np.linalg.inv(t_april1_to_camera)
+# t_rot_180_x = np.array([[1, 0, 0, 0],
+#                         [0, -1, 0, 0],
+#                         [0, 0, -1, 0],
+#                         [0, 0, 0, 1]])
 
-t_april2_to_camera = np.array([[ 0.98549024,  0.15646889, -0.06577595,  0.11766756],
-                            [-0.08862948,  0.80488383,  0.58677665, -0.0666505 ],
-                            [ 0.14475429, -0.57243298,  0.80707291,  0.741747  ],
-                            [ 0.,          0.,          0.,          1.        ]])
+# t_april1_to_camera = np.dot(t_april1_to_camera, t_rot_180_x)
 
-t_april1_to_robot = np.array([[1, 0, 0, -0.1075],
-                                [0, 1, 0, -0.3839],
-                                [0, 0, 1, 0.0108],
-                                [0, 0, 0, 1]])
+# print(t_april1_to_camera)
 
-t_robot_to_april1 = np.linalg.inv(t_april1_to_robot)
+# t_camera_to_april1 = np.linalg.inv(t_april1_to_camera)
+
+# t_april2_to_camera = np.array([[ 0.98549024,  0.15646889, -0.06577595,  0.11766756],
+#                             [-0.08862948,  0.80488383,  0.58677665, -0.0666505 ],
+#                             [ 0.14475429, -0.57243298,  0.80707291,  0.741747  ],
+#                             [ 0.,          0.,          0.,          1.        ]])
+
+# t_april2_to_camera = np.dot(t_april2_to_camera, t_rot_180_x)
+
+# t_camera_to_april2 = np.linalg.inv(t_april2_to_camera)
+
+# t_april1_to_robot = np.array([[1, 0, 0, -0.1075],
+#                                 [0, 1, 0, -0.3839],
+#                                 [0, 0, 1, 0.0108],
+#                                 [0, 0, 0, 1]])
+
+# t_april1_to_robot = np.array([[1, 0, 0, 1],
+#                                 [0, 1, 0, 0.],
+#                                 [0, 0, 1, 0.],
+#                                 [0, 0, 0, 1]])
+
+# t_robot_to_april1 = np.linalg.inv(t_april1_to_robot)
 
 
 
-punto_pieza_respecto_april = np.array([0.3, 0.3, 0.3])
+# punto_pieza_respecto_april = np.array([0.3, 0.3, 0.3])
 
 # t_point = point_tansf(punto_pieza_respecto_april, t_apriltag_to_robot)
 
@@ -138,45 +158,78 @@ punto_pieza_respecto_april = np.array([0.3, 0.3, 0.3])
 # SISTEMA DE REF IMTERMEDIO -> APRILTAG 1
 # SISTEMA DE REF FINAL -> BASE DEL ROBOT
 
-pcrc = np.array([0, 0, 0])
-parc = t_april1_to_camera[:3, 3]
-ppiezarc = t_april2_to_camera[:3, 3]
+# respecto de camera
+# pcrc = np.array([0, 0, 0])
+# parc = t_april1_to_camera[:3, 3]
+# ppiezarc = t_april2_to_camera[:3, 3]
 
-para = pcrc
-pcra = point_tansf(t_camera_to_april1, pcrc)
-ppiezara = point_tansf(t_camera_to_april1, ppiezarc)
-prra = point_tansf(t_robot_to_april1, [0,0,0])
+# # respecto april1
+# para = pcrc
+# pcra = point_tansf(t_camera_to_april1, pcrc)
+# ppiezara = point_tansf(t_camera_to_april1, ppiezarc)
+# prra = point_tansf(t_robot_to_april1, [0,0,0])
 
-parr = point_tansf(t_april1_to_robot, para)
-ppiezarr = point_tansf(t_april1_to_robot, ppiezara)
-pcrr = point_tansf(t_april1_to_robot, pcra)
+# # respecto del robot
+# parr = point_tansf(t_april1_to_robot, para)
+# ppiezarr = point_tansf(t_april1_to_robot, ppiezara)
+# pcrr = point_tansf(t_april1_to_robot, pcra)
 
-dr = points_distance(ppiezarr, pcrr)
-da = points_distance(ppiezara, pcra)
-dc = points_distance(ppiezarc, pcrc)
+# # distancias entre pieza y camara
+# dr = points_distance(ppiezarr, pcrr)
+# da = points_distance(ppiezara, pcra)
+# dc = points_distance(ppiezarc, pcrc)
 
-print(dr)
-print(da)
-print(dc)
+# print(dr)
+# print(da)
+# print(dc)
 
 
 # VIS
 
-fig, ax, t_camera = init_3d_rep()
+# fig, ax, t_camera = init_3d_rep()
 
-print_point_with_axis(ax, [0,0,0], 'robot')
-print_point(ax, ppiezarr, 'pieza', 'r')
-print_point(ax, pcrr, 'camara', 'b')
+# print_point_with_axis(ax, [0,0,0], 'robot')
+# print_point(ax, ppiezarr, 'pieza', 'r')
+# print_point(ax, pcrr, 'camara', 'b')
 
-show_3d_rep(fig, ax, 'Sistema de Referencia: Robot')
+# show_3d_rep(fig, ax, 'Sistema de Referencia: Robot')
 
 
-fig2, ax2, t_camera = init_3d_rep()
+# ----- RESPECTO DEL APRIL -----
+# scale = 0.5
+# axis = np.array([[scale, 0, 0], [0, scale, 0], [0, 0, scale]])  # Ejes unitarios
+# fig2, ax2, t_camera = init_3d_rep()
 
-print_point(ax2, prra, 'robot')
-print_point(ax2, ppiezara, 'pieza', 'c')
-print_point_with_axis(ax2, para, 'april', 'r')
-print_point(ax2, pcra, 'camara', 'b')
+# print_point_with_axis(ax2, para,axis , 'april', 'r')
 
-show_3d_rep(fig2, ax2, 'Sistema de Referencia: April')
+# axis_r = np.dot(t_april1_to_robot[:3, :3], axis.T).T
+# print_point_with_axis(ax2, prra, axis_r, 'robot')
+
+# axis_c = np.dot(t_april1_to_camera[:3,:3], axis.T)
+# print_point_with_axis(ax2, pcra, axis_c, 'camara', 'b')
+
+# axis_pieza = np.dot(t_camera_to_april2[:3, :3], axis_c.T).T
+# print_point_with_axis(ax2, ppiezara, axis_pieza, 'pieza', 'c')
+
+
+
+
+# show_3d_rep(fig2, ax2, 'Sistema de Referencia: April')
+
+
+# ----- RESPECTO DE LA CAMARA -----
+
+# scale = 0.5
+# axis = np.array([[scale, 0, 0], [0, scale, 0], [0, 0, scale]])  # Ejes unitarios
+# fig3, ax3, t_ident = init_3d_rep()
+
+# print_point_with_axis(ax3, pcrc,axis, 'camara', 'b')
+
+# axis_pieza = np.dot(t_april2_to_camera[:3, :3], axis.T).T
+# print_point_with_axis(ax3, ppiezarc,axis_pieza, 'pieza', 'c')
+
+# axis_a = np.dot(t_april1_to_camera[:3, :3], axis.T).T
+# print_point_with_axis(ax3, parc, axis_a, 'april', 'r')
+
+# show_3d_rep(fig3, ax3, 'Sistema de Referencia: CAmara')
 

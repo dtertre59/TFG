@@ -1,15 +1,9 @@
 
 import numpy as np
-from numpy.core.multiarray import array as array
 
-class Vector2D():
-    def __init__(self, x: float, y: float) -> None:
-        self.x = x
-        self.y = y
+from .vectors import Vector2D
 
-    
-    def __str__(self) -> str:
-        return f"Vetor2d: [x={self.x}, y={self.y}]"
+
         
 
 
@@ -20,7 +14,7 @@ class ApriltagConfig():
 
         
 class Apriltag(ApriltagConfig):
-    def __init__(self, id: int, family: str, size: float, corners: np.array, center: np.array, T: np.ndarray) -> None:
+    def __init__(self, id: int, family: str, size: float, corners: np.array, center: np.array, T: np.array) -> None:
         super().__init__(family, size)
         self.id = id
         self.corners = corners
