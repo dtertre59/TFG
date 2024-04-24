@@ -15,6 +15,7 @@ def init_detector(families: str = "tag36h11") -> apriltag.Detector:
 # GET detections
 def get_detections(detector: apriltag.Detector, frame: np.ndarray, camera_config: CameraConfig, apriltag_config: ApriltagConfig) -> list[apriltag.Detection]:
     # parametros de la camara
+    # camera_params = [3156.71852, 3129.52243, 359.097908, 239.736909]
     camera_params = [camera_config.f.x, camera_config.f.y, camera_config.c.x, camera_config.c.y]
     # transformamos imagen a escala de grises
     frame_grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -42,11 +43,11 @@ def get_transformation_matrix(detection: apriltag.Detection) -> np.ndarray:
     T = np.hstack((detection.pose_R, detection.pose_t))
     T = np.vstack((T, [0, 0, 0, 1]))
     # rotamos 180 sobre el eje x para que qede ajustada (problema de la libreria)
-    rot = np.array([[1, 0, 0, 0],
-                    [0, -1, 0, 0],
-                    [0, 0, -1, 0],
-                    [0, 0, 0, 1]])
-    T = np.dot(T, rot)
+    # rot = np.array([[1, 0, 0, 0],
+    #                 [0, -1, 0, 0],
+    #                 [0, 0, -1, 0],
+    #                 [0, 0, 0, 1]])
+    # T = np.dot(T, rot)
     return T
 
 # Paint axis

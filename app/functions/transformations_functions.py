@@ -234,7 +234,7 @@ def pixel_to_point3d(pointcloud: o3d.geometry.PointCloud, resolution, pixel) -> 
 
     # point3d = matrix[pixel[0], pixel[1]]
 
-    return point3d
+    return point3d/1000
 
 # CROP by thresholds
 def crop_pointcloud_by_thresholds(pointcloud: o3d.geometry.PointCloud, x_thresholds: np.ndarray | None = None, y_thresholds: np.ndarray | None = None, z_thresholds: np.ndarray| None = None) -> o3d.geometry.PointCloud:
