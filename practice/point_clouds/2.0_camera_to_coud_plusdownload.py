@@ -113,6 +113,7 @@ with device:
 
     first = True
     rot = 0
+    picture_counter = 0
     while device.isPipelineRunning():
         
         inMessage = q.get()
@@ -164,9 +165,10 @@ with device:
         key = cv2.waitKey(1)
         if key == ord('d'):
             print('export point cloud and rgb photo')
-            name = 'apriltags_4.png'
-            # o3d.io.write_point_cloud(str(directory / 'clouds' / 'square_lab_2.ply'), pcd)
-            cv2.imwrite(filename=str(directory / 'assets' / name), img=frameRGB)
+            name = 'april_square_2'
+            o3d.io.write_point_cloud(str(directory / 'clouds' / f'{name}_{picture_counter}.ply'), pcd)
+            cv2.imwrite(filename=str(directory / 'assets' / f'{name}_{picture_counter}.png'), img=frameRGB)
+            picture_counter += 1
         
         if key == ord('q'):
             break

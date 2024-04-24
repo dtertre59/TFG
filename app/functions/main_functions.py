@@ -2,9 +2,10 @@ import numpy as np
 from pathlib import Path
 import cv2
 
-# import depthai_functions as daif
+import depthai_functions as daif
 import apriltag_functions as atf
 import transformations_functions as trf
+import ur3e_functions as ur3f
 
 from models.camera import CameraConfig, ApriltagConfig
 
@@ -16,10 +17,15 @@ camera_config = CameraConfig(width=1280, height=720, fx= 3008.92857, fy=3008.928
 apriltag_config = ApriltagConfig(family='tag36h11', size=0.015)
 
 
-# ROBOT POSE -> Vector6D [X, Y, Z, RX, RY, RZ] # mm, rad
-APRILTAG_POSE = np.array([-0.016, -0.320, 0.017, 2.099, 2.355, -0.017])
+ROBOT_HOST = '192.168.10.222' # "localhost"
+ROBOT_PORT = 30004
+robot_config_filename = config_filename = str(Path(__file__).resolve().parent.parent / 'assets' / 'ur3e' / 'configuration_1.xml')
 
+# ROBOT POSE -> Vector6D [X, Y, Z, RX, RY, RZ] # mm, rad
 ROBOT_BASE = np.array([0, 0, 0])
+APRILTAG_POSE = np.array([-0.016, -0.320, 0.017, 2.099, 2.355, -0.017])
+PIEZE_POSE = np.array([-0.109, -0.408, 0.070, 2.099, 2.355, -0.017])
+
 
 
 # ----- FUNCTIONS ----- #
@@ -97,45 +103,61 @@ def main():
     
     # 1. adquirimos frame de la camara
 
-    # frame = daif.get_camera_frame()
-    # if frame is None:
-    #     print('No frame')
-    #     return 
+    frame = daif.get_camera_frame()
+    if frame is None:
+        print('No frame')
+        return 
     
     # 1. adquirimos imagen descargada si no estamos utilizando la camara
-    frame = cv2.imread(str(Path(__file__).resolve().parent.parent / 'assets' / 'apriltags_1.png'), cv2.IMREAD_COLOR)
+    # frame = cv2.imread(str(Path(__file__).resolve().parent.parent / 'assets' / 'apriltags_1.png'), cv2.IMREAD_COLOR)
 
 
-    # 
+    # 2. matrices de transformacion
     reference_apriltag_t, pieze_t = frame_to_pos(frame)
 
+    # 3. puntos respecto al robot
     prob, pcam, pref, ppieze = pos_to_robot_points(reference_apriltag_t, pieze_t)
 
+    # 4. mostramos puntos segun el sistema ref del robot
     print(prob)
     print(pcam)
     print(pref)
     print(ppieze)
-
     fig, ax, i = trf.init_3d_rep()
-
     scale = 0.5
     axis = np.array([[scale, 0, 0], [0, scale, 0], [0, 0, scale]])  # Ejes unitarios
-
-
     trf.print_point_with_axis(ax, prob, axis , 'base robot', 'k')
-
     # axis_r = np.dot(t_april1_to_robot[:3, :3], axis.T).T
     trf.print_point(ax, pref, 'april ref', 'g')
-
     # axis_c = np.dot(t_april1_to_camera[:3,:3], axis.T)
     trf.print_point(ax, pcam, 'camara', 'b')
-
     # axis_pieza = np.dot(t_camera_to_april2[:3, :3], axis_c.T).T
     trf.print_point(ax, ppieze, 'pieza', 'c')
-
     trf.show_3d_rep(fig, ax, 'Sistema de Referencia: Robot')
 
+    # 5. movemos robot al punto de la pieza
+    con = ur3f.connect_robot(host=ROBOT_HOST, port=ROBOT_PORT)
+    setp, watchdog, gripper = ur3f.setup_robot(con=con, config_file=config_filename)
+
+    init_pose = APRILTAG_POSE + np.array([0,0,0.120,0,0,0])
+    print('moviendo robot posicion inicial... ', init_pose)
+    # 0. robot en posicion inicial
+    ur3f.robot_move(con, setp, watchdog, init_pose)
+    ur3f.gripper_control(con,gripper=gripper,gripper_on=False)
+
+    print('move to Apriltag pose. Press enter to continue... ', APRILTAG_POSE)
+    input()
+    ur3f.robot_move(con, setp, watchdog, APRILTAG_POSE)
+
+    print('move to cuadrado... ', init_pose)
+    input()
+    ur3f.robot_move(con, setp, watchdog, init_pose)
+    ppieze_pose = np.append(ppieze, init_pose[3:])
+    ur3f.robot_move(con, setp, watchdog, ppieze_pose)
 
 # ----- PRUEBAS ----- # 
-main()
+# main()
 
+daif.get_camera_frame('april_robot_square_1')
+
+# print(APRILTAG_POSE[3:])

@@ -40,7 +40,7 @@ sync.out.link(xOut.input)
 xOut.setStreamName("out")
 
 
-def get_camera_frame() -> np.ndarray|None:
+def get_camera_frame(framename: str = 'image') -> np.ndarray|None:
 
     with device:
         device.startPipeline(pipeline)
@@ -50,6 +50,8 @@ def get_camera_frame() -> np.ndarray|None:
 
         first = True
         rot = 0
+        picture_counter = 0
+
         while device.isPipelineRunning():
             
             inMessage = q.get()
@@ -66,9 +68,10 @@ def get_camera_frame() -> np.ndarray|None:
             # teclas
             key = cv2.waitKey(1)
             if key == ord('d'):
-                print('export point cloud and rgb photo')
+                print('export picture ')
                 directory = Path(__file__).resolve().parent.parent
-                cv2.imwrite(filename=str(directory / 'assets' / 'apriltags_1.png'), img=frameRGB)
+                cv2.imwrite(filename=str(directory / 'assets' /  f'{framename}_{picture_counter}.png'), img=frameRGB)
+                picture_counter += 1
             
             if key == ord('q'):
 
