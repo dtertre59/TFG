@@ -28,6 +28,14 @@ def get_center_corners(detection: apriltag.Detection) -> tuple:
     corners = detection.corners.astype(int)
     return center, corners
 
+# GET apriltag center and x, y axis
+def get_center_x_y_axis(detection: apriltag.Detection) -> tuple:
+    center, corners = get_center_corners(detection)
+    x_axis = np.array(((corners[1] + corners[2])/2), dtype=int)
+    y_axis = np.array(((corners[2] + corners[3])/2), dtype=int)
+    
+    return center, x_axis, y_axis
+
 # GET Transformation matrix
 def get_transformation_matrix(detection: apriltag.Detection) -> np.ndarray:
     # Combinar matriz de rotación y vector de traslación en una matriz de transformación homogénea
@@ -50,8 +58,7 @@ def paint_apriltag(frame: np.ndarray, detection: apriltag.Detection) -> None:
     color_green = (0, 255, 0)
 
     id = detection.tag_id
-    center = detection.center.astype(int)
-    corners = detection.corners.astype(int)
+    center, corners = get_center_corners(detection) 
 
     # Dibujar el recuadro del AprilTag
     cv2.line(frame, tuple(corners[0]), tuple(corners[1]), color_white, 2, cv2.LINE_AA, 0)
@@ -60,8 +67,7 @@ def paint_apriltag(frame: np.ndarray, detection: apriltag.Detection) -> None:
     cv2.line(frame, tuple(corners[3]), tuple(corners[0]), color_white, 2, cv2.LINE_AA, 0)
     
     # dibujar ejes de coordenadas
-    x_axis = np.array(((corners[1] + corners[2])/2), dtype=int)
-    y_axis = np.array(((corners[2] + corners[3])/2), dtype=int)
+    center, x_axis, y_axis = get_center_x_y_axis(detection)
     # print(x_axis)
     cv2.line(frame, tuple(center), x_axis, color_red, 2, cv2.LINE_AA, 0)
     cv2.line(frame, tuple(center), y_axis, color_green, 2, cv2.LINE_AA, 0)
