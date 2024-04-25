@@ -2,10 +2,10 @@ import numpy as np
 from pathlib import Path
 import cv2
 
-# try:
-#     import depthai_functions as daif
-# except:
-#     print('no camera conection')
+try:
+    import depthai_functions as daif
+except:
+    print('no camera conection')
 
 import apriltag_functions as atf
 import transformations_functions as trf
@@ -13,11 +13,16 @@ import ur3e_functions as ur3f
 
 from models.camera import CameraConfig, ApriltagConfig
 
-
+# ---------- # 10
+# -------------------- # 20
+# ------------------------------------------------------------------------------------------------------------------------ # 120
 # ----- VARIABLES ----- # 
 
-# CONFIG
-camera_config = CameraConfig(width=1280, height=720, fx= 3008.92857, fy=3008.92857) # (3156.71852, 3129.52243, 359.097908, 239.736909)
+# CONFIG 13MP=4208x3120 -> ()  4K=3840x2160 -> (fx= 2996.7346441158315, fy=2994.755126405525) , 1920x1080 -> (fx=1498.367322, fy=1497.377563), 1280x720 -> (fx=998.911548, fy=998.2517088)
+# camera_config = CameraConfig(width=1280, height=720, fx= 998.911548, fy=998.2517088) # (3156.71852, 3129.52243, 359.097908, 239.736909)
+# camera_config = CameraConfig(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
+camera_config = CameraConfig(width=3840, height=2160, fx= 2996.7346441158315, fy=2994.755126405525) 
+
 # camera_config = CameraConfig(width=1280, height=720, fx= 2774.4, fy=2774.4)
 apriltag_config = ApriltagConfig(family='tag36h11', size=0.015)
 
@@ -28,16 +33,15 @@ robot_config_filename = config_filename = str(Path(__file__).resolve().parent.pa
 
 # ROBOT POSE -> Vector6D [X, Y, Z, RX, RY, RZ] # mm, rad
 ROBOT_BASE = np.array([0, 0, 0])
-APRILTAG_POSE = np.array([-0.016, -0.320, 0.017, 2.099, 2.355, -0.017])
+APRILTAG_POSE = np.array([-0.016, -0.320, 0, 2.099, 2.355, -0.017])
+
+# PIEZAS
+PIEZE_WIDTH = 30
+PIEZE_HEIGHT = 59.86 # mm
+
+
+
 PIEZE_POSE = np.array([-0.109, -0.408, 0.070, 2.099, 2.355, -0.017])
-
-distance_ref_pieze = trf.points_distance(APRILTAG_POSE[:3], PIEZE_POSE[:3])
-distance_rob_ref = trf.points_distance(ROBOT_BASE[:3], APRILTAG_POSE[:3])
-
-print('Real distances:')
-print('ref to pieze: ', distance_ref_pieze)
-print('rob to ref: ', distance_rob_ref)
-print()
 
 
 
@@ -154,13 +158,17 @@ def move_robot_to_point(point: np.ndarray):
     ur3f.robot_move(con, setp, watchdog, init_pose)
     ur3f.gripper_control(con,gripper=gripper,gripper_on=False)
 
-    print('move to Apriltag pose... ', APRILTAG_POSE)
-    ur3f.robot_move(con, setp, watchdog, APRILTAG_POSE)
+    april_pose = APRILTAG_POSE + np.array([0,0,0.005,0,0,0])
+    print('move to Apriltag pose... ', april_pose)
+    ur3f.robot_move(con, setp, watchdog, april_pose)
 
-    print('move to cuadrado... ', init_pose)
+    
     ur3f.robot_move(con, setp, watchdog, init_pose)
     ppieze_pose = np.append(point, init_pose[3:])
-    ur3f.robot_move(con, setp, watchdog, ppieze_pose)
+    ppieze_pose_i = ppieze_pose
+    ppieze_pose_i[2] = init_pose[2]
+    print('move to cuadrado... ', ppieze_pose_i)
+    ur3f.robot_move(con, setp, watchdog, ppieze_pose_i)
     
     return 
 
@@ -169,14 +177,14 @@ def move_robot_to_point(point: np.ndarray):
 def main():
     
     # 1. adquirimos frame de la camara
-
-    # frame = daif.get_camera_frame()
-    # if frame is None:
-    #     print('No frame')
-    #     return 
+    p, q = daif.init_camera_rgb()
+    frame = daif.get_camera_frame(p, q)
+    if frame is None:
+        print('No frame')
+        return 
     
     # 1. adquirimos imagen descargada si no estamos utilizando la camara
-    frame = cv2.imread(str(Path(__file__).resolve().parent.parent / 'assets' / 'apriltags_1.png'), cv2.IMREAD_COLOR)
+    # frame = cv2.imread(str(Path(__file__).resolve().parent.parent / 'assets' / 'apriltags_1.png'), cv2.IMREAD_COLOR)
 
 
     # 2. matrices de transformacion
@@ -203,17 +211,16 @@ def main():
     trf.show_3d_rep(fig, ax, 'Sistema de Referencia: Robot')
 
     # 5. movemos robot al punto de la pieza
-    # move_robot_to_point(ppieze)
+    move_robot_to_point(ppieze)
 
 
 
 def main_april_and_pointcloud():
     name = 'april_square_2_4'
-    directory = fr'app\assets'
 
     # 1. imagen y nube de puntos
-    frame = cv2.imread(fr'app\assets\pictures\april_square_2_4.png')
-    pointcloud = trf.import_pointcloud(fr'app\assets\pointclouds\{name}.ply')
+    frame = cv2.imread(str(Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / f'{name}.png'))
+    pointcloud = trf.import_pointcloud(str(Path(__file__).resolve().parent.parent / 'assets' / 'pointclouds' / f'{name}.ply'))
 
     # ----- APRILTAG DETECTIONS + OPENCV + FRAME ----- # 
 
@@ -242,7 +249,7 @@ def main_april_and_pointcloud():
     cv2.imshow('AprilTag', frame)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-
+    
     p_rob, p_cam, p_ref, p_pieze = pos_to_camera_points(reference_apriltag, square_apriltag)
 
     distance_ref_pieze = trf.points_distance(p_ref, p_pieze)
@@ -311,6 +318,6 @@ def main_april_and_pointcloud():
 
 # ----- PRUEBAS ----- # 
 
-# main()
-main_april_and_pointcloud()
+main()
+# main_april_and_pointcloud()
 

@@ -43,11 +43,11 @@ def get_transformation_matrix(detection: apriltag.Detection) -> np.ndarray:
     T = np.hstack((detection.pose_R, detection.pose_t))
     T = np.vstack((T, [0, 0, 0, 1]))
     # rotamos 180 sobre el eje x para que qede ajustada (problema de la libreria)
-    # rot = np.array([[1, 0, 0, 0],
-    #                 [0, -1, 0, 0],
-    #                 [0, 0, -1, 0],
-    #                 [0, 0, 0, 1]])
-    # T = np.dot(T, rot)
+    rot = np.array([[1, 0, 0, 0],
+                    [0, -1, 0, 0],
+                    [0, 0, -1, 0],
+                    [0, 0, 0, 1]])
+    T = np.dot(T, rot)
     return T
 
 # Paint axis

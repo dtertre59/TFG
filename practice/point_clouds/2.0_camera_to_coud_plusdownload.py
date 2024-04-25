@@ -119,23 +119,22 @@ with device:
         inMessage = q.get()
         inColor = inMessage["rgb"]
         inPointCloud = inMessage["pcl"]
-        cvColorFrame = inColor.getCvFrame()
-        
-        cvRGBFrame = cv2.cvtColor(cvColorFrame, cv2.COLOR_BGR2RGB)
 
+
+        cvColorFrame = inColor.getCvFrame()
+        cvRGBFrame = cv2.cvtColor(cvColorFrame, cv2.COLOR_BGR2RGB)
         # in rgb
         if inColor:
             frameRGB = inColor.getCvFrame()
-            cv2.imshow("depth", frameRGB)
+            cv2.imshow("rgb", frameRGB)
 
         # in depth camera
         inDepth = qDepth.tryGet()
-
         # imagen depth
-        # if inDepth is not None:
-        #     frame = inDepth.getCvFrame()
-        #     # pintar frame
-        #     cv2.imshow("depth", frame)
+        if inDepth is not None:
+            frame = inDepth.getCvFrame()
+            # pintar frame
+            cv2.imshow("depth", frame)
 
         # Nube de puntos
         if inPointCloud:
