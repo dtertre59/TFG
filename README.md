@@ -80,3 +80,8 @@ Google colab para ejecutar el script de entrenado de la red
 
 la libreria apriltag no puede instalarse en windows
 
+
+# ---------- # 10
+# -------------------- # 20
+# ------------------------------------------------------------------------------------------------------------------------ # 120
+

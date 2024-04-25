@@ -1,4 +1,16 @@
-# import apriltag
+"""
+        apriltag_functions.py
+
+    Este script contiene un conjunto de funciones destinadas al reconocimiento y procesamiento de apriltags en imagenes.
+    Para el reconocimiento de apriltags en imagenes hemos utilizado pupil_apriltags, 
+    ya que corrige el error de funcionamiento de la libreria apriltag en windows.
+
+
+"""
+
+
+# -------------------- PACKAGES ------------------------------------------------------------------------------------------ #
+
 import cv2
 from pathlib import Path
 import numpy as np
@@ -8,29 +20,30 @@ import pupil_apriltags as apriltag
 from models.camera import CameraConfig, ApriltagConfig, Apriltag
 
 
+# -------------------- FUNCTIONS ----------------------------------------------------------------------------------------- #
+
 # INIT detector
 def init_detector(families: str = "tag36h11") -> apriltag.Detector:
     return apriltag.Detector(families=families)
 
 # GET detections
 def get_detections(detector: apriltag.Detector, frame: np.ndarray, camera_config: CameraConfig, apriltag_config: ApriltagConfig) -> list[apriltag.Detection]:
-    # parametros de la camara
-    # camera_params = [3156.71852, 3129.52243, 359.097908, 239.736909]
+    # Camera params
     camera_params = [camera_config.f.x, camera_config.f.y, camera_config.c.x, camera_config.c.y]
-    # transformamos imagen a escala de grises
+    # frame to grayscale
     frame_grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    # detecciones
+    # detections
     detections = detector.detect(frame_grayscale, True, camera_params=camera_params, tag_size=apriltag_config.size)
     return detections
 
 # GET apriltag center and corners
-def get_center_corners(detection: apriltag.Detection) -> tuple:
+def get_center_corners(detection: apriltag.Detection) -> tuple[np.ndarray]:
     center = detection.center.astype(int)
     corners = detection.corners.astype(int)
     return center, corners
 
 # GET apriltag center and x, y axis
-def get_center_x_y_axis(detection: apriltag.Detection) -> tuple:
+def get_center_x_y_axis(detection: apriltag.Detection) -> tuple[np.ndarray]:
     center, corners = get_center_corners(detection)
     x_axis = np.array(((corners[1] + corners[2])/2), dtype=int)
     y_axis = np.array(((corners[2] + corners[3])/2), dtype=int)
@@ -39,10 +52,10 @@ def get_center_x_y_axis(detection: apriltag.Detection) -> tuple:
 
 # GET Transformation matrix
 def get_transformation_matrix(detection: apriltag.Detection) -> np.ndarray:
-    # Combinar matriz de rotación y vector de traslación en una matriz de transformación homogénea
+    # "Combine rotation matrix and translation vector into a homogeneous transformation matrix
     T = np.hstack((detection.pose_R, detection.pose_t))
     T = np.vstack((T, [0, 0, 0, 1]))
-    # rotamos 180 sobre el eje x para que qede ajustada (problema de la libreria)
+    # Rotate 180 degrees over the x-axis to get it properly aligned (library issue)
     rot = np.array([[1, 0, 0, 0],
                     [0, -1, 0, 0],
                     [0, 0, -1, 0],
@@ -93,8 +106,8 @@ def get_april(detection: apriltag.Detection, apriltag_config: ApriltagConfig) ->
 
 
 
+# -------------------- TRAINNING ----------------------------------------------------------------------------------------- #
 
-# -------------------- PRUEBAS --------------------------------
 
 # # CONFIG
 # camera_config = CameraConfig(width=1280, height=720, fx= 3008.92857, fy=3008.92857)
