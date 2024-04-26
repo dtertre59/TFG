@@ -1,3 +1,13 @@
+"""
+        ur3e_functions.py
+
+    Este Script contiene las funciones de interacción con el robot ur3e, de universal robots.
+    La libreria utilizada es rtde (Real time data exchange), proporcionada por el mismo fabricante.
+
+"""
+
+# -------------------- PACKAGES ------------------------------------------------------------------------------------------ #
+
 import sys
 import time
 
@@ -9,6 +19,9 @@ import logging
 import rtde.rtde as rtde
 import rtde.rtde_config as rtde_config
 
+
+# -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
+
 p_axis = [-0.1075, -0.3839, 0.0108, 2.035, 2.411, 0]
 
 p_inicial = [0.133, -0.425, 0.478, 1.111, 1.352, -1.342]
@@ -16,6 +29,9 @@ p_limite_11 = [-0.152, -0.425, 0.560, 1.111, 1.352, -1.342]
 p_limite_12 = [0.218, -0.425, 0.560, 1.111, 1.352, -1.342]
 p_limite_21 = [-0.152, -0.425, 0.146, 1.111, 1.352, -1.342]
 p_limite_22 = [0.218, -0.425, 0.146, 1.111, 1.352, -1.342]
+
+
+# -------------------- FUNCTIONS ----------------------------------------------------------------------------------------- #
 
 # robot connection
 def connect_robot(host: str, port: str)-> rtde.RTDE:
@@ -159,7 +175,7 @@ def gripper_control(con: rtde.RTDE, gripper, gripper_on: bool):
     return
 
 
-
+# -------------------- TRAINNING ----------------------------------------------------------------------------------------- #
 
 def main():
     # GOLBAL VARIABLES

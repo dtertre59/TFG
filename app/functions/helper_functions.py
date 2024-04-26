@@ -25,7 +25,7 @@ import open3d as o3d
 
 # -------------------- OPERACIONES --------------------------------------------------------------------------------------- #
 
-# POINT reference system transformation 
+# POINT reference system transformation  FALTA EN INGLES
 def point_tansf(T: np.ndarray, point: np.ndarray) -> np.ndarray:
     # Agrega una coordenada homogénea al punto
     h_point= np.append(point, 1)
@@ -119,9 +119,9 @@ def add_axes(ax: Axes, point: np.ndarray, axes: np.ndarray, length: float = 1) -
     return 
 
 # POINT + AXES
-def add_point_with_axes(ax: Axes, point: np.ndarray, axis: np.ndarray, name: str, c: str = 'k') -> None:
+def add_point_with_axes(ax: Axes, point: np.ndarray, axes: np.ndarray, name: str, c: str = 'k') -> None:
     ax.scatter(point[0], point[1], point[2], c=c, marker='o', label=name)
-    add_axes(ax, point, axis)
+    add_axes(ax, point, axes)
     return
 
 
@@ -240,6 +240,14 @@ def import_pointcloud(filename: str) -> o3d.geometry.PointCloud:
     pointcloud.points = o3d.utility.Vector3dVector(points)
     return pointcloud
 
+# INVERT pointcloud
+def invert_pointcloud(pointcloud: o3d.geometry.PointCloud) -> o3d.geometry.PointCloud:
+    # points
+    points = np.asarray(pointcloud.points)
+    # We invert points with respect to the x-axis because it's mirrored
+    points[:,0] *= -1
+    pointcloud.points = o3d.utility.Vector3dVector(points)
+    return pointcloud
 
 # PIXEL to 3D point
 def pixel_to_point3d(pointcloud: o3d.geometry.PointCloud, resolution: np.ndarray, pixel: np.ndarray) -> np.ndarray:

@@ -1,13 +1,22 @@
-import depthai as dai
+"""
+        depthai_functions.py
+
+    Este script contiene la agrupación de funciones para la interacción de la camara OAK-D LITE.
+    Utilizamos la libreria depthai, proporcionada por el fabricante (luxonis)
+
+
+"""
+
+# -------------------- PACKAGES ------------------------------------------------------------------------------------------ #
+
 import numpy as np
-import cv2
 import sys
 from pathlib import Path
-
+import cv2
 import open3d as o3d
+import depthai as dai
 
 
-# ------------------------------------------------------------------------------------------------------------------------ # 
 # -------------------- FUNCTIONS ----------------------------------------------------------------------------------------- #
 
 # INIT camera RGB
@@ -47,60 +56,60 @@ def init_camera_rgb():
 
     return pipeline, device
 
-# INIT pointcloud
-# def init_pointcloud(pipeline: dai.Pipeline):
-#     monoLeft = pipeline.create(dai.node.MonoCamera)
-#     monoRight = pipeline.create(dai.node.MonoCamera)
+# INIT pointcloud -------------- MEJORAR --------------- CREO QUE NO VA
+def init_pointcloud(pipeline: dai.Pipeline):
+    monoLeft = pipeline.create(dai.node.MonoCamera)
+    monoRight = pipeline.create(dai.node.MonoCamera)
 
-#     depth = pipeline.create(dai.node.StereoDepth)
-#     pointcloud = pipeline.create(dai.node.PointCloud)
-#     sync = pipeline.create(dai.node.Sync)
-#     xOut = pipeline.create(dai.node.XLinkOut)
-#     xOut.input.setBlocking(False)
-
-
-#     # Properties MONO CAMS
-#     monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_480_P)
-#     monoLeft.setCamera("left")
-
-#     monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_480_P)
-#     monoRight.setCamera("right")
+    depth = pipeline.create(dai.node.StereoDepth)
+    pointcloud = pipeline.create(dai.node.PointCloud)
+    sync = pipeline.create(dai.node.Sync)
+    xOut = pipeline.create(dai.node.XLinkOut)
+    xOut.input.setBlocking(False)
 
 
-#     depth.setDefaultProfilePreset(dai.node.StereoDepth.PresetMode.HIGH_DENSITY)
-#     # depth.initialConfig.setMedianFilter(dai.MedianFilter.KERNEL_7x7)
+    # Properties MONO CAMS
+    monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_480_P)
+    monoLeft.setCamera("left")
 
-#     depth.setLeftRightCheck(True)
-#     # depth.setExtendedDisparity(False)
-#     depth.setSubpixel(True)
-#     depth.setDepthAlign(dai.CameraBoardSocket.CAM_A)
-
-#     config = depth.initialConfig.get()
-#     config.postProcessing.thresholdFilter.minRange = 100
-#     config.postProcessing.thresholdFilter.maxRange = 1000
-#     depth.initialConfig.set(config)
-
-#     # otras caracteristicas
-#     monoLeft.out.link(depth.left)
-#     monoRight.out.link(depth.right)
-
-#     depth.depth.link(pointcloud.inputDepth)
+    monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_480_P)
+    monoRight.setCamera("right")
 
 
-#     pointcloud.outputPointCloud.link(sync.inputs["pcl"])
-#     pointcloud.initialConfig.setSparse(False)
-#     sync.out.link(xOut.input)
-#     xOut.setStreamName("pointcloud out")
+    depth.setDefaultProfilePreset(dai.node.StereoDepth.PresetMode.HIGH_DENSITY)
+    # depth.initialConfig.setMedianFilter(dai.MedianFilter.KERNEL_7x7)
 
-#     inConfig = pipeline.create(dai.node.XLinkIn)
-#     inConfig.setStreamName("config")
-#     inConfig.out.link(pointcloud.inputConfig)
+    depth.setLeftRightCheck(True)
+    # depth.setExtendedDisparity(False)
+    depth.setSubpixel(True)
+    depth.setDepthAlign(dai.CameraBoardSocket.CAM_A)
+
+    config = depth.initialConfig.get()
+    config.postProcessing.thresholdFilter.minRange = 100
+    config.postProcessing.thresholdFilter.maxRange = 1000
+    depth.initialConfig.set(config)
+
+    # otras caracteristicas
+    monoLeft.out.link(depth.left)
+    monoRight.out.link(depth.right)
+
+    depth.depth.link(pointcloud.inputDepth)
 
 
-#     xoutDepth = pipeline.create(dai.node.XLinkOut)
-#     xoutDepth.setStreamName("depth")
+    pointcloud.outputPointCloud.link(sync.inputs["pcl"])
+    pointcloud.initialConfig.setSparse(False)
+    sync.out.link(xOut.input)
+    xOut.setStreamName("pointcloud out")
 
-#     depth.disparity.link(xoutDepth.input)
+    inConfig = pipeline.create(dai.node.XLinkIn)
+    inConfig.setStreamName("config")
+    inConfig.out.link(pointcloud.inputConfig)
+
+
+    xoutDepth = pipeline.create(dai.node.XLinkOut)
+    xoutDepth.setStreamName("depth")
+
+    depth.disparity.link(xoutDepth.input)
 
 
 
@@ -166,6 +175,8 @@ def get_camera_frame(pipeline, device, framename: str = 'image') -> np.ndarray|N
         cv2.destroyAllWindows()
         return 
     
+
+# -------------------- TRAINNING ----------------------------------------------------------------------------------------- #
 
 
 # pipeline, device = init_camera_rgb()
