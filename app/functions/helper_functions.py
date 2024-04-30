@@ -53,7 +53,7 @@ def points_distance(point1: np.ndarray, point2: np.ndarray) -> float:
 # -------------------- MATPLOT ------------------------------------------------------------------------------------------- #
 
 # INIT matplot3d
-def init_mat3d(ref_point1: np.ndarray = np.array([1,1,1]), ref_point2: np.ndarray = np.array([1,1,1])) -> tuple[Figure, Axes]:
+def init_mat3d(ref_point1: np.ndarray = np.array([1,1,1]), ref_point2: np.ndarray = np.array([-1,-1,-1])) -> tuple[Figure, Axes]:
     # Create figure and 3d axis
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')

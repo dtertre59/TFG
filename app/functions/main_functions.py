@@ -159,6 +159,40 @@ def pos_to_ref_points(t_ref_to_cam, t_pieze_to_cam):
 
     return pref_ref, ppieze_ref, prob_ref, pcam_ref, t_ref_to_cam, t_pieze_to_cam, t_ref_to_robot
 
+def pieze_point_to_robot_ref(t_ref_to_cam, t_pieze_to_cam):
+    # puntos de origen de los sistemas de coordenadas
+    pcam_cam = pref_ref = ppieze_pieze = prob_rob = np.array([0 ,0, 0])
+
+    # puntos respecto de la camara (ref, pieze )
+    pref_cam = hf.point_tansf(t_ref_to_cam, pref_ref)
+    ppieze_cam = hf.point_tansf(t_pieze_to_cam, ppieze_pieze)
+    
+    # puntos respecto de ref (cam -> ref)
+    pcam_ref = hf.point_tansf(np.linalg.inv(t_ref_to_cam), pcam_cam)
+    ppieze_ref = hf.point_tansf(np.linalg.inv(t_ref_to_cam), ppieze_cam)
+
+    # puntos respecto a la base del robot
+    t_ref_to_robot = np.array([[1, 0, 0, APRILTAG_POSE[0]],
+                               [0, 1, 0, APRILTAG_POSE[1]],
+                               [0, 0, 1, APRILTAG_POSE[2]],
+                               [0, 0, 0, 1]])
+    
+    pcam_rob = hf.point_tansf(t_ref_to_robot, pcam_ref)
+    pref_rob = hf.point_tansf(t_ref_to_robot, pref_ref)
+    ppieze_rob = hf.point_tansf(t_ref_to_robot, ppieze_ref)
+
+    prob_ref = hf.point_tansf(np.linalg.inv(t_ref_to_robot), prob_rob)
+
+
+    # t_pieze_to_cam -> t_cam_to_ref -> t_ref_to_robot
+    # t_pieze_to_ref = np.dot(np.linalg.inv(t_ref_to_cam), t_pieze_to_cam)
+
+    t_pieze_to_ref = np.dot(np.linalg.inv(t_ref_to_cam), t_pieze_to_cam)
+    t_pieze_to_robot = np.dot(t_ref_to_robot,t_pieze_to_ref)
+
+    return t_pieze_to_robot
+
+
 # matrizes de transformacion de los puntos a la camara -> puntos respecto del rovbot
 def pos_to_robot_points(t_ref_to_cam, t_pieze_to_cam):
     # puntos de origen de los sistemas de coordenadas
@@ -254,6 +288,261 @@ def main():
     move_robot_to_point(ppieze)
 
 
+def main_simple_april_camref():
+    name = 'april_square_2_4'
+
+    # 1. frame and pointcloud
+    frame = cv2.imread(str(Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / f'{name}.png'))
+
+    # ----- APRILTAG DETECTIONS + OPENCV + FRAME ----- # 
+
+    #2.  detections
+    detections = frame_to_apriltag_detections(frame) 
+    if not detections:
+        print('No detections')
+        return
+    
+    # 2.1 paint frame
+    reference_apriltag = None
+    for detection in detections:
+        # encontramos apriltag de referencia con el robot: tag_id = 4 (conocemos su posicion respecto a la base del robot)
+        if detection.tag_id == 4:
+            reference_apriltag = detection
+        else:
+            square_apriltag = detection
+        # paint apriltags in the frame
+        atf.paint_apriltag(frame, detection)
+
+    # reference_apriltag = square_apriltag
+
+    # Show frame
+    cv2.imshow('AprilTag', frame)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    
+    # Points REFEREMCE APRIL SISTEM --------------------------------
+    
+    t_ref_to_cam = atf.get_transformation_matrix(reference_apriltag)
+
+    pref_cam = hf.point_tansf(t_ref_to_cam, [0,0,0])
+    pcam_cam = np.array([0,0,0])
+
+    # cam_axes = np.eye(3, 3) # matriz identidad
+    size = 0.2
+    cam_axes = np.array([[size, 0, 0],
+                         [0, size, 0],
+                         [0, 0, size]])
+    ref_axes = np.dot(t_ref_to_cam[:3, :3], cam_axes.T).T
+
+
+    # ----- MATPLOT ------------------ # 
+
+    fig, ax = hf.init_mat3d()
+
+    hf.add_point_with_axes(ax, pcam_cam, cam_axes, 'camera', 'b')
+    hf.add_point_with_axes(ax, pref_cam, ref_axes, 'ref', 'r')
+
+
+
+
+
+    hf.show_mat3d(fig, ax, 'apriltags representation')
+
+    return 
+
+def main_simple_april_ref():
+    name = 'april_square_2_4'
+
+    # 1. frame and pointcloud
+    frame = cv2.imread(str(Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / f'{name}.png'))
+
+    # ----- APRILTAG DETECTIONS + OPENCV + FRAME ----- # 
+
+    #2.  detections
+    detections = frame_to_apriltag_detections(frame) 
+    if not detections:
+        print('No detections')
+        return
+    
+    # 2.1 paint frame
+    reference_apriltag = None
+    for detection in detections:
+        # encontramos apriltag de referencia con el robot: tag_id = 4 (conocemos su posicion respecto a la base del robot)
+        if detection.tag_id == 4:
+            reference_apriltag = detection
+        else:
+            square_apriltag = detection
+        # paint apriltags in the frame
+        atf.paint_apriltag(frame, detection)
+
+    # reference_apriltag = square_apriltag
+
+    # Show frame
+    cv2.imshow('AprilTag', frame)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    
+    # Points REFEREMCE APRIL SISTEM --------------------------------
+    
+    t_ref_to_cam = atf.get_transformation_matrix(reference_apriltag)
+    t_cam_to_ref = np.linalg.inv(t_ref_to_cam)
+
+    pref_ref = np.array([0,0,0])
+    pcam_ref = hf.point_tansf(t_cam_to_ref, [0,0,0])
+
+    # cam_axes = np.eye(3, 3) # matriz identidad
+    size = 0.2
+    ref_axes = np.array([[size, 0, 0],
+                         [0, size, 0],
+                         [0, 0, size]])
+    cam_axes = np.dot(t_cam_to_ref[:3, :3], ref_axes.T).T
+
+    # ----- MATPLOT ------------------ # 
+
+    fig, ax = hf.init_mat3d()
+
+    hf.add_point_with_axes(ax, pcam_ref, cam_axes, 'camera', 'b')
+    hf.add_point_with_axes(ax, pref_ref, ref_axes, 'ref', 'r')
+
+    hf.show_mat3d(fig, ax, 'apriltags representation')
+
+    return 
+
+def main_simple_april_camref_ref_pluspieze():
+    name = 'april_square_2_4'
+
+    # 1. frame and pointcloud
+    frame = cv2.imread(str(Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / f'{name}.png'))
+
+    # ----- APRILTAG DETECTIONS + OPENCV + FRAME ----- # 
+
+    #2.  detections
+    detections = frame_to_apriltag_detections(frame) 
+    if not detections:
+        print('No detections')
+        return
+    
+    # 2.1 paint frame
+    reference_apriltag = None
+    for detection in detections:
+        # encontramos apriltag de referencia con el robot: tag_id = 4 (conocemos su posicion respecto a la base del robot)
+        if detection.tag_id == 4:
+            reference_apriltag = detection
+        else:
+            square_apriltag = detection
+        # paint apriltags in the frame
+        atf.paint_apriltag(frame, detection)
+
+
+    # Show frame
+    cv2.imshow('AprilTag', frame)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    
+    # Points REFEREMCE APRIL SISTEM --------------------------------
+
+    t_ref_to_cam = atf.get_transformation_matrix(reference_apriltag)
+    t_cam_to_ref = np.linalg.inv(t_ref_to_cam)
+
+    t_pieze_to_cam = atf.get_transformation_matrix(square_apriltag)
+    t_cam_to_pieze = np.linalg.inv(t_pieze_to_cam)
+
+    t_pieze_to_ref = np.dot(t_cam_to_ref, t_pieze_to_cam)
+    t_ref_to_pieze = np.linalg.inv(t_pieze_to_ref)
+
+    pcam_cam = np.array([0,0,0])
+    pref_cam = hf.point_tansf(t_ref_to_cam, [0,0,0])
+    ppieze_cam = hf.point_tansf(t_pieze_to_cam, [0,0,0])
+
+    size = 0.2
+    cam_axes = np.array([[size, 0, 0],
+                         [0, size, 0],
+                         [0, 0, size]])
+    ref_axes = np.dot(t_ref_to_cam[:3, :3], cam_axes.T).T
+    ppieze_axes = np.dot(t_pieze_to_cam[:3, :3], cam_axes.T).T
+
+    # ----- MATPLOT ------------------ # 
+
+    fig, ax = hf.init_mat3d()
+
+    hf.add_point_with_axes(ax, pcam_cam, cam_axes, 'camera', 'b')
+    hf.add_point_with_axes(ax, pref_cam, ref_axes, 'ref', 'r')
+    hf.add_point_with_axes(ax, ppieze_cam, ppieze_axes, 'square', 'k')
+
+    hf.show_mat3d(fig, ax, 'apriltags representation')
+
+    return 
+
+# ESTE ES EL BUENO
+def main_simple_april_ref_pluspieze():
+    name = 'april_square_2_4'
+
+    # 1. frame and pointcloud
+    frame = cv2.imread(str(Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / f'{name}.png'))
+
+    # ----- APRILTAG DETECTIONS + OPENCV + FRAME ----- # 
+
+    #2.  detections
+    detections = frame_to_apriltag_detections(frame) 
+    if not detections:
+        print('No detections')
+        return
+    
+    # 2.1 paint frame
+    reference_apriltag = None
+    for detection in detections:
+        # encontramos apriltag de referencia con el robot: tag_id = 4 (conocemos su posicion respecto a la base del robot)
+        if detection.tag_id == 4:
+            reference_apriltag = detection
+        else:
+            square_apriltag = detection
+        # paint apriltags in the frame
+        atf.paint_apriltag(frame, detection)
+
+
+    # Show frame
+    cv2.imshow('AprilTag', frame)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    
+    # Points REFEREMCE APRIL SISTEM --------------------------------
+    
+    t_ref_to_cam = atf.get_transformation_matrix(reference_apriltag)
+    t_cam_to_ref = np.linalg.inv(t_ref_to_cam)
+
+    t_pieze_to_cam = atf.get_transformation_matrix(square_apriltag)
+    t_cam_to_pieze = np.linalg.inv(t_pieze_to_cam)
+
+    t_pieze_to_ref = np.dot(t_cam_to_ref, t_pieze_to_cam)
+    t_ref_to_pieze = np.linalg.inv(t_pieze_to_ref)
+
+    pref_ref = np.array([0,0,0])
+    pcam_ref = hf.point_tansf(t_cam_to_ref, [0,0,0])
+
+    ppieze_ref = hf.point_tansf(t_pieze_to_ref, [0,0,0])
+
+    # cam_axes = np.eye(3, 3) # matriz identidad
+    size = 0.2
+    ref_axes = np.array([[size, 0, 0],
+                         [0, size, 0],
+                         [0, 0, size]])
+    cam_axes = np.dot(t_cam_to_ref[:3, :3], ref_axes.T).T
+
+    ppieze_axes = np.dot(t_pieze_to_ref[:3, :3], ref_axes.T).T
+    # ----- MATPLOT ------------------ # 
+
+    fig, ax = hf.init_mat3d()
+
+    hf.add_point_with_axes(ax, pcam_ref, cam_axes, 'camera', 'b')
+    hf.add_point_with_axes(ax, pref_ref, ref_axes, 'ref', 'r')
+    hf.add_point_with_axes(ax, ppieze_ref, ppieze_axes, 'square', 'k')
+    
+
+    hf.show_mat3d(fig, ax, 'apriltags representation')
+
+    return 
+
+# BIEN TAMBIEN
 def main_april():
     name = 'april_square_2_4'
 
@@ -290,7 +579,8 @@ def main_april():
     t_ref_to_cam = t_ref_to_cam
 
     t_cam_to_pieze = np.linalg.inv(t_pieze_to_cam)
-    t_ref_to_pieze = np.dot(t_ref_to_cam, t_cam_to_pieze)
+
+    t_pieze_to_ref = np.dot(np.linalg.inv(t_ref_to_cam), t_pieze_to_cam)
 
 
     # cam_axes = np.eye(3, 3) # matriz identidad
@@ -298,9 +588,9 @@ def main_april():
     ref_axes = np.array([[size, 0, 0],
                          [0, size, 0],
                          [0, 0, size]])
-    cam_axes = np.dot(t_ref_to_cam[:3, :3], ref_axes.T).T
-    pieze_axes = np.dot(t_ref_to_pieze[:3,:3], ref_axes.T).T
-    rob_axes = np.dot(t_ref_to_robot[:3,:3],ref_axes.T).T
+    cam_axes = np.dot(np.linalg.inv(t_ref_to_cam)[:3, :3], ref_axes.T).T
+    pieze_axes = np.dot(t_pieze_to_ref[:3,:3], ref_axes.T).T
+    rob_axes = np.dot(np.linalg.inv(t_ref_to_robot)[:3,:3],ref_axes.T).T
 
     # ----- MATPLOT ------------------ # 
 
@@ -317,6 +607,74 @@ def main_april():
     hf.show_mat3d(fig, ax, 'apriltags representation')
 
     return 
+
+def main_april_v2():
+    name = 'april_square_2_4'
+
+    # 1. frame and pointcloud
+    frame = cv2.imread(str(Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / f'{name}.png'))
+
+    # ----- APRILTAG DETECTIONS + OPENCV + FRAME ----- # 
+
+    #2.  detections
+    detections = frame_to_apriltag_detections(frame) 
+    if not detections:
+        print('No detections')
+        return
+    
+    # 2.1 paint frame
+    reference_apriltag = None
+    for detection in detections:
+        # encontramos apriltag de referencia con el robot: tag_id = 4 (conocemos su posicion respecto a la base del robot)
+        if detection.tag_id == 4:
+            reference_apriltag = detection
+        else:
+            square_apriltag = detection
+        # paint apriltags in the frame
+        atf.paint_apriltag(frame, detection)
+
+    # Show frame
+    cv2.imshow('AprilTag', frame)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    
+    # Points REFEREMCE APRIL SISTEM --------------------------------
+    t_ref_to_cam = atf.get_transformation_matrix(reference_apriltag)
+    t_pieze_to_cam = atf.get_transformation_matrix(square_apriltag)
+
+    t_pieze_to_robot  = pieze_point_to_robot_ref(t_ref_to_cam, t_pieze_to_cam)
+
+    t_cam_to_robot = np.dot( t_pieze_to_robot, np.linalg.inv(t_pieze_to_cam))
+    
+    t_ref_to_robot = np.dot(t_cam_to_robot, t_ref_to_cam)
+    
+    ppieze = hf.point_tansf(t_pieze_to_robot, [0,0,0])
+    pcam = hf.point_tansf(t_cam_to_robot, [0,0,0])
+    pref = hf.point_tansf(t_ref_to_robot, [0,0,0])
+    probot = np.array([0,0,0])
+
+    # cam_axes = np.eye(3, 3) # matriz identidad
+    size = 0.2
+    robot_axes = np.array([[size, 0, 0],
+                         [0, size, 0],
+                         [0, 0, size]])
+    cam_axes = np.dot(t_cam_to_robot[:3, :3], robot_axes.T).T
+    pieze_axes = np.dot(t_pieze_to_robot[:3,:3], robot_axes.T).T
+    ref_axes = robot_axes
+
+    # ----- MATPLOT ------------------ # 
+
+    fig, ax = hf.init_mat3d()
+
+    hf.add_point_with_axes(ax, pcam, cam_axes, 'camera', 'b')
+    hf.add_point_with_axes(ax, pref, ref_axes, 'ref', 'r')
+    hf.add_point_with_axes(ax, ppieze, pieze_axes, 'pieze', 'g')
+    hf.add_point_with_axes(ax, probot, robot_axes, 'robot', 'k')
+
+    hf.show_mat3d(fig, ax, 'apriltags representation')
+
+    return 
+
 
 def main_april_and_pointcloud():
     name = 'april_square_2_4'
@@ -435,6 +793,11 @@ def main_april_and_pointcloud():
 # ----- PRUEBAS ----- # 
 
 # main()
-main_april()
+# main_simple_april_camref()
+# main_simple_april_ref()
+# main_simple_april_camref_ref_pluspieze()
+# main_simple_april_ref_pluspieze()
+# main_april()
+main_april_v2()
 # main_april_and_pointcloud()
 
