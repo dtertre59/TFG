@@ -18,12 +18,13 @@ import numpy as np
 from pathlib import Path
 import cv2
 
-import depthai_functions as daif
-import apriltag_functions as atf
-import helper_functions as hf
-import ur3e_functions as ur3f
+import functions.depthai_functions as daif
+import functions.helper_functions as hf
+import functions.ur3e_functions as ur3f
 
-from models.camera import CameraConfig, ApriltagConfig
+import functions.apriltag_functions as atf
+
+from functions.models.camera import CameraConfig, ApriltagConfig
 
 
 
@@ -56,6 +57,22 @@ PIEZE_POSE = np.array([-0.109, -0.408, 0.070, 2.099, 2.355, -0.017])
 
 
 # -------------------- FUNCTIONS ----------------------------------------------------------------------------------------- #
+
+def init_camera_and_visualize():
+    pipeline, device = daif.init_camera_rgb()
+    daif.visualize_camera_frame(pipeline, device)
+    return
+
+def init_camera_visualize_trigger_detection(frame):
+    # ESTUDIAR DECORADORES
+    def trigger_function_nn(frame):
+        pass
+    def trigger_function_apriltags():
+        pass
+    # 1. es necesario enviar una funcion que se ejecute en la otra funcion analizando cada frame y si se cumple que lance un trigger o devuelva el frame detectado
+    frame = init_camera_and_visualize(trigger_function_nn)
+    
+    pass
 
 
 def frame_to_apriltag_detections(frame: np.ndarray):
@@ -798,6 +815,6 @@ def main_april_and_pointcloud():
 # main_simple_april_camref_ref_pluspieze()
 # main_simple_april_ref_pluspieze()
 # main_april()
-main_april_v2()
+# main_april_v2()
 # main_april_and_pointcloud()
 

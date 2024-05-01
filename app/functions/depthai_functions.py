@@ -112,6 +112,46 @@ def init_pointcloud(pipeline: dai.Pipeline):
     depth.disparity.link(xoutDepth.input)
 
 
+def visualize_camera_frame(pipeline, device, framename: str = 'image') -> np.ndarray|None:
+
+    with device:
+        device.startPipeline(pipeline)
+        
+        q = device.getOutputQueue(name="rgb out", maxSize=4, blocking=False)
+
+        while device.isPipelineRunning():
+            
+            inMessage = q.get()
+            inColor = inMessage["rgb"]
+            cvColorFrame = inColor.getCvFrame()
+            
+            cvRGBFrame = cv2.cvtColor(cvColorFrame, cv2.COLOR_BGR2RGB)
+
+            
+
+            # ----- in rgb
+            if inColor:
+                frameRGB = inColor.getCvFrame()
+                frame = cv2.resize(frameRGB, (1280, 720))
+                cv2.imshow("rgb", frame)
+
+
+
+            # ----- teclas
+            key = cv2.waitKey(1)
+            
+            if key == ord('q'):
+
+                break
+
+            if key == ord('r'):
+                cv2.destroyAllWindows()
+                return frameRGB
+
+        cv2.destroyAllWindows()
+        return 
+
+
 def get_camera_frame(pipeline, device, framename: str = 'image') -> np.ndarray|None:
 
     with device:
@@ -177,8 +217,8 @@ def get_camera_frame(pipeline, device, framename: str = 'image') -> np.ndarray|N
 # -------------------- TRAINNING ----------------------------------------------------------------------------------------- #
 
 
-pipeline, device = init_camera_rgb()
+# pipeline, device = init_camera_rgb()
 # # init_pointcloud(pipeline)
 
-get_camera_frame(pipeline, device, 'square_1')
+# get_camera_frame(pipeline, device, 'square_1')
     

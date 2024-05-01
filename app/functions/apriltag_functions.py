@@ -17,7 +17,7 @@ import numpy as np
 
 import pupil_apriltags as apriltag
 
-from models.camera import CameraConfig, ApriltagConfig, Apriltag
+from functions.models.camera import CameraConfig, ApriltagConfig, Apriltag
 
 
 # -------------------- FUNCTIONS ----------------------------------------------------------------------------------------- #
