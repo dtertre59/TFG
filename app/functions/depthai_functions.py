@@ -34,7 +34,7 @@ def init_camera_rgb():
 
     # Properties RGB CAM
     camRgb.setBoardSocket(dai.CameraBoardSocket.CAM_A)
-    camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_4_K)
+    camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
 
     camRgb.setFps(15)
     # if 1: camRgb.setIspScale(2, 3)
@@ -112,8 +112,6 @@ def init_pointcloud(pipeline: dai.Pipeline):
     depth.disparity.link(xoutDepth.input)
 
 
-
-
 def get_camera_frame(pipeline, device, framename: str = 'image') -> np.ndarray|None:
 
     with device:
@@ -155,7 +153,7 @@ def get_camera_frame(pipeline, device, framename: str = 'image') -> np.ndarray|N
             key = cv2.waitKey(1)
             if key == ord('d') and frameRGB is not None:
                 print('export picture ')
-                directory = Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / f'{framename}_{picture_counter}.png'
+                directory = Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / 'train' / 'square' / f'{framename}.{picture_counter}.png'
                 print(directory)
                 try:
                     cv2.imwrite(filename=str(directory), img=frameRGB)
@@ -179,8 +177,8 @@ def get_camera_frame(pipeline, device, framename: str = 'image') -> np.ndarray|N
 # -------------------- TRAINNING ----------------------------------------------------------------------------------------- #
 
 
-# pipeline, device = init_camera_rgb()
+pipeline, device = init_camera_rgb()
 # # init_pointcloud(pipeline)
 
-# get_camera_frame(pipeline, device, 'new')
+get_camera_frame(pipeline, device, 'square_1')
     
