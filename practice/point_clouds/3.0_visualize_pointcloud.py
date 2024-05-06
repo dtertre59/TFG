@@ -4,7 +4,7 @@ import numpy as np
 
 from pathlib import Path
 
-cloud_name = 'square_lab_2_crop'
+cloud_name = 'square_lab_2'
 image_name = 'square_lab_2'
 # import point cloud
 pointcloud = o3d.io.read_point_cloud(str(Path(__file__).resolve().parent / 'clouds' / f'{cloud_name}.ply'))

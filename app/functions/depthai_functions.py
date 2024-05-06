@@ -112,7 +112,7 @@ def init_pointcloud(pipeline: dai.Pipeline):
     depth.disparity.link(xoutDepth.input)
 
 
-def visualize_camera_frame(pipeline, device, framename: str = 'image') -> np.ndarray|None:
+def run_camera(pipeline, device, trigger_func = None) -> np.ndarray|None:
 
     with device:
         device.startPipeline(pipeline)
@@ -127,15 +127,17 @@ def visualize_camera_frame(pipeline, device, framename: str = 'image') -> np.nda
             
             cvRGBFrame = cv2.cvtColor(cvColorFrame, cv2.COLOR_BGR2RGB)
 
-            
-
             # ----- in rgb
             if inColor:
-                frameRGB = inColor.getCvFrame()
-                frame = cv2.resize(frameRGB, (1280, 720))
-                cv2.imshow("rgb", frame)
+                frame = inColor.getCvFrame()
+                # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                frame = cv2.resize(frame, (1280, 720))
 
-
+                # trigger function
+                if trigger_func:
+                    painted_frame = trigger_func(frame)
+                
+                cv2.imshow("rgb", painted_frame)
 
             # ----- teclas
             key = cv2.waitKey(1)
@@ -144,14 +146,10 @@ def visualize_camera_frame(pipeline, device, framename: str = 'image') -> np.nda
 
                 break
 
-            if key == ord('r'):
-                cv2.destroyAllWindows()
-                return frameRGB
-
         cv2.destroyAllWindows()
         return 
 
-
+# CON DOWNLOAD Y MAS BOTONES
 def get_camera_frame(pipeline, device, framename: str = 'image') -> np.ndarray|None:
 
     with device:

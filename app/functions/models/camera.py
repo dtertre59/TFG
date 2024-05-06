@@ -34,3 +34,7 @@ class CameraConfig():
         self.c = Vector2D(width/2, height/2)
 
 
+class Camera():
+    def __init__(self) -> None:
+        pass
+        

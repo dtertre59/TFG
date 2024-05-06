@@ -19,9 +19,9 @@ def main():
     # 1.1 mover robot a posicion inicial o de reposo
 
     # 2. (thread) visualizar con la camara el area donde se encuentran las piezas (el robot en reposo ya apunta a este area)
-    mf.init_camera_and_visualize()
+    mf.init_camera_and_visualize(mf.detections_with_apriltags)
     # 2.1 adquirimos frame (es necesario que se vea el apriltag de ref)
-
+    
     # 2.2 deteccion de apriltags con las funciones de la libreria apriltags. Sabemos la pieza que es porque tiene un tag_id conocido.
 
     # 2.3 ubicar centro del april de las piezas como punto 3d respecto a la base del robot (matrices de transferencia)
