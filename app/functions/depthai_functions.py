@@ -112,12 +112,16 @@ def init_pointcloud(pipeline: dai.Pipeline):
     depth.disparity.link(xoutDepth.input)
 
 
-def run_camera(pipeline, device, trigger_func = None) -> np.ndarray|None:
+
+# LA BUENA DE RUN
+def run_camera(pipeline, device, trigger_func = None, detector = None) -> np.ndarray|None:
 
     with device:
         device.startPipeline(pipeline)
         
         q = device.getOutputQueue(name="rgb out", maxSize=4, blocking=False)
+
+        detections_bool = False
 
         while device.isPipelineRunning():
             
@@ -135,19 +139,27 @@ def run_camera(pipeline, device, trigger_func = None) -> np.ndarray|None:
 
                 # trigger function
                 if trigger_func:
-                    painted_frame = trigger_func(frame)
+                        frame, detections_bool = trigger_func(detector, frame)
                 
-                cv2.imshow("rgb", painted_frame)
+                cv2.imshow("rgb", frame)
+
+                if detections_bool:
+                    cv2.destroyAllWindows()
+                    return frame
+                
 
             # ----- teclas
-            key = cv2.waitKey(1)
+            key = cv2.waitKey(10)
             
             if key == ord('q'):
 
                 break
 
         cv2.destroyAllWindows()
-        return 
+        return
+
+
+
 
 # CON DOWNLOAD Y MAS BOTONES
 def get_camera_frame(pipeline, device, framename: str = 'image') -> np.ndarray|None:

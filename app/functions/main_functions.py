@@ -13,6 +13,13 @@
 """
 
 # -------------------- PACKAGES ------------------------------------------------------------------------------------------ #
+import os
+import sys
+from pathlib import Path
+# Obtener la ruta del directorio del script principal
+dir_principal = Path(__file__).resolve().parent.parent
+# Añadir el directorio del script principal al sys.path
+sys.path.append(str(dir_principal))
 
 import numpy as np
 from pathlib import Path
@@ -24,7 +31,8 @@ import functions.ur3e_functions as ur3f
 
 import functions.apriltag_functions as atf
 
-from functions.models.camera import CameraConfig, ApriltagConfig
+from functions.models.myCamera import MyCameraConfig
+from functions.models.myApriltag import MyApriltagConfig
 
 
 
@@ -33,9 +41,9 @@ from functions.models.camera import CameraConfig, ApriltagConfig
 # CAMERA Config
 # camera_config = CameraConfig(width=3840, height=2160, fx= 2996.7346441158315, fy=2994.755126405525) 
 # camera_config = CameraConfig(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
-camera_config = CameraConfig(width=1280, height=720, fx= 998.911548, fy=998.2517088)
+camera_config = MyCameraConfig(width=1280, height=720, fx= 998.911548, fy=998.2517088)
 
-apriltag_config = ApriltagConfig(family='tag36h11', size=0.015)
+apriltag_config = MyApriltagConfig(family='tag36h11', size=0.015)
 
 
 ROBOT_HOST = '192.168.10.222' # "localhost"
@@ -63,8 +71,15 @@ PIEZE_POSE = np.array([-0.109, -0.408, 0.070, 2.099, 2.355, -0.017])
 #FUNCIONA BIEN ->  CAMERA CON DETECCION APRILTAGS
 def init_camera_and_visualize(trigger_frame_func = None):
     pipeline, device = daif.init_camera_rgb()
-    frame = daif.run_camera(pipeline, device, trigger_frame_func)
+    detector = atf.init_detector()
+    frame = daif.run_camera(pipeline, device, trigger_frame_func, detector)
     return frame
+
+    
+
+
+
+
 
 # HAY QUE3 HACERLO BIEN. DEVUELVE UNA DETECCION -> center, corners, transformation matrix
 # def init_camera_with_detections(trigger_frame_func = None):
@@ -86,23 +101,23 @@ def init_camera_and_visualize(trigger_frame_func = None):
 
 
 
-def detections_with_apriltags(frame: np.ndarray):
+def detections_with_apriltags(detector, frame: np.ndarray):
     # Aqui tenemos imagen sin analizar
     # Redimensiona la imagen utilizando la interpolación de área de OpenCV
     frame = cv2.resize(frame, (camera_config.resolution.x, camera_config.resolution.y), interpolation=cv2.INTER_AREA) 
     # DETECION
-    detector = atf.init_detector(families=apriltag_config.family)
+    # detector = atf.init_detector(families=apriltag_config.family)
     detections = atf.get_detections(detector, frame, camera_config, apriltag_config)
 
     if not detections:
         print('No apriltags detections')
-        return frame
+        return frame, False
     
     # paint detectins
     for detection in detections:
         atf.paint_apriltag(frame, detection)
     
-    return frame
+    return frame, True
 
 
 
