@@ -29,27 +29,22 @@ robot_config_filename = config_filename = str(Path(__file__).resolve().parent / 
 
 # -------------------- FUNCTIONS ----------------------------------------------------------------------------------------- #
 
-# Con apriltags
+# Con apriltags y object detection
 def main():
-    # # 1. conexion con el robot (verificar con algun registro)
+    # 1. Instancias
     robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
-    
-    # # 1.1 mover robot a posicion inicial o de reposo (verificar que el prorama esta en funcionamiento en la tablet)
-    # robot.move(p_init)
-
-    # 2. (thread) visualizar con la camara el area donde se encuentran las piezas (el robot en reposo ya apunta a este area)
-    # 2.0 instancias
-    apriltag = Apriltag(family='tag36h11', size=0.015)
-    nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_square_v1.pt'))
     camera = Camera(width=1280, height=720, fx= 998.911548, fy=998.2517088)
+    apriltag = Apriltag(family='tag36h11', size=0.015)
+    nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_square_v1.pt'))  
 
-    # 1. init
-    # 1.1 robot
+    # 2. init
+    # 2.1 robot
     robot.connect()
     robot.setup()
-    # 1. camera
+    # 2.2 camera
     camera.init_rgb()
 
+    # 3. Bucle del proceso
     flag = True
     while flag:
         Coordinator.the_whole_process(robot, camera, apriltag, nn_od_model)
