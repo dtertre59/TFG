@@ -9,13 +9,15 @@
 
 import cv2
 from pathlib import Path
+import numpy as np
 
 from functions import main_functions as mf
 
-# from .models.robot import Robot
+# from models.robot import Robot
 from models.camera import Camera
-
-from models.detection import *
+from models.robot import Robot
+from models.detection import Apriltag, YoloObjectDetection, YoloPoseEstimation
+from models.coordinator import Coordinator
 
 
 # -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
@@ -24,16 +26,14 @@ ROBOT_HOST = '192.168.10.222' # "localhost"
 ROBOT_PORT = 30004
 robot_config_filename = config_filename = str(Path(__file__).resolve().parent / 'assets' / 'ur3e' / 'configuration_1.xml')
 
-p_init = [0.128, -0.298, 0.180, 3.1415, 0.2617, 0]
 
 # -------------------- FUNCTIONS ----------------------------------------------------------------------------------------- #
 
 # Con apriltags
 def main():
     # # 1. conexion con el robot (verificar con algun registro)
-    # robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
-    # robot.connect()
-    # robot.setup()
+    robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
+    
     # # 1.1 mover robot a posicion inicial o de reposo (verificar que el prorama esta en funcionamiento en la tablet)
     # robot.move(p_init)
 
@@ -43,39 +43,17 @@ def main():
     nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_square_v1.pt'))
     camera = Camera(width=1280, height=720, fx= 998.911548, fy=998.2517088)
 
-    # 2.1 adquirimos frame (es necesario que se vea el apriltag de ref) -> podriamos que devolviera directamente la deteccion para no tener que analizar la imagen otra vez
+    # 1. init
+    # 1.1 robot
+    robot.connect()
+    robot.setup()
+    # 1. camera
     camera.init_rgb()
 
-    frame, piecesN = camera.run_with_condition(DetectionsCoordinator.nn_object_detections, nn_od_model)
-    frame, bolean , piecesA = DetectionsCoordinator.apriltag_detections(frame, camera, apriltag)
-    # frame, piecesA = camera.run_with_condition(DetectionsCoordinator.apriltag_detections, apriltag)
+    flag = True
+    while flag:
+        Coordinator.the_whole_process(robot, camera, apriltag, nn_od_model)
 
-    # 2.2 union de las detecciones para sacar las piezas
-    ref, pieces = DetectionsCoordinator.combined_detections(piecesA, piecesN)
-    
-    ref.paint(frame)
-    for piece in pieces:
-        print(piece)
-        piece.paint(frame)
-
-    cv2.imshow('a',frame)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-    # 2.3 ubicar centro del april de las piezas como punto 3d respecto a la base del robot (matrices de transferencia). Importante la rotacion de la pieza
-    piece = pieces[0]
-    
-    ################################################
-    piece.calculate3dPoint(ref)
-    ##################################################
-
-
-
-
-    new_pose = [0.128, -0.298, 0.180, 3.1415, 0.2617, 0]
-    # 3. movimiento del robot para conger la pieza y dejarla en su respectivo hoyo (posicion conocida)
-
-    # 4. repetimos en bucle hasta que no haya mas piezas
 
     # 5. (opcional) revisar que los hoyos no esten ocupados para poder mover la pieza a su hoyo
 

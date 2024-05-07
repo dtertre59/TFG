@@ -25,6 +25,8 @@ import open3d as o3d
 
 # -------------------- OPERACIONES --------------------------------------------------------------------------------------- #
 
+
+
 # POINT reference system transformation  FALTA EN INGLES
 def point_tansf(T: np.ndarray, point: np.ndarray) -> np.ndarray:
     # Agrega una coordenada homogénea al punto
@@ -37,6 +39,27 @@ def point_tansf(T: np.ndarray, point: np.ndarray) -> np.ndarray:
                h_t_point[1] / h_t_point[3],
                h_t_point[2] / h_t_point[3]])
     return t_point
+
+# ROTATION
+def rotation_transf(T: np.ndarray) -> np.ndarray:
+    r11, r12, r13 = T[0][:3]
+    r21, r22, r23 = T[1][:3]
+    r31, r32, r33 = T[2][:3]
+
+    rx = math.atan2(r32, r33)
+    ry = math.atan2(-r31, math.sqrt(r32**2 + r33**2))
+    rz = math.atan2(r21, r11)
+
+    return np.array([rx, ry, rz])
+    
+# POSE reference system transformation
+def pose_transf(T: np.ndarray, point: np.ndarray) -> np.ndarray:
+    new_point = point_tansf(T, point)
+    new_rot = rotation_transf(T)
+    pose = np.hstack([new_point, new_rot])
+    # print('Pose: ', pose)
+    return pose
+
 
 # POINTS disctance
 def points_distance(point1: np.ndarray, point2: np.ndarray) -> float:

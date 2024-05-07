@@ -19,7 +19,7 @@ class Vector3D(Vector2D):
 
 class Vector6D(Vector3D):
     def __init__(self, x: float, y: float, z: float, rx: float, ry: float, rz: float) -> None:
-        super.__init__(x, y, z)
+        super().__init__(x, y, z)
         self.rx = rx
         self.ry = ry
         self.rz = rz

@@ -1,11 +1,57 @@
+"""
+        robot.py
+
+    Robot 
+
+"""
+
+# -------------------- PACKAGES ------------------------------------------------------------------------------------------ #
 
 import time
 import logging
 import sys
+import numpy as np
 
 import rtde.rtde as rtde
 import rtde.rtde_config as rtde_config
 
+
+# -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
+
+class RobotConstants():
+    # Posicion del a base del robot
+    POSE_ROBOT_BASE = np.array([0, 0, 0])
+    # Posicion del apriltag de referencia
+    POSE_APRILTAG_REF = np.array([-0.016, -0.320, 0, 2.099, 2.355, -0.017])
+
+    # Matriz de transicion del sistema de referencia del apriltag(ref) al de la base del robot
+    T_REF_TO_ROBOT = np.array([[1, 0, 0, POSE_APRILTAG_REF[0]],
+                                [0, 1, 0, POSE_APRILTAG_REF[1]],
+                                [0, 0, 1, POSE_APRILTAG_REF[2]],
+                                [0, 0, 0, 1]])
+    
+    # Posicion para la visualizacion de las piezas
+    POSE_DISPLAY = np.array([0.128, -0.298, 0.180, 3.1415, 0.2617, 0])
+
+    # Posicion segura para el movimiento
+    POSE_SAFE = np.array([0.128, -0.298, 0.180, 3.1415, 0.2617, 0])
+
+    # POSICIONES DE LOS HOYOS
+    # 5%
+    POSE_PUZZLE_CIRCLE_5 = np.ndarray([1,1,1,1,1,1])
+    POSE_PUZZLE_SQUARE_5 = np.ndarray([1,1,1,1,1,1])
+    POSE_PUZZLE_HEXAGON_5 = np.ndarray([1,1,1,1,1,1])
+    # 10%
+    POSE_PUZZLE_CIRCLE_10 = np.ndarray([1,1,1,1,1,1])
+    POSE_PUZZLE_SQUARE_10 = np.ndarray([1,1,1,1,1,1])
+    POSE_PUZZLE_HEXAGON_10 = np.ndarray([1,1,1,1,1,1])
+    # 20%
+    POSE_PUZZLE_CIRCLE_20 = np.ndarray([1,1,1,1,1,1])
+    POSE_PUZZLE_SQUARE_20 = np.ndarray([1,1,1,1,1,1])
+    POSE_PUZZLE_HEXAGON_20 = np.ndarray([1,1,1,1,1,1])
+
+
+# -------------------- CLASSES ------------------------------------------------------------------------------------------- #
 
 class RobotException(Exception):
     """Excepcion del robot"""
@@ -146,3 +192,4 @@ class Robot():
             break
         time.sleep(1)
         return
+    

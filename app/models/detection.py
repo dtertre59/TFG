@@ -16,9 +16,9 @@ import pupil_apriltags
 from ultralytics import YOLO
 
 from models.camera import CameraConfig, Camera
-
 from models.vectors import Vector2D
 from models.piece import BoundingBox, PieceA, PieceN, Piece
+from models.robot import Robot
 
 # -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
 
@@ -33,6 +33,7 @@ objects_colors = {
 
 
 # -------------------- APRILTAG ------------------------------------------------------------------------------------------ #
+
 class ApriltagConfig():
     """Configuracion del Apriltag"""
     def __init__(self, family: str, size: float) -> None:
@@ -86,6 +87,7 @@ class Apriltag(ApriltagConfig):
             piece.paint(frame)
         return
 
+
 # -------------------- NEURONAL NETWORKS --------------------------------------------------------------------------------- #
 
 class YoloBaseModel(ABC):
@@ -99,7 +101,6 @@ class YoloBaseModel(ABC):
     # @abstractmethod
     # def detect():
     #     pass
-
 
 
 class YoloObjectDetection(YoloBaseModel):
@@ -144,62 +145,8 @@ class YoloObjectDetection(YoloBaseModel):
                 piece.paint(frame)
         return 
 
-
-       
+     
 class YoloPoseEstimation(YoloBaseModel):
     def __init__(self, filename: str) -> None:
         super().__init__(filename)
-
-
-
-# -------------------- DETECTIONS COORDINATOR ---------------------------------------------------------------------------- #
-
-class DetectionsCoordinator():
-
-    @staticmethod
-    def apriltag_detections(frame, camera: Camera, apriltag: Apriltag):
-        # 1. Camera params
-        camera_params = [camera.f.x, camera.f.y, camera.c.x, camera.c.y]
-        # 2. deteccion
-        apriltag.detect(frame, camera_params)
-        # 3. verificacion y paint
-        if apriltag.pieces:
-            # apriltag.paint(frame)
-            return frame, True, apriltag.pieces
-        else:
-            return frame, False, apriltag.pieces
-
-      
-    @staticmethod
-    def nn_object_detections(frame, camera: Camera, nn_model: YoloObjectDetection):
-        # 1. deteccion
-        nn_model.detect(frame)
-        # 2. verificacion y paint
-        if nn_model.pieces:
-            # nn_model.paint(frame)
-            return frame, True, nn_model.pieces
-        else:
-            return frame, False, nn_model.pieces
-
-    
-    @staticmethod
-    def nn_poseEstimation_detections(frame, camera: Camera, nn_model: YoloPoseEstimation):
-        pass
-
-
-    @staticmethod
-    def combined_detections(piecesA: list[PieceA], piecesN: list[PieceN]) -> tuple[PieceA|None, list[Piece]]:
-        """combinar detecciones en una sola"""
-        pieces = []
-        for pieceA in piecesA:
-            if pieceA.name == '4':
-                # 1. apriltag de ref
-                ref = pieceA
-            else:
-                for pieceN in piecesN:
-                    piece = Piece(pieceA, pieceN)
-                    if piece.validate():
-                        # 2. piezas con aprils incluidos
-                        pieces.append(piece)
-        return ref, pieces
 
