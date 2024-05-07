@@ -9,7 +9,7 @@ from .vectors import Vector2D
 
         
 
-class MyCameraConfig():
+class CameraConfig():
     def __init__(self, width: int, height: int, fx: float, fy: float) -> None:
         """ Camera config
             Resolution: pixels
@@ -21,7 +21,7 @@ class MyCameraConfig():
         self.c = Vector2D(width/2, height/2)
 
 
-class MyCamera(MyCameraConfig):
+class Camera(CameraConfig):
     def __init__(self, width: int, height: int, fx: float, fy: float) -> None:
         super().__init__(width, height, fx, fy)
 
@@ -91,13 +91,13 @@ class MyCamera(MyCameraConfig):
 
                     # trigger function
                     if trigger_func:
-                            frame, detections_bool = trigger_func(frame, self, detector)
+                            frame, detections_bool, pieces = trigger_func(frame, self, detector)
                     
                     cv2.imshow("rgb", frame)
 
                     if detections_bool:
                         cv2.destroyAllWindows()
-                        return frame
+                        return frame, pieces
                     
 
                 # ----- teclas

@@ -17,7 +17,7 @@ import numpy as np
 
 import pupil_apriltags as apriltag
 
-from models.myCamera import MyCameraConfig
+from models.camera import CameraConfig
 from models.detection import Apriltag, ApriltagConfig
 
 
@@ -28,7 +28,7 @@ def init_detector(families: str = "tag36h11") -> apriltag.Detector:
     return apriltag.Detector(families=families)
 
 # GET detections
-def get_detections(detector: apriltag.Detector, frame: np.ndarray, camera_config: MyCameraConfig, apriltag_config: ApriltagConfig) -> list[apriltag.Detection]:
+def get_detections(detector: apriltag.Detector, frame: np.ndarray, camera_config: CameraConfig, apriltag_config: ApriltagConfig) -> list[apriltag.Detection]:
     # Camera params
     camera_params = [camera_config.f.x, camera_config.f.y, camera_config.c.x, camera_config.c.y]
     # frame to grayscale

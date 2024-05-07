@@ -15,10 +15,10 @@ import pupil_apriltags
 # neuronal network
 from ultralytics import YOLO
 
-from models.myCamera import MyCameraConfig, MyCamera
+from models.camera import CameraConfig, Camera
 
 from models.vectors import Vector2D
-
+from models.piece import BoundingBox, PieceA, PieceN, Piece
 
 # -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
 
@@ -30,18 +30,6 @@ objects_colors = {
 
 # -------------------- FUNCTIONS ----------------------------------------------------------------------------------------- #
 
-class PieceBase():
-    def __init__(self, name: str, corners: np.ndarray) -> None:
-        self.name = name
-        self.corners = corners
-        
-
-
-class Piece:
-    def __init__(self, name: str, coordinates: np.ndarray, color: tuple):
-        self.name = name
-        self.coordinates = coordinates
-        self.color = color
 
 
 # -------------------- APRILTAG ------------------------------------------------------------------------------------------ #
@@ -53,55 +41,50 @@ class ApriltagConfig():
 
         
 class Apriltag(ApriltagConfig):
-    """Apriltag completo. configuracion mas funcionalidades"""
+    """Apriltag completo. configuracion mas funcionalidades
+    formado por piezas de tipo A"""
     def __init__(self, family: str, size: float) -> None:
         super().__init__(family, size)
 
         self.detector = pupil_apriltags.Detector(families=family)
 
         self.detections = None
-
-    def paint(self, frame: np.ndarray, index: int) -> np.ndarray:
-        """Pintamos los ejes del apriltag detectado en la imagen"""
-        detection = self.detections[index]
-        color_white = (255, 255, 255)
-        color_black = (0,0,0)
-        color_red = (0, 0, 255)
-        color_green = (0, 255, 0)
-
-        id = detection.tag_id
-        center = detection.center.astype(int)
-        corners = detection.corners.astype(int)
-
-        # Dibujar el recuadro del AprilTag
-        cv2.line(frame, tuple(corners[0]), tuple(corners[1]), color_white, 2, cv2.LINE_AA, 0)
-        cv2.line(frame, tuple(corners[1]), tuple(corners[2]), color_white, 2, cv2.LINE_AA, 0)
-        cv2.line(frame, tuple(corners[2]), tuple(corners[3]), color_white, 2, cv2.LINE_AA, 0)
-        cv2.line(frame, tuple(corners[3]), tuple(corners[0]), color_white, 2, cv2.LINE_AA, 0)
-        
-        # dibujar ejes de coordenadas
-        x_axis = np.array(((corners[1] + corners[2])/2), dtype=int)
-        y_axis = np.array(((corners[2] + corners[3])/2), dtype=int)
-
-        # print(x_axis)
-        cv2.line(frame, tuple(center), x_axis, color_red, 2, cv2.LINE_AA, 0)
-        cv2.line(frame, tuple(center), y_axis, color_green, 2, cv2.LINE_AA, 0)
-
-        #  Dibujar centro en la imagen
-        cv2.circle(frame, tuple(center), 3, color_black, -1)
-
-        # Escribir el número Id del taf
-        cv2.putText(frame, str(id), tuple(corners[0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-
-        return frame
+        self.pieces = []
 
     def detect(self, frame: np.ndarray, camera_params: list):
         # 1. frame to grayscale
         frame_grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         # 2. detections
         self.detections = self.detector.detect(frame_grayscale, True, camera_params=camera_params, tag_size=self.size)
+        # 3. instancias de piezas
+        self.pieces = []
+        for detection in self.detections:
+            id = detection.tag_id
+            center = detection.center.astype(int)
+            cors = detection.corners.astype(int)
+            corners = []
+            for corner in cors:
+                corners.append(Vector2D(corner[0], corner[1]))
+            # transformation matrix
+            T = np.hstack((detection.pose_R, detection.pose_t))
+            T = np.vstack((T, [0, 0, 0, 1]))
+            # Rotate 180 degrees over the x-axis to get it properly aligned (library issue)
+            rot = np.array([[1, 0, 0, 0],
+                            [0, -1, 0, 0],
+                            [0, 0, -1, 0],
+                            [0, 0, 0, 1]])
+            T = np.dot(T, rot)
+
+            piece = PieceA(name=str(id), color=(0,0,0), center=Vector2D(center[0], center[1]), corners=corners, T=T)
+            self.pieces.append(piece)
+
         return
 
+    def paint(self, frame: np.ndarray) -> None:
+        """Pintamos los ejes del apriltag detectado en la imagen"""
+        for piece in self.pieces:
+            piece.paint(frame)
+        return
 
 # -------------------- NEURONAL NETWORKS --------------------------------------------------------------------------------- #
 
@@ -120,40 +103,49 @@ class YoloBaseModel(ABC):
 
 
 class YoloObjectDetection(YoloBaseModel):
-    """Deteccion de objetos en una imagen con YOLOv8 OBJECT DETECTION"""
+    """Deteccion de objetos en una imagen con YOLOv8 OBJECT DETECTION
+    formado de piezas de tipoN"""
     def __init__(self, filename: str) -> None:
         super().__init__(filename)
+        self.pieces = []
 
-    # repasar  IDEX, DETECTIONS Y OBJECTS
-    def paint(self, frame: np.ndarray, index: int) -> np.ndarray:
-        """Pintar bounding box de la denteccion de la pieza"""
-        detection = self.detections[index]
-        objects = detection.boxes.cls.numpy().tolist()  
-        names = detection.names
 
-        if objects:
-            for index, object in enumerate(objects):
-                coordinates = detection.boxes.xyxy[index].numpy() # .tolist()
-                # nombre del objeto detectado
-                object_name = names[object]
-                # color asociado
-                object_color = objects_colors[object_name]
-
-                # Escribir el nombre encima del rectángulo
-                cv2.putText(frame, object_name, (int(coordinates[0]), int(coordinates[1]) - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.9, object_color, 2)
-                # Dibujar el rectángulo en la imagen
-                cv2.rectangle(img=frame, pt1=(int(coordinates[0]), int(coordinates[1])),
-                            pt2=(int(coordinates[2]), int(coordinates[3])), color=object_color, thickness=2)
-
-        return frame
-
-    def detect(self, frame: np.ndarray) -> tuple[np.ndarray, bool]:
+    def detect(self, frame: np.ndarray) -> None:
         """Deteccion con red neuronal"""
+        # 1. deteccion
         self.detections = list(self.model(frame, stream=True))
+        # 2. instancias de las piezas detectadas
+        self.pieces = []
+        for detection in self.detections:
+            # identificación de objetos
+            objects = detection.boxes.cls.numpy().tolist()
+            # diccionario de nombres de la red
+            names = detection.names     
+            if objects:
+                for index, object in enumerate(objects):
+                    # coodenadas de cada objeto
+                    coordinates = detection.boxes.xyxy[index].numpy()
+                    # nombre de la pieza detectad
+                    pieze_name = names[object]
+                    # color asociado
+                    pieze_color = (255,0,0)
+                    # creamos instancia de la pieza
+                    bbox = BoundingBox(p1 = np.array([int(coordinates[0]), int(coordinates[1])]), p2=np.array([int(coordinates[2]), int(coordinates[3])]))
+                    piece = PieceN(name=pieze_name, color=pieze_color, bbox=bbox)
+                    # print(piece)
+                    self.pieces.append(piece)
+
         return
 
-        
+
+    def paint(self, frame: np.ndarray) -> None:
+        if self.pieces:
+            for piece in self.pieces:
+                piece.paint(frame)
+        return 
+
+
+       
 class YoloPoseEstimation(YoloBaseModel):
     def __init__(self, filename: str) -> None:
         super().__init__(filename)
@@ -165,37 +157,49 @@ class YoloPoseEstimation(YoloBaseModel):
 class DetectionsCoordinator():
 
     @staticmethod
-    def apriltag_detections(frame, camera: MyCamera, apriltag: Apriltag):
+    def apriltag_detections(frame, camera: Camera, apriltag: Apriltag):
         # 1. Camera params
         camera_params = [camera.f.x, camera.f.y, camera.c.x, camera.c.y]
         # 2. deteccion
         apriltag.detect(frame, camera_params)
         # 3. verificacion y paint
-        if apriltag.detections:
-            for i, detection in enumerate(apriltag.detections):
-                frame = apriltag.paint(frame, i)
-            return frame, True
+        if apriltag.pieces:
+            # apriltag.paint(frame)
+            return frame, True, apriltag.pieces
         else:
-            return frame, False
+            return frame, False, apriltag.pieces
 
       
     @staticmethod
-    def nn_object_detections(frame, camera: MyCamera, nn_model: YoloObjectDetection):
+    def nn_object_detections(frame, camera: Camera, nn_model: YoloObjectDetection):
         # 1. deteccion
         nn_model.detect(frame)
         # 2. verificacion y paint
-        if nn_model.detections:
-            for i, detection in enumerate(nn_model.detections):
-                if detection.obb == None:
-                    return frame, False
-                else:
-                    frame = nn_model.paint(frame, i)
-                    return frame, True
-            
+        if nn_model.pieces:
+            # nn_model.paint(frame)
+            return frame, True, nn_model.pieces
         else:
-            return frame, False
+            return frame, False, nn_model.pieces
+
+    
+    @staticmethod
+    def nn_poseEstimation_detections(frame, camera: Camera, nn_model: YoloPoseEstimation):
+        pass
 
 
     @staticmethod
-    def nn_poseEstimation_detections(frame, camera: MyCamera, nn_model: YoloPoseEstimation):
-        pass
+    def combined_detections(piecesA: list[PieceA], piecesN: list[PieceN]) -> tuple[PieceA|None, list[Piece]]:
+        """combinar detecciones en una sola"""
+        pieces = []
+        for pieceA in piecesA:
+            if pieceA.name == '4':
+                # 1. apriltag de ref
+                ref = pieceA
+            else:
+                for pieceN in piecesN:
+                    piece = Piece(pieceA, pieceN)
+                    if piece.validate():
+                        # 2. piezas con aprils incluidos
+                        pieces.append(piece)
+        return ref, pieces
+

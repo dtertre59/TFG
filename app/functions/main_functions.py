@@ -31,7 +31,7 @@ import functions.ur3e_functions as ur3f
 
 import functions.apriltag_functions as atf
 
-from models.myCamera import MyCameraConfig
+from models.camera import CameraConfig
 from models.detection import ApriltagConfig
 
 
@@ -41,7 +41,7 @@ from models.detection import ApriltagConfig
 # CAMERA Config
 # camera_config = CameraConfig(width=3840, height=2160, fx= 2996.7346441158315, fy=2994.755126405525) 
 # camera_config = CameraConfig(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
-camera_config = MyCameraConfig(width=1280, height=720, fx= 998.911548, fy=998.2517088)
+camera_config = CameraConfig(width=1280, height=720, fx= 998.911548, fy=998.2517088)
 
 apriltag_config = ApriltagConfig(family='tag36h11', size=0.015)
 
