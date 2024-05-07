@@ -12,12 +12,10 @@ from pathlib import Path
 
 from functions import main_functions as mf
 
-from functions.models.robot import Robot
-from functions.models.myCamera import MyCamera
-from functions.models.myApriltag import MyApriltag
-from functions.models.detection import DetectionsCoordinator
+# from .models.robot import Robot
+from models.myCamera import MyCamera
 
-
+from models.detection import *
 
 
 # -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
@@ -40,20 +38,29 @@ def main():
     # robot.move(p_init)
 
     # 2. (thread) visualizar con la camara el area donde se encuentran las piezas (el robot en reposo ya apunta a este area)
-    apriltag = MyApriltag(family='tag36h11', size=0.015)
-
+    # 2.0 instancias
+    apriltag = Apriltag(family='tag36h11', size=0.015)
+    nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_square_v1.pt'))
     camera = MyCamera(width=1280, height=720, fx= 998.911548, fy=998.2517088)
-    camera.init_rgb()
-    
 
     # 2.1 adquirimos frame (es necesario que se vea el apriltag de ref) -> podriamos que devolviera directamente la deteccion para no tener que analizar la imagen otra vez
-    frame = camera.run_with_condition(DetectionsCoordinator.apriltag_detections, apriltag)
+    camera.init_rgb()
+    frame = camera.run_with_condition(DetectionsCoordinator.nn_object_detections, nn_od_model)
+    # frame = camera.run_with_condition(DetectionsCoordinator.apriltag_detections, apriltag)
+    
+    # frame = cv2.imread(str(Path(__file__).resolve().parent / 'assets' / 'pictures' / 'april_square_2_4.png'))
+    # frame, flag = DetectionsCoordinator.nn_object_detections(frame, camera, nn_od_model)
+    # frame, flag = DetectionsCoordinator.apriltag_detections(frame, camera, apriltag)
 
+    
     cv2.imshow('a',frame)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+    
  
-    # 2.2 deteccion de apriltags con las funciones de la libreria apriltags. Sabemos la pieza que es porque tiene un tag_id conocido.
+    # 2.2 deteccion de apriltags con las funciones de la libreria apriltags. Sabemos la pieza que es por el object detection
+    
 
     # 2.3 ubicar centro del april de las piezas como punto 3d respecto a la base del robot (matrices de transferencia). Importante la rotacion de la pieza
 

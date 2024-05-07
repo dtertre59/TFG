@@ -17,8 +17,8 @@ import numpy as np
 
 import pupil_apriltags as apriltag
 
-from functions.models.myCamera import MyCameraConfig
-from functions.models.myApriltag import MyApriltagConfig, MyApriltag
+from models.myCamera import MyCameraConfig
+from models.detection import Apriltag, ApriltagConfig
 
 
 # -------------------- FUNCTIONS ----------------------------------------------------------------------------------------- #
@@ -28,7 +28,7 @@ def init_detector(families: str = "tag36h11") -> apriltag.Detector:
     return apriltag.Detector(families=families)
 
 # GET detections
-def get_detections(detector: apriltag.Detector, frame: np.ndarray, camera_config: MyCameraConfig, apriltag_config: MyApriltagConfig) -> list[apriltag.Detection]:
+def get_detections(detector: apriltag.Detector, frame: np.ndarray, camera_config: MyCameraConfig, apriltag_config: ApriltagConfig) -> list[apriltag.Detection]:
     # Camera params
     camera_params = [camera_config.f.x, camera_config.f.y, camera_config.c.x, camera_config.c.y]
     # frame to grayscale
@@ -97,12 +97,6 @@ def paint_apriltag(frame: np.ndarray, detection: apriltag.Detection) -> None:
     return
 
 
-# GET APRIL CLASS STRUCTURE SIN ACABAR
-def get_april(detection: apriltag.Detection, apriltag_config: MyApriltagConfig) -> MyApriltag:
-    center, corners = get_center_corners(detection)
-    T = get_transformation_matrix(detection)
-    # ap = Apriltag(detection.tag_id, family=detection.tag_family, size=apriltag_config.size, c)
-    return
 
 
 

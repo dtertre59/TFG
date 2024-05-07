@@ -31,8 +31,8 @@ import functions.ur3e_functions as ur3f
 
 import functions.apriltag_functions as atf
 
-from functions.models.myCamera import MyCameraConfig
-from functions.models.myApriltag import MyApriltagConfig
+from models.myCamera import MyCameraConfig
+from models.detection import ApriltagConfig
 
 
 
@@ -43,7 +43,7 @@ from functions.models.myApriltag import MyApriltagConfig
 # camera_config = CameraConfig(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
 camera_config = MyCameraConfig(width=1280, height=720, fx= 998.911548, fy=998.2517088)
 
-apriltag_config = MyApriltagConfig(family='tag36h11', size=0.015)
+apriltag_config = ApriltagConfig(family='tag36h11', size=0.015)
 
 
 ROBOT_HOST = '192.168.10.222' # "localhost"
