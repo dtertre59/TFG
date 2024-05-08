@@ -152,7 +152,7 @@ class Robot():
             # do something...
             if move_completed == False and robot_aviable == 1 and init == 1:
                 # print('inicio')
-                # print('Programa en funcionamiento')
+                print('Programa en funcionamiento')
                 list_to_setp(self.setp, vector) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
                 self.con.send(self.setp)
                 time.sleep(0.5)
@@ -193,3 +193,15 @@ class Robot():
         time.sleep(1)
         return
     
+
+
+# pruebas
+# from pathlib import Path
+# ROBOT_HOST = '192.168.10.222' # "localhost"
+# ROBOT_PORT = 30004
+# robot_config_filename = config_filename = str(Path(__file__).resolve().parent.parent / 'assets' / 'ur3e' / 'configuration_1.xml')
+# robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
+
+# robot.connect()
+# robot.setup()
+# robot.move(RobotConstants.POSE_DISPLAY)

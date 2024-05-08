@@ -56,7 +56,7 @@ class PieceA(PieceBase):
 
     def __str__(self) -> str:
         textb = super().__str__()
-        textcen = """    - Center: {self.center}"""
+        textcen = f"""    - Center: {self.center}"""
         textc = """    - Corners: ["""
         for corner in self.corners:
             textc += corner.__str__() + ' ,'
@@ -158,7 +158,7 @@ class Piece(PieceBase):
         
 
     def calculatePose(self, ref: PieceA, t_ref_to_robot: np.ndarray = np.eye(4)):
-        print(t_ref_to_robot)
+        # print(t_ref_to_robot)
         t_ref_to_cam = ref.T
         t_piece_to_cam = self.T
 
@@ -194,22 +194,21 @@ class Piece(PieceBase):
         self.pose = Vector6D(ppiece_robot[0], ppiece_robot[1], ppiece_robot[2], pose_robot[3], pose_robot[4], pose_robot[5])
 
         # 3D representation
+        # size = 0.2
+        # robot_axes = np.array([[size, 0, 0],
+        #                     [0, size, 0],
+        #                     [0, 0, size]])
+        # ref_axes = np.dot(t_ref_to_robot[:3, :3], robot_axes.T).T
+        # piece_axes = np.dot(t_piece_to_robot[:3, :3], robot_axes.T).T
+        # cam_axes = np.dot(t_cam_to_robot[:3, :3], robot_axes.T).T
 
-        size = 0.2
-        robot_axes = np.array([[size, 0, 0],
-                            [0, size, 0],
-                            [0, 0, size]])
-        ref_axes = np.dot(t_ref_to_robot[:3, :3], robot_axes.T).T
-        piece_axes = np.dot(t_piece_to_robot[:3, :3], robot_axes.T).T
-        cam_axes = np.dot(t_cam_to_robot[:3, :3], robot_axes.T).T
+        # fig, ax = hf.init_mat3d()
+        # hf.add_point_with_axes(ax, prob_rob, robot_axes, 'robot', 'k')
+        # hf.add_point_with_axes(ax, pref_rob, ref_axes, 'ref', 'r')
+        # hf.add_point_with_axes(ax, pcam_rob, cam_axes, 'camera', 'b')
+        # hf.add_point_with_axes(ax, ppiece_robot, piece_axes, 'piece', 'g')
 
-        fig, ax = hf.init_mat3d()
-        hf.add_point_with_axes(ax, prob_rob, robot_axes, 'robot', 'k')
-        hf.add_point_with_axes(ax, pref_rob, ref_axes, 'ref', 'r')
-        hf.add_point_with_axes(ax, pcam_rob, cam_axes, 'camera', 'b')
-        hf.add_point_with_axes(ax, ppiece_robot, piece_axes, 'piece', 'g')
-
-        hf.show_mat3d(fig, ax, 'apriltags representation')
+        # hf.show_mat3d(fig, ax, 'apriltags representation')
         return 
 
 

@@ -77,9 +77,10 @@ class Coordinator():
     def combined_detections(piecesA: list[PieceA], piecesN: list[PieceN]) -> tuple[PieceA|None, list[Piece]]:
         """combinar detecciones en una sola"""
         pieces = []
+        ref = None
         if not piecesA:
             print('No aprils')
-            return None, None
+            return ref, pieces
         for pieceA in piecesA:
             if pieceA.name == '4':
                 # 1. apriltag de ref
@@ -133,10 +134,13 @@ class Coordinator():
     
     @staticmethod
     def the_whole_process(robot: Robot, camera: Camera, apriltag: Apriltag, nn_od_model: YoloObjectDetection) -> None:
-        # 1. Movemos robot a la posicion de visualizacion de las piezas
+        # 1. Movemos robot a la posicion de visualizacion de las 
+        robot.move(RobotConstants.POSE_APRILTAG_REF)
         robot.move(RobotConstants.POSE_DISPLAY)
+        print('inicio paso 2')
         # 2. detecciones
         while True:
+            camera.init_rgb()
             # 2.1 Deteccion de la pieza con red neuronal (object detection)
             frame, piecesN = camera.run_with_condition(Coordinator.nn_object_detections, nn_od_model)
             # 2.2 Deteccion de los apriltags de la imagen en la que se ha encontrado la pieza. Es necesario que se encuentre el apriltag de referencia
@@ -144,31 +148,40 @@ class Coordinator():
 
             # 2.3. union de las detecciones para sacar la referencia y las piezas
             ref, pieces = Coordinator.combined_detections(piecesA, piecesN)
-
+    
             # 2.4. si no ha encontrado la ref y al menos una pieza vuelve a repetir el proceso
-            if ref and pieces:
+            if (ref != None) and (pieces != []):
+                print('Referencia: ', ref)
+                for piece in pieces:
+                    print('pieza final: ',piece)
                 break
-        
+
+        print('inicio paso 4')
+
         # 3. Imagen con las piezas y la referencia dibujadas
 
-        ref.paint(frame)
-        for piece in pieces:
-            # print(piece)
-            piece.paint(frame)
+        # ref.paint(frame)
+        # for piece in pieces:
+        #     # print(piece)
+        #     piece.paint(frame)
 
-        cv2.imshow('a',frame)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.imshow('a',frame)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+
 
         # 4 ubicar centro del april de las piezas como punto 3d respecto a la base del robot (matrices de transferencia). Importante la rotacion de la pieza
         # 4.1 Se elige la primera pieza para continuar el proceso
         piece = pieces[0]
         # 4.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
         piece.calculatePose(ref, RobotConstants.T_REF_TO_ROBOT)
-        new_pose = piece.pose
+        new_pose = piece.pose.get_array()
+        input(new_pose)
+
+        robot.move(new_pose)
 
         # 4. Movimiento del robot para coger la pieza y dejarla en su respectivo hoyo (posicion conocida)
-        Coordinator.combinated_movement(robot, piece)
+        # Coordinator.combinated_movement(robot, piece)
 
         return
 

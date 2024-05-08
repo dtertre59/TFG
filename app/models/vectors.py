@@ -1,4 +1,4 @@
-
+import numpy as np
 
 
 class Vector2D():
@@ -26,3 +26,6 @@ class Vector6D(Vector3D):
 
     def __str__(self) -> str:
         return f"Vetor6D"
+    
+    def get_array(self) -> np.ndarray:
+        return np.array([self.x, self.y, self.z, self.rx, self.ry, self.rz])

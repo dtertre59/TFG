@@ -42,7 +42,7 @@ def main():
     robot.connect()
     robot.setup()
     # 2.2 camera
-    camera.init_rgb()
+    # camera.init_rgb()
 
     # 3. Bucle del proceso
     flag = True
@@ -67,7 +67,8 @@ def main2():
 
     # 2. (thread) visualizar con la camara el area donde se encuentran las piezas (el robot en reposo ya apunta a este area)
 
-    # 2.1 adquirimos frame (es necesario que se vea el apriltag de ref)
+    # 2.1 adquirimos frame (es necesario que se vea el
+    #  apriltag de ref)
 
     # 2.2 deteccion de la pieza con red neuronal. Pose estimation con la red. por lo que concocemos el centro de la cara superior de la pieza
 
