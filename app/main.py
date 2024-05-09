@@ -33,7 +33,8 @@ robot_config_filename = config_filename = str(Path(__file__).resolve().parent / 
 def main():
     # 1. Instancias
     robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
-    camera = Camera(width=1280, height=720, fx= 998.911548, fy=998.2517088)
+    camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
+    # camera = Camera(width=1280, height=720, fx= 998.911548, fy=998.2517088)
     apriltag = Apriltag(family='tag36h11', size=0.015)
     nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_square_v1.pt'))  
 
@@ -42,12 +43,12 @@ def main():
     robot.connect()
     robot.setup()
     # 2.2 camera
-    # camera.init_rgb()
+    camera.init_rgb()
 
     # 3. Bucle del proceso
     flag = True
-    while flag:
-        Coordinator.the_whole_process(robot, camera, apriltag, nn_od_model)
+    # while flag:
+    Coordinator.the_whole_process(robot, camera, apriltag, nn_od_model)
 
 
     # 5. (opcional) revisar que los hoyos no esten ocupados para poder mover la pieza a su hoyo

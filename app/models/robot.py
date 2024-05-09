@@ -19,22 +19,35 @@ import rtde.rtde_config as rtde_config
 # -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
 
 class RobotConstants():
-    # Posicion del a base del robot
+   
+
+    
+    # Posicion para la visualizacion de las piezas
+    POSE_DISPLAY = np.array([-0.128, -0.298, 0.180, 0.025, 0, 2.879])
+
+    # Posicion segura para el movimiento
+    SAFE_Z = 0.075
+    SAFE_Z_2 = 0.150
+
+    TAKE_PIECE_Z = 0.040
+
+    # POSE_SAFE = np.array([0.128, -0.298, 0.180, 3.1415, 0.2617, 0])
+    # POSE_SAFE = np.array([-0.128, -0.298, 0.180, 0.025, 0, 2.879])
+
+
+     # Posicion del a base del robot
     POSE_ROBOT_BASE = np.array([0, 0, 0])
     # Posicion del apriltag de referencia
-    POSE_APRILTAG_REF = np.array([-0.016, -0.320, 0, 2.099, 2.355, -0.017])
+    POSE_APRILTAG_REF = np.array([-0.016, -0.320, 0.003, 0.028, 0, 3.318])
+    POSE_SAFE_APRILTAG_REF = np.array([-0.016, -0.320, SAFE_Z, 0.028, 0, 3.318])
+
 
     # Matriz de transicion del sistema de referencia del apriltag(ref) al de la base del robot
     T_REF_TO_ROBOT = np.array([[1, 0, 0, POSE_APRILTAG_REF[0]],
                                 [0, 1, 0, POSE_APRILTAG_REF[1]],
                                 [0, 0, 1, POSE_APRILTAG_REF[2]],
                                 [0, 0, 0, 1]])
-    
-    # Posicion para la visualizacion de las piezas
-    POSE_DISPLAY = np.array([0.128, -0.298, 0.180, 3.1415, 0.2617, 0])
 
-    # Posicion segura para el movimiento
-    POSE_SAFE = np.array([0.128, -0.298, 0.180, 3.1415, 0.2617, 0])
 
     # POSICIONES DE LOS HOYOS
     # 5%
@@ -155,7 +168,7 @@ class Robot():
             # do something...
             if move_completed == False and robot_aviable == 1 and init == 1:
                 # print('inicio')
-                print('robot en movimiento')
+                print('robot en movimiento a pose: ', vector)
                 list_to_setp(self.setp, vector) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
                 self.con.send(self.setp)
                 time.sleep(0.5)
@@ -191,6 +204,7 @@ class Robot():
             if state.output_int_register_0 == 1:
                 print('programa funcionando el local')
                 break
+            print('Gripper ON: ', gripper_on)
             self.con.send(self.gripper)
             break
         time.sleep(1)
