@@ -149,10 +149,13 @@ class Robot():
                     sp.__dict__["input_double_register_%i" % i] = list[i]
                 return sp
 
+            list_to_setp(self.setp, vector) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
+            self.con.send(self.setp)
+
             # do something...
             if move_completed == False and robot_aviable == 1 and init == 1:
                 # print('inicio')
-                print('Programa en funcionamiento')
+                print('robot en movimiento')
                 list_to_setp(self.setp, vector) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
                 self.con.send(self.setp)
                 time.sleep(0.5)
@@ -196,12 +199,53 @@ class Robot():
 
 
 # pruebas
-# from pathlib import Path
-# ROBOT_HOST = '192.168.10.222' # "localhost"
-# ROBOT_PORT = 30004
-# robot_config_filename = config_filename = str(Path(__file__).resolve().parent.parent / 'assets' / 'ur3e' / 'configuration_1.xml')
-# robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
+from pathlib import Path
+ROBOT_HOST = '192.168.10.222' # "localhost"
+ROBOT_PORT = 30004
+robot_config_filename = config_filename = str(Path(__file__).resolve().parent.parent / 'assets' / 'ur3e' / 'configuration_1.xml')
+robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
 
-# robot.connect()
-# robot.setup()
-# robot.move(RobotConstants.POSE_DISPLAY)
+
+def girar_en_plano_xy(rx, ry, angulo_rotacion):
+    # Calcular las componentes x e y del vector de rotación en el plano xy
+    x_component = rx
+    y_component = ry
+
+    # Convertir el ángulo de rotación a radianes
+    angulo_rotacion_rad = angulo_rotacion * (np.pi / 180)
+
+    # Rotar en sentido antihorario en el plano xy (los ejes están intercambiados)
+    x_new = x_component * np.cos(angulo_rotacion_rad) - y_component * np.sin(angulo_rotacion_rad)
+    y_new = x_component * np.sin(angulo_rotacion_rad) + y_component * np.cos(angulo_rotacion_rad)
+
+    # Convertir las nuevas coordenadas x e y del vector de rotación de nuevo a los ángulos rx y ry
+    rx_new = np.arcsin(np.sqrt(x_new**2 + y_new**2))  # Arco seno del módulo del vector
+    ry_new = np.arctan2(y_new, x_new)
+
+    return np.array([rx_new, ry_new])
+
+robot.connect()
+robot.setup()
+robot.move(RobotConstants.POSE_DISPLAY)
+
+new_rot = RobotConstants.POSE_DISPLAY[-3:]
+
+new_rot = girar_en_plano_xy(new_rot[0], new_rot[1], 90)
+
+new_rot = np.append(new_rot, RobotConstants.POSE_DISPLAY[-1])
+
+new_rot = np.array([0,3.14,0])
+new_pose = np.append(RobotConstants.POSE_DISPLAY[:3], new_rot)
+print('rotamos 1', new_pose)
+# input(new_pose)
+robot.move(new_pose)
+robot.move(new_pose)
+
+
+new_rot = np.array([np.pi*np.sin(np.pi/4),np.pi*np.sin(np.pi/4),0])
+# new_rot = np.array([3.14,0,0])
+
+print('Rotacion: ', new_rot)
+new_pose = np.append(RobotConstants.POSE_DISPLAY[:3], new_rot)
+print('rotamos 2', new_pose)
+robot.move(new_pose)

@@ -135,8 +135,10 @@ class Coordinator():
     @staticmethod
     def the_whole_process(robot: Robot, camera: Camera, apriltag: Apriltag, nn_od_model: YoloObjectDetection) -> None:
         # 1. Movemos robot a la posicion de visualizacion de las 
+        
         robot.move(RobotConstants.POSE_APRILTAG_REF)
         robot.move(RobotConstants.POSE_DISPLAY)
+        
         print('inicio paso 2')
         # 2. detecciones
         while True:
@@ -157,17 +159,18 @@ class Coordinator():
                 break
 
         print('inicio paso 4')
+        robot.move(RobotConstants.POSE_DISPLAY)
 
         # 3. Imagen con las piezas y la referencia dibujadas
 
-        # ref.paint(frame)
-        # for piece in pieces:
-        #     # print(piece)
-        #     piece.paint(frame)
+        ref.paint(frame)
+        for piece in pieces:
+            # print(piece)
+            piece.paint(frame)
 
-        # cv2.imshow('a',frame)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
+        cv2.imshow('a',frame)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
 
         # 4 ubicar centro del april de las piezas como punto 3d respecto a la base del robot (matrices de transferencia). Importante la rotacion de la pieza
@@ -175,10 +178,11 @@ class Coordinator():
         piece = pieces[0]
         # 4.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
         piece.calculatePose(ref, RobotConstants.T_REF_TO_ROBOT)
-        new_pose = piece.pose.get_array()
-        input(new_pose)
-
-        robot.move(new_pose)
+        new_pose = piece.pose.get_array()[:3]
+        new_pose = np.append(new_pose, RobotConstants.POSE_APRILTAG_REF[-3:])
+        print('new pose: ', new_pose)
+        input()
+        robot.move( new_pose)
 
         # 4. Movimiento del robot para coger la pieza y dejarla en su respectivo hoyo (posicion conocida)
         # Coordinator.combinated_movement(robot, piece)
