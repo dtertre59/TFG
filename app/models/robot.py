@@ -199,53 +199,49 @@ class Robot():
 
 
 # pruebas
-from pathlib import Path
-ROBOT_HOST = '192.168.10.222' # "localhost"
-ROBOT_PORT = 30004
-robot_config_filename = config_filename = str(Path(__file__).resolve().parent.parent / 'assets' / 'ur3e' / 'configuration_1.xml')
-robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
+# from pathlib import Path
+# ROBOT_HOST = '192.168.10.222' # "localhost"
+# ROBOT_PORT = 30004
+# robot_config_filename = config_filename = str(Path(__file__).resolve().parent.parent / 'assets' / 'ur3e' / 'configuration_1.xml')
+# robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
 
 
-def girar_en_plano_xy(rx, ry, angulo_rotacion):
-    # Calcular las componentes x e y del vector de rotación en el plano xy
-    x_component = rx
-    y_component = ry
+# def rx_ry_para(angulo_rotacion):
+#     ang_rad = angulo_rotacion * (np.pi/180)
+#     rx = np.pi * np.sin(ang_rad/2)
+#     ry = np.pi * np.cos(ang_rad/2)
+#     return np.array([rx, ry, 0])
 
-    # Convertir el ángulo de rotación a radianes
-    angulo_rotacion_rad = angulo_rotacion * (np.pi / 180)
+# robot.connect()
+# robot.setup()
+# robot.move(RobotConstants.POSE_DISPLAY)
 
-    # Rotar en sentido antihorario en el plano xy (los ejes están intercambiados)
-    x_new = x_component * np.cos(angulo_rotacion_rad) - y_component * np.sin(angulo_rotacion_rad)
-    y_new = x_component * np.sin(angulo_rotacion_rad) + y_component * np.cos(angulo_rotacion_rad)
+# new_rot = RobotConstants.POSE_DISPLAY[-3:]
 
-    # Convertir las nuevas coordenadas x e y del vector de rotación de nuevo a los ángulos rx y ry
-    rx_new = np.arcsin(np.sqrt(x_new**2 + y_new**2))  # Arco seno del módulo del vector
-    ry_new = np.arctan2(y_new, x_new)
+# new_rot = np.array([0,3.14,0])
+# new_pose = np.append(RobotConstants.POSE_DISPLAY[:3], new_rot)
+# print('rotamos 0º', new_pose)
+# # input(new_pose)
+# robot.move(new_pose)
 
-    return np.array([rx_new, ry_new])
+# # new_rot = np.array([np.pi*np.sin(np.pi/4),np.pi*np.sin(np.pi/4),0])
+# # new_rot = np.array([3.14,0,0])
+# new_rot = rx_ry_para(90)
+# new_pose = np.append(RobotConstants.POSE_DISPLAY[:3], new_rot)
+# print('rotamos 90º', new_pose)
+# robot.move(new_pose)
 
-robot.connect()
-robot.setup()
-robot.move(RobotConstants.POSE_DISPLAY)
+# new_rot = rx_ry_para(45)
+# new_pose = np.append(RobotConstants.POSE_DISPLAY[:3], new_rot)
+# print('rotamos 45º', new_pose)
+# robot.move(new_pose)
 
-new_rot = RobotConstants.POSE_DISPLAY[-3:]
+# new_rot = rx_ry_para(30)
+# new_pose = np.append(RobotConstants.POSE_DISPLAY[:3], new_rot)
+# print('rotamos 30º', new_pose)
+# robot.move(new_pose)
 
-new_rot = girar_en_plano_xy(new_rot[0], new_rot[1], 90)
-
-new_rot = np.append(new_rot, RobotConstants.POSE_DISPLAY[-1])
-
-new_rot = np.array([0,3.14,0])
-new_pose = np.append(RobotConstants.POSE_DISPLAY[:3], new_rot)
-print('rotamos 1', new_pose)
-# input(new_pose)
-robot.move(new_pose)
-robot.move(new_pose)
-
-
-new_rot = np.array([np.pi*np.sin(np.pi/4),np.pi*np.sin(np.pi/4),0])
-# new_rot = np.array([3.14,0,0])
-
-print('Rotacion: ', new_rot)
-new_pose = np.append(RobotConstants.POSE_DISPLAY[:3], new_rot)
-print('rotamos 2', new_pose)
-robot.move(new_pose)
+# new_rot = rx_ry_para(135)
+# new_pose = np.append(RobotConstants.POSE_DISPLAY[:3], new_rot)
+# print('rotamos 135º', new_pose)
+# robot.move(new_pose)

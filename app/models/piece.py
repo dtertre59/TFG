@@ -187,11 +187,14 @@ class Piece(PieceBase):
         t_cam_to_robot = np.dot(t_ref_to_robot, np.linalg.inv(t_ref_to_cam))
 
         ppiece_robot = hf.point_tansf(t_piece_to_robot, np.array([0,0,0]))
+
         pose_robot = hf.pose_transf(t_piece_to_robot, np.array([0,0,0]))
+        print('Matriz de transicion de la pieza al robot: ', t_piece_to_robot)
+        print('Pose de la pieza respecto del robot: ', pose_robot)
+        input()
+        self.point3d = Vector3D(ppiece_robot[0], ppiece_robot[1], ppiece_robot[2]) # =  Vector6D(pose_robot[0], pose_robot[1], pose_robot[2])
 
-        self.point3d = Vector3D(ppiece_robot[0], ppiece_robot[1], ppiece_robot[2])
-
-        self.pose = Vector6D(ppiece_robot[0], ppiece_robot[1], ppiece_robot[2], pose_robot[3], pose_robot[4], pose_robot[5])
+        self.pose = Vector6D(pose_robot[0], pose_robot[1], pose_robot[2], pose_robot[3], pose_robot[4], pose_robot[5])
 
         # 3D representation
         size = 0.2
