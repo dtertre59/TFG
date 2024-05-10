@@ -31,29 +31,35 @@ robot_config_filename = config_filename = str(Path(__file__).resolve().parent / 
 
 # Con apriltags y object detection
 def main():
+    print()
+    print(' ----- Init ----- ')
+    print()
+
     # 1. Instancias
+    print('Inicio: ')
     robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
+    # camera = Camera(width=3840, height=2160, fx= 2996.7346441158315, fy=2994.755126405525) 
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
     # camera = Camera(width=1280, height=720, fx= 998.911548, fy=998.2517088)
     apriltag = Apriltag(family='tag36h11', size=0.015)
     nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_square_v1.pt'))  
 
-    # 2. init
+    # 2. Init
     # 2.1 robot
     robot.connect()
     robot.setup()
     # 2.2 camera
     camera.init_rgb()
 
-    # 3. Bucle del proceso
-    flag = True
-    # while flag:
-    Coordinator.the_whole_process(robot, camera, apriltag, nn_od_model)
+    # 3. Proceso completo de una pieza:
+    while 1:
+        flag = Coordinator.the_whole_process(robot, camera, apriltag, nn_od_model)
+        if not flag:
+            break
 
-
-    # 5. (opcional) revisar que los hoyos no esten ocupados para poder mover la pieza a su hoyo
-
-    # 6 .(opcional) poner un apriltag en el madero de los hoyos y asi no es necesario saber la posicion exacta de cada hoyo, solo la relativa respecto al april2
+    print()
+    print(' ----- End----- ')
+    print()
 
     return
 
@@ -79,6 +85,9 @@ def main2():
 
     # 3. movimiento del robot para conger la pieza y dejarla en su respectivo hoyo (posicion conocida)
     
+    # 5. (opcional) revisar que los hoyos no esten ocupados para poder mover la pieza a su hoyo
+
+    # 6 .(opcional) poner un apriltag en el madero de los hoyos y asi no es necesario saber la posicion exacta de cada hoyo, solo la relativa respecto al april2
 
     return
 

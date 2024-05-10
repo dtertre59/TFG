@@ -3,6 +3,31 @@
 
     Robot 
 
+    Registros utilizados:
+
+        - Estado (receive):
+            Posición objetivo -> name="target_q" type="VECTOR6D"/>
+            Velocidad objetivo ->  name="target_qd" type="VECTOR6D"/>
+            TCP pose actual -> name="actual_TCP_pose" type="VECTOR6D"/>
+            Programa de PolyScope en funcionamiento ->  name="output_int_register_0" type="INT32"/>
+            Robot esperando -> name="output_int_register_1" type="INT32"/>
+            
+
+        - Pose (send):
+            x -> name="input_double_register_0" type="DOUBLE"/>
+            y -> name="input_double_register_1" type="DOUBLE"/>
+            z -> name="input_double_register_2" type="DOUBLE"/>
+            rx -> name="input_double_register_3" type="DOUBLE"/>
+            ry -> name="input_double_register_4" type="DOUBLE"/>
+            rz -> name="input_double_register_5" type="DOUBLE"/>
+
+        - Control del Gripper (send) -> name="input_bit_register_126" type="BOOL"
+
+        Sin utilidad todavia en el programa de polyscope
+        - watchdog (send) -> name="input_bit_register_127" type="BOOL"/>
+
+
+
 """
 
 # -------------------- PACKAGES ------------------------------------------------------------------------------------------ #
@@ -68,6 +93,10 @@ class RobotConstants():
 
 class RobotException(Exception):
     """Excepcion del robot"""
+    def __init__(self, msg: str):
+        msg = 'Excepcion Robot: ' + msg
+        super().__init__(msg)
+
 
 
 class Robot():
@@ -92,7 +121,7 @@ class Robot():
             print(connection_state)
             time.sleep(1)
             connection_state = self.con.connect()
-        print('connected to the robot')
+        print('Robot conectado')
 
         return self.con
 
@@ -130,45 +159,48 @@ class Robot():
         self.setp.input_double_register_4 = p_axis[4]
         self.setp.input_double_register_5 = p_axis[5]
 
+        print('Setup del robot completo')
         return
         
     # movimiento del robot
     def move(self, vector):
-        """ Si el watchdog == 1 -> el robot se esta moviendo"""
-
         # start data synchronization
         if not self.con.send_start():
-            raise RobotException("robot send_start failed")
+            raise RobotException("Fallo en la instrucción de start")
         
         move_completed = False
 
         # The function "rtde_set_watchdog" in the "rtde_control_loop.urp" creates a 1 Hz watchdog
-        self.watchdog.input_bit_register_127 = 0
+        # self.watchdog.input_bit_register_127 = 0
 
         init = 1
+        # bucle de movimiento del robot
         while move_completed == False:
             # receive the current state; recibimos los datos que tenemo en el .xml state
             state = self.con.receive()
-            robot_aviable = state.output_int_register_1
-            # print(robot_aviable)
-
             if state is None:
-                print('state None')
-                break
+                raise RobotException('No se recibe el estado')
             
+            # comprobamos que el programa del robot esta en funcionamiento
+            program_running = state.output_int_register_0
+            if not program_running:
+                raise RobotException('No está activado el programa en PolyScope')
+            # comprobamos estado del robot (parado=0, en movimiento = 1)
+            robot_aviable = state.output_int_register_1
+
             # funcion de transformacion inversa
             def list_to_setp(sp, list):
                 for i in range(0, 6):
                     sp.__dict__["input_double_register_%i" % i] = list[i]
                 return sp
 
-            list_to_setp(self.setp, vector) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
-            self.con.send(self.setp)
+            # list_to_setp(self.setp, vector) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
+            # self.con.send(self.setp)
 
             # do something...
             if move_completed == False and robot_aviable == 1 and init == 1:
                 # print('inicio')
-                print('robot en movimiento a pose: ', vector)
+                print('Robot en movimiento a pose: ', vector)
                 list_to_setp(self.setp, vector) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
                 self.con.send(self.setp)
                 time.sleep(0.5)
@@ -177,33 +209,35 @@ class Robot():
 
             # No se ha movido, esta parado en la misma posicion
             elif init == 0 and robot_aviable == 1:
-                # print('salida')
+                print('Fin del movimiento del robot')
                 move_completed = True
 
             time.sleep(0.2)
             # kick watchdog
-            self.con.send(self.watchdog)
+            # self.con.send(self.watchdog)
         return
     
     # control del gripper del robot
     def gripper_control(self, gripper_on: bool):
         # hace falta -> SI pero no se por qué para iniciar el envio
         if not self.con.send_start():
-            raise RobotException("robot send_start failed")
+            raise RobotException("Fallo en la instrucción de start")
         
         # The function "rtde_set_watchdog" in the "rtde_control_loop.urp" creates a 1 Hz watchdog
         # watchdog.input_bit_register_127 = True
         self.gripper.input_bit_register_126 = gripper_on
 
         while True:
-            # receive the current state; recivimos los datos que tenemo en el .xml state
+            # receive the current state; recibimos los datos que tenemo en el .xml state
             state = self.con.receive()
             if state is None:
-                print('state None')
-                break
-            if state.output_int_register_0 == 1:
-                print('programa funcionando el local')
-                break
+                raise RobotException('No se recibe el estado')
+
+            # comprobamos que el programa del robot esta en funcionamiento
+            program_running = state.output_int_register_0
+            if not program_running:
+                raise RobotException('No está activado el programa en PolyScope')
+            
             print('Gripper ON: ', gripper_on)
             self.con.send(self.gripper)
             break

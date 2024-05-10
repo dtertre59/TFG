@@ -1,5 +1,5 @@
 """
-        main_functions.py
+        camera.py
 
     Este Script contiene una union de los conceptos basicos en funcciones más especificas.
     Teniendo en cuenta los parametros que tenemos en nuestro proyecto en específico.
@@ -20,6 +20,7 @@ import depthai as dai
 import cv2
 
 from models.vectors import Vector2D
+from models.piece import PieceA, Piece
 
 
         
@@ -85,12 +86,15 @@ class Camera(CameraConfig):
         sync.out.link(xOut.input)
         xOut.setStreamName("rgb out")
 
+        print('Cámara iniciada')
+
         return
     
     # RUN camera
-    def run_with_condition(self, trigger_func = None, detector = None) -> np.ndarray|None:
+    def run_with_condition(self, trigger_func = None, *args, **kwargs) -> np.ndarray|None|tuple[np.ndarray, PieceA, list[Piece]]:
         start_time = time.time()
         with dai.Device(self.pipeline) as self.device:
+            print('Camara en funcionamiento')
             # For now, RGB needs fixed focus to properly align with depth.
             # This value was used during calibration
             # try:
@@ -104,15 +108,12 @@ class Camera(CameraConfig):
             
             q = self.device.getOutputQueue(name="rgb out", maxSize=4, blocking=False)
 
-            detections_bool = False
+            flag = False
 
             while self.device.isPipelineRunning():
                 
                 inMessage = q.get()
                 inColor = inMessage["rgb"]
-                cvColorFrame = inColor.getCvFrame()
-                
-                cvRGBFrame = cv2.cvtColor(cvColorFrame, cv2.COLOR_BGR2RGB)
 
                 # ----- in rgb
                 if inColor:
@@ -122,21 +123,20 @@ class Camera(CameraConfig):
 
                     # trigger function
                     if trigger_func:
-                            frame, detections_bool, pieces = trigger_func(frame, self, detector)
+                            flag, ref, pieces = trigger_func(frame, self, *args, **kwargs)
                     
                     
-                    cv2.imshow("rgb", frame)
+                    cv2.imshow("OAK-D-Lite", cv2.resize(frame, (1280, 720)))
 
-                    if detections_bool and ((time.time()-start_time)>8): # ponemos 20 sergundos de enfoque
+                    if flag and ((time.time()-start_time)>8): # ponemos 8 sergundos de enfoque
                         cv2.destroyAllWindows()
-                        return frame, pieces
+                        return frame, ref, pieces
                     
 
                 # ----- teclas
                 key = cv2.waitKey(1)
                 
                 if key == ord('q'):
-
                     break
 
             cv2.destroyAllWindows()

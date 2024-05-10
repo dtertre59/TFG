@@ -13,3 +13,14 @@
 #     print(r.keypoints)  # print the Keypoints object containing the detected keypoints
 #     r.show()
 
+def ejemplo(*args, **kwargs):
+    print("Argumentos posicionales:")
+    for arg in args:
+        print(arg)
+        
+    print("\nArgumentos de palabra clave:")
+    for key, value in kwargs.items():
+        print(f"{key}: {value}")
+
+# Llamada a la función ejemplo con diferentes tipos de argumentos
+ejemplo(1, 2, 3, nombre="Alice", edad=30)

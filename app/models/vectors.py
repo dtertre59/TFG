@@ -25,7 +25,7 @@ class Vector6D(Vector3D):
         self.rz = rz
 
     def __str__(self) -> str:
-        return f"Vetor6D"
+        return str(self.get_array())
     
     def get_array(self) -> np.ndarray:
         return np.array([self.x, self.y, self.z, self.rx, self.ry, self.rz])

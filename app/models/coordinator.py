@@ -41,7 +41,7 @@ class Coordinator():
         else:
             return
 
-
+    """ ----- DETECCIONES ----- """
     @staticmethod
     def apriltag_detections(frame, camera: Camera, apriltag: Apriltag) -> tuple[np.ndarray, bool, list[PieceA]]:
         # 1. Camera params
@@ -54,8 +54,7 @@ class Coordinator():
             return frame, True, apriltag.pieces
         else:
             return frame, False, apriltag.pieces
-
-      
+  
     @staticmethod
     def nn_object_detections(frame, camera: Camera, nn_model: YoloObjectDetection):
         # 1. deteccion
@@ -67,20 +66,20 @@ class Coordinator():
         else:
             return frame, False, nn_model.pieces
 
-    
     @staticmethod
     def nn_poseEstimation_detections(frame, camera: Camera, nn_model: YoloPoseEstimation):
         pass
 
-
     @staticmethod
-    def combined_detections(piecesA: list[PieceA], piecesN: list[PieceN]) -> tuple[PieceA|None, list[Piece]]:
+    def combined_pieces_detections(piecesA: list[PieceA], piecesN: list[PieceN]) -> tuple[bool, PieceA|None, list[Piece]]:
         """combinar detecciones en una sola"""
-        pieces = []
+        flag = False
         ref = None
+        pieces = []
+        
         if not piecesA:
-            print('No aprils')
-            return ref, pieces
+            print('No se ha detectado ningun apriltag')
+            return flag, ref, pieces
         for pieceA in piecesA:
             if pieceA.name == '4':
                 # 1. apriltag de ref
@@ -88,21 +87,41 @@ class Coordinator():
             else:
                 for pieceN in piecesN:
                     piece = Piece(pieceA, pieceN)
-                    if piece.validate():
+                    if piece.validate(): # se valida que el centro de la cara de la pieza se envcuentre dentro de la boundig box
                         # 2. piezas con aprils incluidos
                         pieces.append(piece)
-        return ref, pieces
+        
+        if (ref == None) or (pieces == []):
+            return flag, ref, pieces
+        flag = True
+        return flag, ref, pieces
 
     @staticmethod
+    def detections(frame: np.ndarray, camera: Camera, apriltag: Apriltag, nn_model: YoloObjectDetection|YoloPoseEstimation, paint_frame: bool = True) -> tuple[bool, PieceA|None, list[Piece]]:
+        frame, flagA, piecesA = Coordinator.apriltag_detections(frame, camera, apriltag)
+        if type(nn_model) == YoloObjectDetection:
+            frame, flagN, piecesN = Coordinator.nn_object_detections(frame, camera, nn_model)
+        elif type(nn_model) == YoloPoseEstimation:
+            print('método no completado todavia')
+            return
+        if paint_frame:
+            for pieceA in piecesA:
+                pieceA.paint(frame)
+            for pieceN in piecesN:
+                pieceN.paint(frame)
+        flag, ref, pieces = Coordinator.combined_pieces_detections(piecesA, piecesN)
+        
+        return flag, ref, pieces
+
+    """ ----- MOVIMIENTOS ----- """
+    @staticmethod
     def combinated_movement(robot: Robot, piece: Piece) -> None:
-        print('piece pose: ', piece.pose)
         # 1. posicion de la pieza
         if piece.pose:
             pose = piece.pose.get_array()
         else:
             # Exception?
             return
-        print('pose: ', pose)
 
         # # posicion del hoyo
         # name = piece.name
@@ -129,9 +148,8 @@ class Coordinator():
         secure_pose[2] = RobotConstants.SAFE_Z_2
         robot.move(secure_pose)
         # 6. ir a la posicion del hoyo ( un poco arriba)
-        input('----------CONTINNUAMOS--------------------')
         # 7. posicion del hoyo exacta + soltar gripper
-        robot.move()
+        # robot.move()
         robot.gripper_control(False)
 
         # 8. posicion segura un poco mas arriba
@@ -141,72 +159,48 @@ class Coordinator():
 
         return
     
+    """ ----- PRINCIPAL -----"""
     @staticmethod
     def the_whole_process(robot: Robot, camera: Camera, apriltag: Apriltag, nn_od_model: YoloObjectDetection) -> None:
-        # 1. Movemos robot a la posicion de visualizacion de las 
-        
-        robot.move(RobotConstants.POSE_SAFE_APRILTAG_REF)
-        robot.gripper_control(True)
-        robot.move(RobotConstants.POSE_DISPLAY)
-        
         print()
-        print('Inicio de detecciones')
+        # 1. Movemos robot a la posicion de visualizacion de las piezas
+        try:
+            print('Movimientos iniciales:')
+            robot.gripper_control(True)
+            robot.move(RobotConstants.POSE_SAFE_APRILTAG_REF)
+            robot.move(RobotConstants.POSE_DISPLAY)
+        except Exception as e:
+            print(str(e))
+            return
+        
         # 2. detecciones
-        while True:
-            # camera.init_rgb()
-            # 2.1 Deteccion de la pieza con red neuronal (object detection)
-            frame, piecesN = camera.run_with_condition(Coordinator.nn_object_detections, nn_od_model)
-            # 2.2 Deteccion de los apriltags de la imagen en la que se ha encontrado la pieza. Es necesario que se encuentre el apriltag de referencia
-            frame, boolean , piecesA = Coordinator.apriltag_detections(frame, camera, apriltag)
-
-            # 2.3. union de las detecciones para sacar la referencia y las piezas
-            ref, pieces = Coordinator.combined_detections(piecesA, piecesN)
-
-            for pieceA in piecesA:
-                pieceA.paint(frame)
-            for piece in pieces:
-                # print(piece)
-                piece.paint(frame)
-
-            cv2.imshow('a',frame)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-
-            # 2.4. si no ha encontrado la ref y al menos una pieza vuelve a repetir el proceso
-            if (ref != None) and (pieces != []):
-                print('Referencia: ', ref)
-                for piece in pieces:
-                    print('pieza final: ',piece)
-                break
-            else:
-                print('Repetimos bucle de deteccion')
-
-        print('inicio paso 4')
-        robot.move(RobotConstants.POSE_DISPLAY)
-
-        # 3. Imagen con las piezas y la referencia dibujadas
-
-        ref.paint(frame)
-        for piece in pieces:
-            # print(piece)
-            piece.paint(frame)
-
-        cv2.imshow('a',frame)
+        print()
+        print('Inicio de detecciones:')
+        try:
+            frame, ref, pieces = camera.run_with_condition(Coordinator.detections, apriltag, nn_od_model, paint_frame = True)
+        except:
+            print()
+            print('Salida desde camara')
+            return
+        
+        cv2.imshow('Detecciones',cv2.resize(frame, (1280, 720)))
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-
-        # 4 ubicar centro del april de las piezas como punto 3d respecto a la base del robot (matrices de transferencia). Importante la rotacion de la pieza
-        # 4.1 Se elige la primera pieza para continuar el proceso
+        # 3. calcular pose
+        # 3.1 Se elige la primera pieza para continuar el proceso
         piece = pieces[0]
-        # 4.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
-        piece.calculatePose(ref, RobotConstants.T_REF_TO_ROBOT)
-        # new_pose = piece.pose.get_array()
-        # print('new pose: ', new_pose)
+        # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
+        piece.calculatePose(ref, RobotConstants.T_REF_TO_ROBOT, verbose=True, matplot_representation=False)
         
-        print('inicio del movimiento combinado')
-        # 4. Movimiento del robot para coger la pieza y dejarla en su respectivo hoyo (posicion conocida)
-        Coordinator.combinated_movement(robot, piece)
-        input('---------FIN 2-------------------')
-        return
+        # 4. movimiento combinado: coger la pieza y dejarla en su respectivo hoyo (posicion conocida)
+        try:
+            print()
+            print('Inicio de movimientos combinados:')
+            Coordinator.combinated_movement(robot, piece)
+        except Exception as e:
+            print(str(e))
+            return False
+
+        return True
 
