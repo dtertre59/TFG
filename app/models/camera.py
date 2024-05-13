@@ -12,7 +12,7 @@
             . 720P = 1280x720 -> (fx = 998.911548, fy = 998.2517088)
 """
 
-
+# -------------------- PACKAGES ------------------------------------------------------------------------------------------ #
 
 import numpy as np
 import time
@@ -23,8 +23,10 @@ from pathlib import Path
 from models.vectors import Vector2D
 from models.piece import PieceA, Piece
 
+from functions import helper_functions as hf
 
-        
+
+# -------------------- CLASSES ------------------------------------------------------------------------------------------- #       
 
 class CameraConfig():
     def __init__(self, width: int, height: int, fx: float, fy: float) -> None:
@@ -91,54 +93,51 @@ class Camera(CameraConfig):
 
         return
     
-
-    # # RUN camera
-    # def run_with_options(self, directory: str|None = None, frame_name: str|None = None) -> None:
-    #     with dai.Device(self.pipeline) as self.device:
-    #         print('Camara en funcionamiento')
+    # RUN camera with OPTIONS
+    def run_with_options(self, directory: str|None = None, name: str = 'img') -> None:
+        with dai.Device(self.pipeline) as self.device:
+            print('Camara en funcionamiento')
             
-    #         q = self.device.getOutputQueue(name="rgb out", maxSize=4, blocking=False)
+            q = self.device.getOutputQueue(name="rgb out", maxSize=4, blocking=False)
 
-    #         flag = False
+            # descargas
+            if not directory:
+                directory = Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / 'train' / name
+            picture_counter = hf.obtain_last_number(directory, name) + 1
 
-    #         while self.device.isPipelineRunning():
+            while self.device.isPipelineRunning():
                 
-    #             inMessage = q.get()
-    #             inColor = inMessage["rgb"]
+                inMessage = q.get()
+                inColor = inMessage["rgb"]
 
-    #             # ----- in rgb
-    #             if inColor:
-    #                 frame = inColor.getCvFrame()
-    #                 # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    #                 # frame = cv2.resize(frame, (1280, 720))
+                # ----- in rgb
+                if inColor:
+                    frame = inColor.getCvFrame()
+                    # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    # frame = cv2.resize(frame, (1280, 720))
                  
-    #                 cv2.imshow("OAK-D-Lite", cv2.resize(frame, (1280, 720)))
+                    cv2.imshow("OAK-D-Lite", cv2.resize(frame, (1280, 720)))
 
 
-    #             # ----- teclas
-    #             key = cv2.waitKey(1)
+                # ----- teclas
+                key = cv2.waitKey(1)
                 
-    #             if key == ord('d') and frame is not None:
-    #                 print('export picture ')
-    #                 if directory:
-    #                     filename = f'{directory}/{framename}.{picture_counter}.png'
-    #                 else:
-    #                     directory = Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / 'train' / 'square' / f'{framename}.{picture_counter}.png'
-    #                 print(directory)
-    #                 try:
-    #                     cv2.imwrite(filename=str(directory), img=frame)
-    #                     # cv2.imwrite(filename='img.png', img=frameRGB)
-    #                 except Exception as e:
-    #                     print(str(e))
-    #                 picture_counter += 1
-    #             if key == ord('q'):
-    #                 break
+                if key == ord('d') and frame is not None:
+                    filename = f'{directory}/{name}_{picture_counter}.png'
+                    try:
+                        print('Export picture ', filename)
+                        cv2.imwrite(filename=str(filename), img=frame)
+                        # cv2.imwrite(filename='img.png', img=frameRGB)
+                    except Exception as e:
+                        print(str(e))
+                    picture_counter += 1
+                if key == ord('q'):
+                    break
 
-    #         cv2.destroyAllWindows()
-    #         return
+            cv2.destroyAllWindows()
+            return
 
-
-    # RUN camera
+    # RUN camera with CONDITION FUNCTION
     def run_with_condition(self, trigger_func = None, *args, **kwargs) -> np.ndarray|None|tuple[np.ndarray, PieceA, list[Piece]]:
         start_time = time.time()
         with dai.Device(self.pipeline) as self.device:
@@ -199,3 +198,9 @@ class Camera(CameraConfig):
 # camera.init_rgb()
 # while 1:
 #     camera.run_with_condition()
+
+# TAKE PICTURES
+# camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
+# camera.init_rgb()
+
+# camera.run_with_options(name='square')

@@ -19,9 +19,23 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 import open3d as o3d
+import os
 
 
 # -------------------- FUNCTIONS ----------------------------------------------------------------------------------------- #
+
+def obtain_last_number(directory: str, name: str) -> int:
+    filenames = os.listdir(directory)
+    numbers = [int(filename.split('_')[1].split('.')[0]) for filename in filenames if filename.startswith(f'{name}_')]
+    if not numbers:
+        return 0
+    return max(numbers)
+
+
+
+
+
+
 
 # -------------------- OPERACIONES --------------------------------------------------------------------------------------- #
 
