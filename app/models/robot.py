@@ -115,13 +115,15 @@ class Robot():
 
     # Connection
     def connect(self)-> rtde.RTDE:
-
-        connection_state = self.con.connect()
-        while connection_state != None:
-            print(connection_state)
-            time.sleep(1)
+        try:
             connection_state = self.con.connect()
-        print('Robot conectado')
+            while connection_state != None:
+                print(connection_state)
+                time.sleep(1)
+                connection_state = self.con.connect()
+            print('Robot conectado')
+        except Exception as e:
+            raise RobotException("Fallo en la conexion")
 
         return self.con
 

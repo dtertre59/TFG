@@ -18,6 +18,7 @@ import numpy as np
 import time
 import depthai as dai
 import cv2
+from pathlib import Path
 
 from models.vectors import Vector2D
 from models.piece import PieceA, Piece
@@ -90,6 +91,53 @@ class Camera(CameraConfig):
 
         return
     
+
+    # # RUN camera
+    # def run_with_options(self, directory: str|None = None, frame_name: str|None = None) -> None:
+    #     with dai.Device(self.pipeline) as self.device:
+    #         print('Camara en funcionamiento')
+            
+    #         q = self.device.getOutputQueue(name="rgb out", maxSize=4, blocking=False)
+
+    #         flag = False
+
+    #         while self.device.isPipelineRunning():
+                
+    #             inMessage = q.get()
+    #             inColor = inMessage["rgb"]
+
+    #             # ----- in rgb
+    #             if inColor:
+    #                 frame = inColor.getCvFrame()
+    #                 # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    #                 # frame = cv2.resize(frame, (1280, 720))
+                 
+    #                 cv2.imshow("OAK-D-Lite", cv2.resize(frame, (1280, 720)))
+
+
+    #             # ----- teclas
+    #             key = cv2.waitKey(1)
+                
+    #             if key == ord('d') and frame is not None:
+    #                 print('export picture ')
+    #                 if directory:
+    #                     filename = f'{directory}/{framename}.{picture_counter}.png'
+    #                 else:
+    #                     directory = Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / 'train' / 'square' / f'{framename}.{picture_counter}.png'
+    #                 print(directory)
+    #                 try:
+    #                     cv2.imwrite(filename=str(directory), img=frame)
+    #                     # cv2.imwrite(filename='img.png', img=frameRGB)
+    #                 except Exception as e:
+    #                     print(str(e))
+    #                 picture_counter += 1
+    #             if key == ord('q'):
+    #                 break
+
+    #         cv2.destroyAllWindows()
+    #         return
+
+
     # RUN camera
     def run_with_condition(self, trigger_func = None, *args, **kwargs) -> np.ndarray|None|tuple[np.ndarray, PieceA, list[Piece]]:
         start_time = time.time()

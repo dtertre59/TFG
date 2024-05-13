@@ -36,7 +36,6 @@ def main():
     print()
 
     # 1. Instancias
-    print('Inicio: ')
     robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
     # camera = Camera(width=3840, height=2160, fx= 2996.7346441158315, fy=2994.755126405525) 
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
@@ -45,14 +44,21 @@ def main():
     nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_square_v1.pt'))  
 
     # 2. Init
-    # 2.1 robot
-    robot.connect()
-    robot.setup()
-    # 2.2 camera
-    camera.init_rgb()
+    print('Inicio: ')
+    try:
+        # 2.1 robot
+        robot.connect()
+        robot.setup()
+        # 2.2 camera
+        camera.init_rgb()
+        flag = True
+    except Exception as e:
+        print(str(e))
+        flag = False
 
+    
     # 3. Proceso completo de una pieza:
-    while 1:
+    while flag:
         flag = Coordinator.the_whole_process(robot, camera, apriltag, nn_od_model)
         if not flag:
             break
