@@ -100,5 +100,8 @@ def main2():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
     # main2()
+    camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
+    camera.init_rgb() 
+    camera.run_with_options(name='square')
