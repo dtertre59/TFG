@@ -29,6 +29,14 @@ robot_config_filename = config_filename = str(Path(__file__).resolve().parent / 
 
 # -------------------- FUNCTIONS ----------------------------------------------------------------------------------------- #
 
+def main_camera():
+    camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563)
+    apriltag = Apriltag(family='tag36h11', size=0.015)
+    nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_od_v1.pt'))
+    
+    camera.init_rgb()
+    camera.run_with_condition(Coordinator.detections,  apriltag, nn_od_model, paint_frame = True)
+
 # Con apriltags y object detection
 def main():
     print()
@@ -100,8 +108,9 @@ def main2():
 
 
 if __name__ == '__main__':
+    main_camera()
     # main()
     # main2()
-    camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
-    camera.init_rgb() 
-    camera.run_with_options(name='square')
+    # camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
+    # camera.init_rgb() 
+    # camera.run_with_options(name='hexagon')

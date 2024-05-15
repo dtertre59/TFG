@@ -46,9 +46,9 @@ import rtde.rtde_config as rtde_config
 class RobotConstants():
    
 
-    
+    POSE_STANDAR = np.array([-0.128, -0.298, 0.180, 0.025, 0, 2.879])
     # Posicion para la visualizacion de las piezas
-    POSE_DISPLAY = np.array([-0.128, -0.298, 0.180, 0.025, 0, 2.879])
+    POSE_DISPLAY = np.array([-0.125, -0.166, 0.170, 1.454, -1.401, -4.095])
 
     # Posicion segura para el movimiento
     SAFE_Z = 0.075
