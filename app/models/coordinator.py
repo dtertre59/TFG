@@ -168,6 +168,7 @@ class Coordinator():
             print('Movimientos iniciales:')
             robot.gripper_control(True)
             robot.move(RobotConstants.POSE_SAFE_APRILTAG_REF)
+            input('aaaaaaaaaa')
             robot.move(RobotConstants.POSE_DISPLAY)
         except Exception as e:
             print(str(e))

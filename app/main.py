@@ -49,7 +49,7 @@ def main():
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
     # camera = Camera(width=1280, height=720, fx= 998.911548, fy=998.2517088)
     apriltag = Apriltag(family='tag36h11', size=0.015)
-    nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_square_v1.pt'))  
+    nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_od_v1.pt'))  
 
     # 2. Init
     print('Inicio: ')
@@ -108,8 +108,8 @@ def main2():
 
 
 if __name__ == '__main__':
-    main_camera()
-    # main()
+    # main_camera()
+    main()
     # main2()
     # camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
     # camera.init_rgb() 
