@@ -17,7 +17,7 @@ from ultralytics import YOLO
 
 from models.camera import CameraConfig, Camera
 from models.vectors import Vector2D
-from models.piece import BoundingBox, PieceA, PieceN, Piece
+from models.piece import BoundingBox, PieceA, PieceN, PieceN2, Piece
 from models.robot import Robot
 
 # -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
@@ -90,7 +90,7 @@ class Apriltag(ApriltagConfig):
 
 # -------------------- NEURONAL NETWORKS --------------------------------------------------------------------------------- #
 
-class YoloBaseModel(ABC):
+class YoloBaseModel(ABC): # el abs es para el abstract
     def __init__(self, filename: str) -> None:
         self.model = YOLO(filename)
         self.detections = None
@@ -149,4 +149,38 @@ class YoloObjectDetection(YoloBaseModel):
 class YoloPoseEstimation(YoloBaseModel):
     def __init__(self, filename: str) -> None:
         super().__init__(filename)
+        self.pieces = []
+        return
+
+    def detect(self, frame: np.ndarray) -> None:
+        # 1. detecciones
+        self.detections = list(self.model(frame, stream=True))
+        # 2. instancias de las piezas detectadas
+        self.pieces = []
+
+        for detection in self.detections:
+            # identificación de objetos
+            objects = detection.boxes.cls.numpy().tolist()
+            # diccionario de nombres de la red
+            names = detection.names
+            if objects:
+                for index, ob in enumerate(objects):
+                    # coodenadas de cada objeto
+                    coordinates = detection.boxes.xyxy[index].numpy()
+                    bbox = BoundingBox(p1 = np.array([int(coordinates[0]), int(coordinates[1])]), p2=np.array([int(coordinates[2]), int(coordinates[3])]))                    
+                    center = detection.keypoints.xy[index][-1].int().tolist()
+                    piece = PieceN2(name=names[ob], color=(0,0,255), bbox=bbox, center=Vector2D(center[0], center[1]))
+                    self.pieces.append(piece)
+        return
+    
+    def paint(self, frame: np.ndarray) -> None:
+        if self.pieces:
+            for piece in self.pieces:
+                piece.paint(frame)
+        return 
+
+
+
+
+    
 

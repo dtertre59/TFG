@@ -19,7 +19,7 @@ from functions import helper_functions as hf
 # -------------------- CLASSES ------------------------------------------------------------------------------------------- #
 
 class BoundingBox():
-    def __init__(self, p1: np.ndarray, p2: Vector2D) -> None:
+    def __init__(self, p1: np.ndarray, p2: np.ndarray) -> None:
         self.p1 = Vector2D(p1[0], p1[1])
         self.p2 = Vector2D(p2[0], p2[1])
     
@@ -113,7 +113,31 @@ class PieceN(PieceBase):
         # Cuadrado boundingbox
         self.bbox.paint(frame, self.color)
         return
-    
+
+class PieceN2(PieceBase):
+    def __init__(self, name: str, color: tuple, bbox: BoundingBox, center: Vector2D) -> None:
+        super().__init__(name, color)
+        self.bbox = bbox
+        self.center = center
+
+    def __str__(self) -> str:
+        textb = super().__str__()
+        textbbox = self.bbox.__str__()
+        text = textb + '\n' + textbbox + '\nCenter: ' + self.center.__str__() 
+        return text
+
+    def paint(self, frame: np.ndarray) -> None:
+        # Escribir el nombre encima de la pieza
+        cv2.putText(frame, self.name, (int(self.bbox.p1.x), int(self.bbox.p1.y) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, self.color, 2)
+        # Cuadrado boundingbox
+        self.bbox.paint(frame, self.color)
+        # centro
+        cv2.circle(frame, (self.center.x, self.center.y), 3, (0,0,0), -1)
+        return
+
+
+
+
 
 class Piece(PieceBase):
     def __init__(self, pieceA: PieceA, pieceN: PieceN) -> None:

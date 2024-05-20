@@ -94,7 +94,7 @@ class Camera(CameraConfig):
         return
     
     # RUN camera with OPTIONS
-    def run_with_options(self, directory: str|None = None, name: str = 'img') -> None:
+    def run_with_options(self, directory: str|None = None, name: str = 'img', crop_size: int|bool = False) -> None:
         with dai.Device(self.pipeline) as self.device:
             print('Camara en funcionamiento')
             
@@ -102,7 +102,10 @@ class Camera(CameraConfig):
 
             # descargas
             if not directory:
-                directory = Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / 'train' / name
+                if crop_size:
+                    directory = Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / 'train_640' / name
+                else:
+                    directory = Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / 'train' / name
             picture_counter = hf.obtain_last_number(directory, name) + 1
 
             while self.device.isPipelineRunning():
@@ -115,8 +118,13 @@ class Camera(CameraConfig):
                     frame = inColor.getCvFrame()
                     # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                     # frame = cv2.resize(frame, (1280, 720))
-                 
-                    cv2.imshow("OAK-D-Lite", cv2.resize(frame, (1280, 720)))
+                    if crop_size:
+                        frame = hf.crop_frame(frame, crop_size)
+                        cv2.imshow("OAK-D-Lite", frame)
+                    else:
+                        cv2.imshow("OAK-D-Lite", cv2.resize(frame, (1280, 720)))
+                    
+                    
 
 
                 # ----- teclas

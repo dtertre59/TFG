@@ -31,6 +31,20 @@ def obtain_last_number(directory: str, name: str) -> int:
         return 0
     return max(numbers)
 
+def crop_frame(frame: np.ndarray, crop_size) -> np.ndarray:
+    # 1. verificar tamaño de la imagen
+    height, width = frame.shape[:2]
+    if height < crop_size or width < crop_size:
+        return
+    # 2. Calcular las coordenadas para el recorte centrado
+    start_x = width // 2 - crop_size // 2
+    start_y = height // 2 - crop_size // 2
+    end_x = start_x + crop_size
+    end_y = start_y + crop_size
+
+    # 3. Realizar el recorte
+    cropped_frame = frame[start_y:end_y, start_x:end_x]
+    return cropped_frame
 
 
 

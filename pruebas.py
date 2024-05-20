@@ -2,7 +2,8 @@ from ultralytics import YOLO
 
 #Load a model
 # model = YOLO('yolov8n-pose.pt')  # load an official model
-model = YOLO('/home/robotica/Documents/dtertre59/TFG/app/assets/nn_models/yolov8n_poseEstimation_square_v1.pt')
+model = YOLO('app/assets/nn_models/yolov8s_pose_v3.pt')
+
 # model = YOLO(fr'square_model_1.pt')
 
 # Predict with the model
@@ -11,9 +12,9 @@ results = model('/home/robotica/Documents/dtertre59/TFG/app/assets/pictures/trai
 print(results)
 
 # View results
-for r in results:
-    print(r.keypoints)  # print the Keypoints object containing the detected keypoints
-    r.show()
+# for r in results:
+#     print(r.keypoints)  # print the Keypoints object containing the detected keypoints
+#     r.show()
 
     
 

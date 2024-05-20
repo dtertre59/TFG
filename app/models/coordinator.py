@@ -68,6 +68,9 @@ class Coordinator():
 
     @staticmethod
     def nn_poseEstimation_detections(frame, camera: Camera, nn_model: YoloPoseEstimation):
+        nn_model.detect(frame)
+        if 1:
+            pass
         pass
 
     @staticmethod
@@ -102,6 +105,7 @@ class Coordinator():
         if type(nn_model) == YoloObjectDetection:
             frame, flagN, piecesN = Coordinator.nn_object_detections(frame, camera, nn_model)
         elif type(nn_model) == YoloPoseEstimation:
+            frame, flagN, piecesN = Coordinator.nn_poseEstimation_detections(frame, camera, nn_model)
             print('método no completado todavia')
             return
         if paint_frame:
@@ -179,6 +183,51 @@ class Coordinator():
         print('Inicio de detecciones:')
         try:
             frame, ref, pieces = camera.run_with_condition(Coordinator.detections, apriltag, nn_od_model, paint_frame = True)
+        except:
+            print()
+            print('Salida desde camara')
+            return
+        
+        cv2.imshow('Detecciones',cv2.resize(frame, (1280, 720)))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        # 3. calcular pose
+        # 3.1 Se elige la primera pieza para continuar el proceso
+        piece = pieces[0]
+        # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
+        piece.calculatePose(ref, RobotConstants.T_REF_TO_ROBOT, verbose=True, matplot_representation=False)
+        
+        # 4. movimiento combinado: coger la pieza y dejarla en su respectivo hoyo (posicion conocida)
+        try:
+            print()
+            print('Inicio de movimientos combinados:')
+            Coordinator.combinated_movement(robot, piece)
+        except Exception as e:
+            print(str(e))
+            return False
+
+        return True
+    
+    @staticmethod
+    def the_whole_process_2(robot: Robot, camera: Camera, apriltag: Apriltag, nn_pose_model: YoloPoseEstimation) -> None:
+        print()
+        # 1. Movemos robot a la posicion de visualizacion de las piezas
+        try:
+            print('Movimientos iniciales:')
+            robot.gripper_control(True)
+            robot.move(RobotConstants.POSE_SAFE_APRILTAG_REF)
+            input('aaaaaaaaaa')
+            robot.move(RobotConstants.POSE_DISPLAY)
+        except Exception as e:
+            print(str(e))
+            return
+        
+        # 2. detecciones
+        print()
+        print('Inicio de detecciones:')
+        try:
+            frame, ref, pieces = camera.run_with_condition(Coordinator.detections, apriltag, nn_pose_model, paint_frame = True)
         except:
             print()
             print('Salida desde camara')
