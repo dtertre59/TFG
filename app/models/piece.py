@@ -10,6 +10,8 @@ import numpy as np
 import cv2
 
 from models.vectors import Vector2D, Vector3D, Vector6D
+from models.constants import ColorBGR
+
 from functions import helper_functions as hf
 
 
@@ -27,7 +29,7 @@ class BoundingBox():
         text = f"""    - Bounding Box: [p1: {self.p1}, p2: {self.p2}]"""
         return text
     
-    def paint(self, frame: np.ndarray, color: tuple = (0, 255, 0)) -> None:
+    def paint(self, frame: np.ndarray, color: tuple = ColorBGR.GREEN) -> None:
         # Dibujar el rectángulo en la imagen
         cv2.rectangle(img=frame, pt1=(int(self.p1.x), int(self.p1.y)),
                     pt2=(int(self.p2.x), int(self.p2.y)), color=color, thickness=2)
@@ -35,7 +37,7 @@ class BoundingBox():
 
 
 class PieceBase():
-    def __init__(self, name: str, color: tuple = (0,255,0)) -> None:
+    def __init__(self, name: str, color: tuple = ColorBGR.GREEN) -> None:
         self.name = name
         self.color = color
 
@@ -67,27 +69,22 @@ class PieceA(PieceBase):
     
     def paint(self, frame) -> None:
 
-        color_white = (255, 255, 255)
-        color_black = (0,0,0)
-        color_red = (0, 0, 255)
-        color_green = (0, 255, 0)
-
         # Dibujar el recuadro del AprilTag
-        cv2.line(frame, (self.corners[0].x, self.corners[0].y), (self.corners[1].x, self.corners[1].y), color_white, 2, cv2.LINE_AA, 0)
-        cv2.line(frame, (self.corners[1].x, self.corners[1].y), (self.corners[2].x, self.corners[2].y), color_white, 2, cv2.LINE_AA, 0)
-        cv2.line(frame, (self.corners[2].x, self.corners[2].y), (self.corners[3].x, self.corners[3].y), color_white, 2, cv2.LINE_AA, 0)
-        cv2.line(frame, (self.corners[3].x, self.corners[3].y), (self.corners[0].x, self.corners[0].y), color_white, 2, cv2.LINE_AA, 0)
+        cv2.line(frame, (self.corners[0].x, self.corners[0].y), (self.corners[1].x, self.corners[1].y), ColorBGR.WHITE, 2, cv2.LINE_AA, 0)
+        cv2.line(frame, (self.corners[1].x, self.corners[1].y), (self.corners[2].x, self.corners[2].y), ColorBGR.WHITE, 2, cv2.LINE_AA, 0)
+        cv2.line(frame, (self.corners[2].x, self.corners[2].y), (self.corners[3].x, self.corners[3].y), ColorBGR.WHITE, 2, cv2.LINE_AA, 0)
+        cv2.line(frame, (self.corners[3].x, self.corners[3].y), (self.corners[0].x, self.corners[0].y), ColorBGR.WHITE, 2, cv2.LINE_AA, 0)
         
         # dibujar ejes de coordenadas
         x_axis = np.array(((np.array([self.corners[1].x, self.corners[1].y]) + np.array([self.corners[2].x, self.corners[2].y]))/2), dtype=int)
         y_axis = np.array(((np.array([self.corners[2].x, self.corners[2].y]) + np.array([self.corners[3].x, self.corners[3].y]))/2), dtype=int)
 
         # print(x_axis)
-        cv2.line(frame, (self.center.x, self.center.y), x_axis, color_red, 2, cv2.LINE_AA, 0)
-        cv2.line(frame, (self.center.x, self.center.y), y_axis, color_green, 2, cv2.LINE_AA, 0)
+        cv2.line(frame, (self.center.x, self.center.y), x_axis, ColorBGR.RED, 2, cv2.LINE_AA, 0)
+        cv2.line(frame, (self.center.x, self.center.y), y_axis, ColorBGR.GREEN, 2, cv2.LINE_AA, 0)
 
         #  Dibujar centro en la imagen
-        cv2.circle(frame, (self.center.x, self.center.y), 3, color_black, -1)
+        cv2.circle(frame, (self.center.x, self.center.y), 3, ColorBGR.BLACK, -1)
 
         # Escribir el número Id del taf solo si es el de referencia
         if self.name == '4':
@@ -115,10 +112,11 @@ class PieceN(PieceBase):
         return
 
 class PieceN2(PieceBase):
-    def __init__(self, name: str, color: tuple, bbox: BoundingBox, center: Vector2D) -> None:
+    def __init__(self, name: str, color: tuple, bbox: BoundingBox, center: Vector2D, corners) -> None:
         super().__init__(name, color)
         self.bbox = bbox
         self.center = center
+        self.corners = corners
 
     def __str__(self) -> str:
         textb = super().__str__()
@@ -132,7 +130,19 @@ class PieceN2(PieceBase):
         # Cuadrado boundingbox
         self.bbox.paint(frame, self.color)
         # centro
-        cv2.circle(frame, (self.center.x, self.center.y), 3, (0,0,0), -1)
+        cv2.circle(frame, (self.center.x, self.center.y), 3, ColorBGR.BLACK, -1)
+        # corners
+        cv2.circle(frame, tuple(self.corners[0]), 3, ColorBGR.BLACK, -1)
+        cv2.circle(frame, tuple(self.corners[1]), 3, ColorBGR.BLACK, -1)
+        cv2.circle(frame, tuple(self.corners[2]), 3, ColorBGR.BLACK, -1)
+        cv2.circle(frame, tuple(self.corners[3]), 3, ColorBGR.BLACK, -1)
+        # Dibujar el recuadro del AprilTag
+        cv2.line(frame, (self.corners[0][0], self.corners[0][1]), (self.corners[1][0], self.corners[1][1]), ColorBGR.BLACK, 2, cv2.LINE_AA, 0)
+        cv2.line(frame, (self.corners[1][0], self.corners[1][1]), (self.corners[2][0], self.corners[2][1]), ColorBGR.BLACK, 2, cv2.LINE_AA, 0)
+        cv2.line(frame, (self.corners[2][0], self.corners[2][1]), (self.corners[3][0], self.corners[3][1]), ColorBGR.BLACK, 2, cv2.LINE_AA, 0)
+        cv2.line(frame, (self.corners[3][0], self.corners[3][1]), (self.corners[0][0], self.corners[0][1]), ColorBGR.BLACK, 2, cv2.LINE_AA, 0)
+        
+
         return
 
 

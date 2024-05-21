@@ -33,19 +33,25 @@ robot_config_filename = config_filename = str(Path(__file__).resolve().parent / 
 def main_camera():
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563)
     # apriltag = Apriltag(family='tag36h11', size=0.015)
-    # nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_od_v1.pt'))
-    
+     
     camera.init_rgb()
-    # camera.run_with_condition(Coordinator.detections,  apriltag, nn_od_model, paint_frame = True)
     camera.run_with_options(name='square', crop_size=640)
 
 def main_camera_detect():
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563)
-    # apriltag = Apriltag(family='tag36h11', size=0.015)
-    nn_pose_model = YoloPoseEstimation(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8s_pose_v3.pt'))
+    apriltag = Apriltag(family='tag36h11', size=0.015)
+    nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_od_v1.pt'))
+    nn_pose_model = YoloPoseEstimation(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8s_pose_v5.pt'))
+    
     
     camera.init_rgb()
-    camera.run_with_condition(Coordinator.nn_poseEstimation_detections,  nn_pose_model, paint_frame = True)
+    # camera.run_with_condition(Coordinator.apriltag_detections, apriltag, paint_frame = True)
+    # camera.run_with_condition(Coordinator.nn_poseEstimation_detections,  nn_pose_model, paint_frame = True)
+    # camera.run_with_condition(Coordinator.nn_object_detections,  nn_od_model, paint_frame = True)
+
+    camera.run_with_condition(Coordinator.detections, nn_od_model, apriltag, paint_frame = True)
+    # camera.run_with_condition(Coordinator.detections, nn_od_model, apriltag, paint_frame = True)
+    
 
 
 
@@ -170,7 +176,7 @@ def main2():
 
 
 if __name__ == '__main__':
-    main_camera()
+    main_camera_detect()
     # main()
     # main2()
     # camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 

@@ -17,6 +17,7 @@ from ultralytics import YOLO
 
 from models.camera import CameraConfig, Camera
 from models.vectors import Vector2D
+from models.constants import ColorBGR
 from models.piece import BoundingBox, PieceA, PieceN, PieceN2, Piece
 from models.robot import Robot
 
@@ -127,12 +128,12 @@ class YoloObjectDetection(YoloBaseModel):
                     # coodenadas de cada objeto
                     coordinates = detection.boxes.xyxy[index].numpy()
                     # nombre de la pieza detectad
-                    pieze_name = names[object]
+                    piece_name = names[object]
                     # color asociado
-                    pieze_color = (255,0,0)
+                    piece_color = ColorBGR.get_piece_color(name=piece_name)
                     # creamos instancia de la pieza
                     bbox = BoundingBox(p1 = np.array([int(coordinates[0]), int(coordinates[1])]), p2=np.array([int(coordinates[2]), int(coordinates[3])]))
-                    piece = PieceN(name=pieze_name, color=pieze_color, bbox=bbox)
+                    piece = PieceN(name=piece_name, color=piece_color, bbox=bbox)
                     # print(piece)
                     self.pieces.append(piece)
 
@@ -166,10 +167,14 @@ class YoloPoseEstimation(YoloBaseModel):
             if objects:
                 for index, ob in enumerate(objects):
                     # coodenadas de cada objeto
+                    piece_name = names[ob]
+                    # color asociado
+                    piece_color = ColorBGR.get_piece_color(name=piece_name)
                     coordinates = detection.boxes.xyxy[index].numpy()
                     bbox = BoundingBox(p1 = np.array([int(coordinates[0]), int(coordinates[1])]), p2=np.array([int(coordinates[2]), int(coordinates[3])]))                    
                     center = detection.keypoints.xy[index][-1].int().tolist()
-                    piece = PieceN2(name=names[ob], color=(0,0,255), bbox=bbox, center=Vector2D(center[0], center[1]))
+                    corners = detection.keypoints.xy[index][:-1].int().tolist()
+                    piece = PieceN2(name=piece_name, color=piece_color, bbox=bbox, center=Vector2D(center[0], center[1]), corners=corners)
                     self.pieces.append(piece)
         return
     

@@ -177,15 +177,19 @@ class Camera(CameraConfig):
                     # frame = cv2.resize(frame, (1280, 720))
 
                     # trigger function
-                    if trigger_func:
-                            flag, ref, pieces = trigger_func(frame, self, *args, **kwargs)
-                    
-                    
-                    cv2.imshow("OAK-D-Lite", cv2.resize(frame, (1280, 720)))
+                    # if trigger_func:
+                    #         flag, ref, pieces = trigger_func(frame, self, *args, **kwargs)
+                    # Filtrar kwargs para que solo contengan los argumentos esperados por trigger_func
+                    # expected_kwargs = {key: value for key, value in kwargs.items() if key in trigger_func.__code__.co_varnames}
 
-                    if flag and ((time.time()-start_time)>8): # ponemos 8 sergundos de enfoque
-                        cv2.destroyAllWindows()
-                        return frame, ref, pieces
+                    if trigger_func:
+                            results_kwargs = trigger_func(frame, self, *args, **kwargs)
+                            flag = results_kwargs.get('flag')
+                            cv2.imshow("OAK-D-Lite", cv2.resize(frame, (1280, 720)))
+
+                            if flag and ((time.time()-start_time)>8): # ponemos 8 sergundos de enfoque
+                                cv2.destroyAllWindows()
+                                return results_kwargs
                     
 
                 # ----- teclas
