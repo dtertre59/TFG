@@ -49,8 +49,6 @@ def main_camera_detect():
 
 
 
-
-
 # MAIN V1. Con red neuronal-object detection y apriltags
 def main():
     print()
@@ -92,7 +90,6 @@ def main():
     return
 
 
-    
 
 # MAIN V2. Con red neuronal-pose y pointcloud y apriltag para ref
 def main2():
