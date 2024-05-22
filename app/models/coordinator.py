@@ -68,8 +68,10 @@ class Coordinator():
             flag = False
         return {'flag': flag, 'pieces': nn_model.pieces}
 
+
+
     @staticmethod
-    def combined_pieces_detections(piecesA: list[PieceA]|None, piecesN: list[PieceN]|None, piecesN2: list[PieceN2]|None) -> tuple[bool, PieceA|None, list[Piece]]:
+    def combined_pieces(piecesA: list[PieceA]|None, piecesN: list[PieceN]|None, piecesN2: list[PieceN2]|None) -> tuple[bool, PieceA|None|bool, list[Piece]]:
         """combinar detecciones en una sola"""
         flag = False
         ref = None
@@ -78,6 +80,7 @@ class Coordinator():
         if piecesA != None:
             # Modo 1
             if piecesN != None: 
+                # print('MODO 1 ----------------------------')
                 for pieceA in piecesA:
                     if pieceA.name == '4':
                         # 1. apriltag de ref
@@ -88,35 +91,35 @@ class Coordinator():
                             if piece.validate(): # se valida que el centro de la cara de la pieza se envcuentre dentro de la boundig box
                                 # 2. piezas con aprils incluidos
                                 pieces.append(piece)
-                
-                if (ref == None) or (pieces == []):
-                    flag = False
-                else:
-                    flag = True
-
 
             # Modo 2 
             elif piecesN2 != None:
+                # print('MODO 2 ----------------------------')
                 # 1. apriltag de ref
                 for pieceA in piecesA:
                     if pieceA.name == '4':
                         # 1. apriltag de ref
                         ref = pieceA
+                    # QUITAR
+                    ref = pieceA
                 # 2. piezas geretales
                 for pieceN2 in piecesN2:
                     pieces.append(Piece(pieceN2))
-                    pass
 
-        
+
         else: # Modo 3 -> sin ref april
-            pass
-
-
-
+            # print('MODO 3 ----------------------------')
+            # 2. piezas 
+            for pieceN2 in piecesN2:
+                pieces.append(Piece(pieceN2))
+            ref = False
+        
+        # condicion de bandera
+        if (pieces != []) and (ref != None):
+            flag = True
 
         return flag, ref, pieces
         
-
 
     @staticmethod
     def detections(frame: np.ndarray, camera: Camera, nn_model: YoloObjectDetection|YoloPoseEstimation, apriltag: Apriltag|None = None, paint_frame: bool = True) -> dict:
@@ -130,11 +133,10 @@ class Coordinator():
         elif type(nn_model) == YoloPoseEstimation:
             pose_kwargs = Coordinator.nn_poseEstimation_detections(frame, camera, nn_model, paint_frame=False)
 
-
-        flag, ref, pieces = Coordinator.combined_pieces_detections(at_kwargs['pieces'], od_kwargs['pieces'], pose_kwargs['pieces'])
+        flag, ref, pieces = Coordinator.combined_pieces(at_kwargs['pieces'], od_kwargs['pieces'], pose_kwargs['pieces'])
 
         if paint_frame:
-            if ref:
+            if ref: # si la ref es False nos encotramos en el modo 3 donde no hay ref (conocemos la pos de la camara)
                 ref.paint(frame)
             for piece in pieces:
                 piece.paint(frame)

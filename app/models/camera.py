@@ -76,23 +76,111 @@ class Camera(CameraConfig):
 
         # For now, RGB needs fixed focus to properly align with depth.
         # This value was used during calibration
-        # try:
-        #     calibData = self.device.readCalibration2()
-        #     lensPosition = calibData.getLensPosition(dai.CameraBoardSocket.CAM_A)
-        #     if lensPosition:
-        #         camRgb.initialControl.setManualFocus(lensPosition)
-        # except:
-        #     raise
-
+        try:
+            calibData = dai.Device().readCalibration2()
+            lensPosition = calibData.getLensPosition(dai.CameraBoardSocket.CAM_A)
+            if lensPosition:
+                camRgb.initialControl.setManualFocus(lensPosition)
+        except:
+            raise
 
         camRgb.isp.link(sync.inputs["rgb"])
         sync.out.link(xOut.input)
         xOut.setStreamName("rgb out")
 
         print('Cámara iniciada')
-
         return
     
+    # INIT camera RGB and pointcloud
+    def init_rgb_and_pointcloud(self):
+         # Create pipeline
+        self.pipeline = dai.Pipeline()
+        # self.device = dai.Device()
+
+        camRgb = self.pipeline.create(dai.node.ColorCamera)
+
+        monoLeft = self.pipeline.create(dai.node.MonoCamera)
+        monoRight = self.pipeline.create(dai.node.MonoCamera)
+
+        depth = self.pipeline.create(dai.node.StereoDepth)
+        pointcloud = self.pipeline.create(dai.node.PointCloud)
+
+        sync = self.pipeline.create(dai.node.Sync)
+        xOut = self.pipeline.create(dai.node.XLinkOut)
+        xOut.input.setBlocking(False)
+
+
+        # Properties RGB CAM
+        camRgb.setBoardSocket(dai.CameraBoardSocket.CAM_A)
+        if self.resolution.y == 720:
+            camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_720_P)
+        elif self.resolution.y == 1080:
+            camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
+        elif self.resolution.y == 2160:
+            camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_4_K)
+        elif self.resolution.y == 3120:
+            camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_13_MP)
+
+        camRgb.setFps(15)
+
+        # For now, RGB needs fixed focus to properly align with depth.
+        # This value was used during calibration
+        try:
+            calibData = dai.Device().readCalibration2()
+            lensPosition = calibData.getLensPosition(dai.CameraBoardSocket.CAM_A)
+            if lensPosition:
+                camRgb.initialControl.setManualFocus(lensPosition)
+        except:
+            raise
+
+    
+        # Properties MONO CAMS
+        monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_480_P)
+        monoLeft.setCamera("left")
+
+        monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_480_P)
+        monoRight.setCamera("right")
+
+
+        depth.setDefaultProfilePreset(dai.node.StereoDepth.PresetMode.HIGH_DENSITY)
+        # depth.initialConfig.setMedianFilter(dai.MedianFilter.KERNEL_7x7)
+
+        depth.setLeftRightCheck(True)
+        # depth.setExtendedDisparity(False)
+        depth.setSubpixel(True)
+        depth.setDepthAlign(dai.CameraBoardSocket.CAM_A)
+
+        config = depth.initialConfig.get()
+        config.postProcessing.thresholdFilter.minRange = 100
+        config.postProcessing.thresholdFilter.maxRange = 1000
+        depth.initialConfig.set(config)
+
+        # otras caracteristicas
+        monoLeft.out.link(depth.left)
+        monoRight.out.link(depth.right)
+
+        depth.depth.link(pointcloud.inputDepth)
+
+        camRgb.isp.link(sync.inputs["rgb"])
+        pointcloud.outputPointCloud.link(sync.inputs["pcl"])
+        pointcloud.initialConfig.setSparse(False)
+        sync.out.link(xOut.input)
+        xOut.setStreamName("out")
+
+        inConfig = self.pipeline.create(dai.node.XLinkIn)
+        inConfig.setStreamName("config")
+        inConfig.out.link(pointcloud.inputConfig)
+
+
+        xoutDepth = self.pipeline.create(dai.node.XLinkOut)
+        xoutDepth.setStreamName("depth")
+
+        depth.disparity.link(xoutDepth.input)
+
+        print('Cámara iniciada')
+
+        return
+
     # RUN camera with OPTIONS
     def run_with_options(self, directory: str|None = None, name: str = 'img', crop_size: int|bool = False) -> None:
         with dai.Device(self.pipeline) as self.device:
@@ -146,7 +234,7 @@ class Camera(CameraConfig):
             return
 
     # RUN camera with CONDITION FUNCTION
-    def run_with_condition(self, trigger_func = None, *args, **kwargs) -> np.ndarray|None|tuple[np.ndarray, PieceA, list[Piece]]:
+    def run_with_condition(self, trigger_func = None, *args, **kwargs) -> np.ndarray|None|dict:
         start_time = time.time()
         with dai.Device(self.pipeline) as self.device:
             print('Camara en funcionamiento')
@@ -185,9 +273,10 @@ class Camera(CameraConfig):
                     if trigger_func:
                             results_kwargs = trigger_func(frame, self, *args, **kwargs)
                             flag = results_kwargs.get('flag')
-                            cv2.imshow("OAK-D-Lite", cv2.resize(frame, (1280, 720)))
+                            frame_resized = cv2.resize(frame, (1280, 720))
+                            cv2.imshow("OAK-D-Lite", frame_resized)
 
-                            if flag and ((time.time()-start_time)>8): # ponemos 8 sergundos de enfoque
+                            if flag and ((time.time()-start_time)>10): # ponemos 8 sergundos de enfoque
                                 cv2.destroyAllWindows()
                                 return results_kwargs
                     
@@ -200,8 +289,10 @@ class Camera(CameraConfig):
 
             cv2.destroyAllWindows()
             return
-        
 
+    # run camera with pointcloud   
+    def run_with_pointcloud(self):
+        pass
     
 
     # PRUEBAS

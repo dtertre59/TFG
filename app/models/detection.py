@@ -66,7 +66,7 @@ class Apriltag(ApriltagConfig):
             cors = detection.corners.astype(int)
             corners = []
             for corner in cors:
-                corners.append(Vector2D(corner[0], corner[1]))
+                corners.append(Vector2D(corner))
             # transformation matrix
             T = np.hstack((detection.pose_R, detection.pose_t))
             T = np.vstack((T, [0, 0, 0, 1]))
@@ -77,7 +77,7 @@ class Apriltag(ApriltagConfig):
                             [0, 0, 0, 1]])
             T = np.dot(T, rot)
 
-            piece = PieceA(name=str(id), color=(0,0,0), center=Vector2D(center[0], center[1]), corners=corners, T=T)
+            piece = PieceA(name=str(id), color=(0,0,0), center=Vector2D(center), corners=corners, T=T)
             self.pieces.append(piece)
 
         return

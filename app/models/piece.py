@@ -10,10 +10,10 @@ import numpy as np
 import cv2
 from typing import overload, Union
 
-from vectors import Vector2D, Vector3D, Vector6D
-from constants import ColorBGR
+from models.vectors import Vector2D, Vector3D, Vector6D
+from models.constants import ColorBGR
 
-# from ..functions import helper_functions as hf
+from functions import helper_functions as hf
 
 
 # -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
@@ -23,11 +23,11 @@ from constants import ColorBGR
 
 class BoundingBox():
     def __init__(self, p1: np.ndarray, p2: np.ndarray) -> None:
-        self.p1 = Vector2D(p1[0], p1[1])
-        self.p2 = Vector2D(p2[0], p2[1])
+        self.p1 = Vector2D(p1)
+        self.p2 = Vector2D(p2)
     
     def __str__(self) -> str:
-        text = f"""    - Bounding Box: [p1: {self.p1}, p2: {self.p2}]"""
+        text = f'    - Bounding Box: [p1: {self.p1}, p2: {self.p2}]'
         return text
     
     def paint(self, frame: np.ndarray, color: tuple = ColorBGR.GREEN) -> None:
@@ -37,18 +37,13 @@ class BoundingBox():
         return
 
 
-coordinates = [1,2,3,4]
-bbox = BoundingBox(p1 = np.array([int(coordinates[0]), int(coordinates[1])]), p2=np.array([int(coordinates[2]), int(coordinates[3])]))
-
-print(bbox)
-
 class PieceBase():
     def __init__(self, name: str, color: tuple = ColorBGR.GREEN) -> None:
         self.name = name
         self.color = color
 
-    def __str__(self) -> str:
-        text = f"""Pieza:
+    def __str__(self, title: str = 'Pieza Base') -> str:
+        text = f"""----- {title} -----
     - Nombre: {self.name}
     - Color: {self.color}"""
         return text
@@ -62,8 +57,8 @@ class PieceA(PieceBase):
         self.corners = corners
         self.T = T
 
-    def __str__(self) -> str:
-        textb = super().__str__()
+    def __str__(self, title: str = 'Pieza tipo A') -> str:
+        textb = super().__str__(title)
         textcen = f"""    - Center: {self.center}"""
         textc = """    - Corners: ["""
         for corner in self.corners:
@@ -74,6 +69,18 @@ class PieceA(PieceBase):
         return text
     
     def paint(self, frame) -> None:
+        self.corners[0].x = int(self.corners[0].x)
+        self.corners[0].y = int(self.corners[0].y)
+        self.corners[1].x = int(self.corners[1].x)
+        self.corners[1].y = int(self.corners[1].y)
+        self.corners[2].x = int(self.corners[2].x)
+        self.corners[2].y = int(self.corners[2].y)
+        self.corners[3].x = int(self.corners[3].x)
+        self.corners[3].y = int(self.corners[3].y)
+
+        self.center.x = int(self.center.x)
+        self.center.y = int(self.center.y)
+
 
         # Dibujar el recuadro del AprilTag
         cv2.line(frame, (self.corners[0].x, self.corners[0].y), (self.corners[1].x, self.corners[1].y), ColorBGR.WHITE, 2, cv2.LINE_AA, 0)
@@ -104,8 +111,8 @@ class PieceN(PieceBase):
         super().__init__(name, color)
         self.bbox = bbox
 
-    def __str__(self) -> str:
-        textb = super().__str__()
+    def __str__(self, title: str = 'Pieza tipo N') -> str:
+        textb = super().__str__(title)
         textbbox = self.bbox.__str__()
         text = textb + '\n' + textbbox
         return text
@@ -124,8 +131,8 @@ class PieceN2(PieceBase):
         self.center = center
         self.corners = corners
 
-    def __str__(self) -> str:
-        textb = super().__str__()
+    def __str__(self, title: str = 'Pieza tipo N2') -> str:
+        textb = super().__str__(title)
         textbbox = self.bbox.__str__()
         text = textb + '\n' + textbbox + '\nCenter: ' + self.center.__str__() 
         return text
@@ -156,6 +163,9 @@ class PieceN2(PieceBase):
 
 
 class Piece(PieceBase):
+    # @overload
+    # def __init__(self, name: str, color: tuple, bbox: BoundingBox, center: Vector2D, corners: list[Vector2D]) -> None: ...
+
     @overload
     def __init__(self, pieceA: PieceA, pieceN: PieceN) -> None: ...
 
@@ -170,6 +180,7 @@ class Piece(PieceBase):
             # 1. el nombre y color lo sacamos de la red neuronal que nos diferencia el objeto
             self.pieceA = pieceA
             self.pieceN = pieceN
+            self.pieceN2 = None
 
             super().__init__(pieceN.name, pieceN.color)
             self.bbox = pieceN.bbox
@@ -182,9 +193,12 @@ class Piece(PieceBase):
             self.pose = None
         
         elif len(args) == 1 and isinstance(args[0], PieceN2):
+            self.pieceA = None
+            self.pieceN = None
             self.pieceN2 = args[0]
+
             pieceN2 = args[0]
-            super.__init__(pieceN2.name, pieceN2.color)
+            super().__init__(pieceN2.name, pieceN2.color)
 
             # bbox
             self.bbox = pieceN2.bbox
@@ -202,18 +216,18 @@ class Piece(PieceBase):
             raise TypeError("Invalid arguments")
 
   
-    def __str__(self) -> str:
-        textN = self.pieceN.__str__()
-
+    def __str__(self, title: str = 'Pieza') -> str:
+        textb = super().__str__(title)
+        textbbox = self.bbox.__str__()
         textcen =f'    - Center: {self.center}'
         textc = '    - Corners: ['
         for corner in self.corners:
             textc += corner.__str__() + ' ,'
         textc = textc[:-2] + ']'
-        textT = f'    - Transformation matrix: {self.T}'
+        textT = f'    - Transformation matrix: {self.T}\n    - Point3d: {self.point3d}\n    - Pose: {self.pose}'
         textA = f'{textcen}\n{textc}\n{textT}'
 
-        text = f'{textN}\n{textA}'
+        text = f'{textb}\n{textbbox}\n{textA}'
         return text
 
     def paint(self, frame) -> None:

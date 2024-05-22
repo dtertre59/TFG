@@ -32,10 +32,13 @@ robot_config_filename = config_filename = str(Path(__file__).resolve().parent / 
 # main para testing de camera
 def main_camera():
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563)
-    # apriltag = Apriltag(family='tag36h11', size=0.015)
-     
-    camera.init_rgb()
-    camera.run_with_options(name='square', crop_size=640)
+
+    # camera.init_rgb()
+    camera.init_rgb_and_pointcloud()
+
+    # camera.run_with_options(name='square', crop_size=640)
+    camera.run_with_pointcloud()
+
 
 def main_camera_detect():
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563)
@@ -46,11 +49,23 @@ def main_camera_detect():
     
     camera.init_rgb()
     # camera.run_with_condition(Coordinator.apriltag_detections, apriltag, paint_frame = True)
-    # camera.run_with_condition(Coordinator.nn_poseEstimation_detections,  nn_pose_model, paint_frame = True)
     # camera.run_with_condition(Coordinator.nn_object_detections,  nn_od_model, paint_frame = True)
+    # camera.run_with_condition(Coordinator.nn_poseEstimation_detections,  nn_pose_model, paint_frame = True)
+    
+    
+    try:
+        # camera.run_with_condition(Coordinator.detections, nn_od_model, apriltag, paint_frame = True)
+        r_kwargs = camera.run_with_condition(Coordinator.detections, nn_pose_model, apriltag, paint_frame = True)
+    except:
+        print('salida de camara')
+        return
+    
+    # 1. para el modo 2 encesitamos sacar la pointcloud. o por lo menos el punto 3d del centro de la pieza
 
-    camera.run_with_condition(Coordinator.detections, nn_od_model, apriltag, paint_frame = True)
-    # camera.run_with_condition(Coordinator.detections, nn_od_model, apriltag, paint_frame = True)
+    ref = r_kwargs['ref']
+    piece = r_kwargs['pieces'][0]
+    print(ref)
+    print(piece)
     
 
 
@@ -176,9 +191,7 @@ def main2():
 
 
 if __name__ == '__main__':
-    main_camera_detect()
+    main_camera()
+    # main_camera_detect()
     # main()
     # main2()
-    # camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
-    # camera.init_rgb() 
-    # camera.run_with_options(name='hexagon')
