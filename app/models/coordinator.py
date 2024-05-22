@@ -90,13 +90,23 @@ class Coordinator():
                                 pieces.append(piece)
                 
                 if (ref == None) or (pieces == []):
-                    return flag, ref, pieces
-                flag = True
-                return flag, ref, pieces
+                    flag = False
+                else:
+                    flag = True
 
-            # Modo2
-            if piecesN2 != None: 
-                pass
+
+            # Modo 2 
+            elif piecesN2 != None:
+                # 1. apriltag de ref
+                for pieceA in piecesA:
+                    if pieceA.name == '4':
+                        # 1. apriltag de ref
+                        ref = pieceA
+                # 2. piezas geretales
+                for pieceN2 in piecesN2:
+                    pieces.append(Piece(pieceN2))
+                    pass
+
         
         else: # Modo 3 -> sin ref april
             pass

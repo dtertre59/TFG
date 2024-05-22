@@ -8,11 +8,12 @@
 # -------------------- PACKAGES ------------------------------------------------------------------------------------------ #
 import numpy as np
 import cv2
+from typing import overload, Union
 
-from models.vectors import Vector2D, Vector3D, Vector6D
-from models.constants import ColorBGR
+from vectors import Vector2D, Vector3D, Vector6D
+from constants import ColorBGR
 
-from functions import helper_functions as hf
+# from ..functions import helper_functions as hf
 
 
 # -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
@@ -35,6 +36,11 @@ class BoundingBox():
                     pt2=(int(self.p2.x), int(self.p2.y)), color=color, thickness=2)
         return
 
+
+coordinates = [1,2,3,4]
+bbox = BoundingBox(p1 = np.array([int(coordinates[0]), int(coordinates[1])]), p2=np.array([int(coordinates[2]), int(coordinates[3])]))
+
+print(bbox)
 
 class PieceBase():
     def __init__(self, name: str, color: tuple = ColorBGR.GREEN) -> None:
@@ -150,20 +156,51 @@ class PieceN2(PieceBase):
 
 
 class Piece(PieceBase):
-    def __init__(self, pieceA: PieceA, pieceN: PieceN) -> None:
-        # 1. el nombre y color lo sacamos de la red neuronal que nos diferencia el objeto
-        self.pieceA = pieceA
-        self.pieceN = pieceN
+    @overload
+    def __init__(self, pieceA: PieceA, pieceN: PieceN) -> None: ...
 
-        super().__init__(pieceN.name, pieceN.color)
-        self.bbox = pieceN.bbox
+    @overload
+    def __init__(self, pieceN2: PieceN2) -> None: ...
 
-        self.center= pieceA.center
-        self.corners = pieceA.corners
-        self.T = pieceA.T
 
-        self.point3d = None
-        self.pose = None
+    def __init__(self, *args: Union[PieceA, PieceN, PieceN2]) -> None:
+        if len(args) == 2 and isinstance(args[0], PieceA) and isinstance(args[1], PieceN):
+            pieceA = args[0]
+            pieceN = args[1]
+            # 1. el nombre y color lo sacamos de la red neuronal que nos diferencia el objeto
+            self.pieceA = pieceA
+            self.pieceN = pieceN
+
+            super().__init__(pieceN.name, pieceN.color)
+            self.bbox = pieceN.bbox
+
+            self.center= pieceA.center
+            self.corners = pieceA.corners
+            self.T = pieceA.T
+
+            self.point3d = None
+            self.pose = None
+        
+        elif len(args) == 1 and isinstance(args[0], PieceN2):
+            self.pieceN2 = args[0]
+            pieceN2 = args[0]
+            super.__init__(pieceN2.name, pieceN2.color)
+
+            # bbox
+            self.bbox = pieceN2.bbox
+
+            # keypoints
+            self.center= pieceN2.center
+            self.corners = pieceN2.corners
+
+            # pointcloud + algebra
+            self.T = None
+            self.point3d = None
+            self.pose = None
+
+        else:
+            raise TypeError("Invalid arguments")
+
   
     def __str__(self) -> str:
         textN = self.pieceN.__str__()
@@ -180,8 +217,12 @@ class Piece(PieceBase):
         return text
 
     def paint(self, frame) -> None:
-        self.pieceA.paint(frame)
-        self.pieceN.paint(frame)
+        if self.pieceA:
+            self.pieceA.paint(frame)
+        if self.pieceN:
+            self.pieceN.paint(frame)
+        if self.pieceN2:
+            self.pieceN2.paint(frame)
         return
 
     def validate(self) -> bool:
