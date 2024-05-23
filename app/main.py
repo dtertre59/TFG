@@ -12,6 +12,7 @@ from pathlib import Path
 import numpy as np
 
 from functions import main_functions as mf
+from functions import helper_functions as hf
 
 # from models.robot import Robot
 from models.camera import Camera
@@ -32,14 +33,16 @@ robot_config_filename = config_filename = str(Path(__file__).resolve().parent / 
 # main para testing de camera
 def main_camera():
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563)
+    # camera = Camera(width=1280, height=720, fx= 1498.367322, fy=1497.377563)
 
     # camera.init_rgb()
     camera.init_rgb_and_pointcloud()
 
     # camera.run_with_options(name='square', crop_size=640)
-    camera.run_with_pointcloud()
+    camera.run_with_pointcloud(show3d=False)
 
 
+# PRUEBAS DE DETECCIONES
 def main_camera_detect():
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563)
     apriltag = Apriltag(family='tag36h11', size=0.015)
@@ -47,25 +50,43 @@ def main_camera_detect():
     nn_pose_model = YoloPoseEstimation(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8s_pose_v5.pt'))
     
     
-    camera.init_rgb()
+    # camera.init_rgb()
+    camera.init_rgb_and_pointcloud()
+
+
     # camera.run_with_condition(Coordinator.apriltag_detections, apriltag, paint_frame = True)
     # camera.run_with_condition(Coordinator.nn_object_detections,  nn_od_model, paint_frame = True)
     # camera.run_with_condition(Coordinator.nn_poseEstimation_detections,  nn_pose_model, paint_frame = True)
+
+    # camera.run_with_pointcloud_with_condition(show3d=False, trigger_func=Coordinator.apriltag_detections, apriltag=apriltag, paint_frame = True)
     
     
     try:
         # camera.run_with_condition(Coordinator.detections, nn_od_model, apriltag, paint_frame = True)
-        r_kwargs = camera.run_with_condition(Coordinator.detections, nn_pose_model, apriltag, paint_frame = True)
-    except:
-        print('salida de camara')
+        r_kwargs = camera.run_with_pointcloud_with_condition(show3d=False, trigger_func=Coordinator.detections, nn_model=nn_pose_model, apriltag=apriltag, paint_frame = True)
+    except Exception as e:
+        print('salida de camara: ',str(e))
         return
     
     # 1. para el modo 2 encesitamos sacar la pointcloud. o por lo menos el punto 3d del centro de la pieza
 
     ref = r_kwargs['ref']
     piece = r_kwargs['pieces'][0]
-    print(ref)
-    print(piece)
+    frame = r_kwargs['frame']
+    pointcloud = r_kwargs['pointcloud']
+
+    hf.o3d_visualization([pointcloud])
+
+
+    # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
+    point, p_ref = piece.calculatePose_v2(pointcloud, ref)
+    cv2.imshow('aaa', frame)
+    cv2.waitKey()
+    cube = hf.create_cube(point=point, size = [5,5,5])
+    cube2 = hf.create_cube(point=p_ref, size = [5,5,5], color = np.array([0,0,1]))
+    hf.o3d_visualization([pointcloud, cube, cube2])
+    # print(ref)
+    # print(piece)
     
 
 
@@ -191,7 +212,7 @@ def main2():
 
 
 if __name__ == '__main__':
-    main_camera()
-    # main_camera_detect()
+    # main_camera()
+    main_camera_detect()
     # main()
     # main2()

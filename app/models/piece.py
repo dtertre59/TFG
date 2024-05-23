@@ -8,6 +8,7 @@
 # -------------------- PACKAGES ------------------------------------------------------------------------------------------ #
 import numpy as np
 import cv2
+import open3d as o3d
 from typing import overload, Union
 
 from models.vectors import Vector2D, Vector3D, Vector6D
@@ -246,6 +247,7 @@ class Piece(PieceBase):
             return False
         
 
+    # Calculate pose modo 1
     def calculatePose(self, ref: PieceA, t_ref_to_robot: np.ndarray = np.eye(4), verbose: bool = True, matplot_representation: bool = False):
         # print(t_ref_to_robot)
         t_ref_to_cam = ref.T
@@ -308,6 +310,88 @@ class Piece(PieceBase):
 
             hf.show_mat3d(fig, ax, 'apriltags representation')
         return 
+    
+
+    # Calculate pose modo 2
+    def calculatePose_v2(self, pointcloud, ref: PieceA, t_ref_to_robot: np.ndarray = np.eye(4),verbose: bool = True, matplot_representation: bool = False):
+        if not pointcloud:
+            print('Not pointcloud')
+            return 
+        
+        # print(t_ref_to_robot)
+        t_ref_to_cam = ref.T
+        pref_cam = hf.point_tansf(t_ref_to_cam, np.array([0 ,0, 0]))
+        # hacemos espejo por culpa del sistemade ref
+        pref_cam[0] = (-1) * pref_cam[0]
+        pref_cam[1] = (-1) * pref_cam[1]
+
+        # nos falta esta t_piece to cam ----------------------------------------------------------------------------------
+        ppiece_cam = hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=self.center.get_array())
+
+        print('centro de la pieza: ', ppiece_cam)
+        print('centro del apriltag: ', pref_cam*1000)
+        return ppiece_cam, pref_cam*1000
+        t_piece_to_cam = self.T
+
+        # --------------------------------------------------------------------------------------------------
+        # 1. metodo
+        # puntos de origen de los sistemas de coordenadas
+        pcam_cam = pref_ref = ppieze_pieze = prob_rob = np.array([0 ,0, 0])
+
+        # puntos respecto de la camara (ref, pieze )
+        pref_cam = hf.point_tansf(t_ref_to_cam, pref_ref)
+        ppieze_cam = hf.point_tansf(t_piece_to_cam, ppieze_pieze)
+        
+        # puntos respecto de ref (cam -> ref)
+        pcam_ref = hf.point_tansf(np.linalg.inv(t_ref_to_cam), pcam_cam)
+        ppieze_ref = hf.point_tansf(np.linalg.inv(t_ref_to_cam), ppieze_cam)
+
+        # puntos respecto a la base del robot
+        t_ref_to_robot = t_ref_to_robot
+        
+        pcam_rob = hf.point_tansf(t_ref_to_robot, pcam_ref)
+        pref_rob = hf.point_tansf(t_ref_to_robot, pref_ref)
+        ppieze_rob = hf.point_tansf(t_ref_to_robot, ppieze_ref)
+
+        # 2. metodo
+        t_piece_to_ref = np.dot(np.linalg.inv(t_ref_to_cam), t_piece_to_cam)
+        t_piece_to_robot = np.dot(t_ref_to_robot,t_piece_to_ref)
+        t_cam_to_robot = np.dot(t_ref_to_robot, np.linalg.inv(t_ref_to_cam))
+
+        ppiece_robot = hf.point_tansf(t_piece_to_robot, np.array([0,0,0]))
+
+        pose_robot = hf.pose_transf(t_piece_to_robot, np.array([0,0,0]))
+        # print('Matriz de transicion de la pieza al robot: ', t_piece_to_robot)
+        # print('Pose de la pieza respecto del robot: ', pose_robot)
+        # input()
+        self.point3d = Vector3D(ppiece_robot[0], ppiece_robot[1], ppiece_robot[2]) # =  Vector6D(pose_robot[0], pose_robot[1], pose_robot[2])
+
+        self.pose = Vector6D(pose_robot[0], pose_robot[1], pose_robot[2], pose_robot[3], pose_robot[4], pose_robot[5])
+
+        if verbose:
+            print()
+            print('Pieza seleccionada: ', self.name)
+            print('Pose: ', self.pose)
+
+        # 3D representation
+        if matplot_representation:
+            size = 0.2
+            robot_axes = np.array([[size, 0, 0],
+                                [0, size, 0],
+                                [0, 0, size]])
+            ref_axes = np.dot(t_ref_to_robot[:3, :3], robot_axes.T).T
+            piece_axes = np.dot(t_piece_to_robot[:3, :3], robot_axes.T).T
+            cam_axes = np.dot(t_cam_to_robot[:3, :3], robot_axes.T).T
+
+            fig, ax = hf.init_mat3d()
+            hf.add_point_with_axes(ax, prob_rob, robot_axes, 'robot', 'k')
+            hf.add_point_with_axes(ax, pref_rob, ref_axes, 'ref', 'r')
+            hf.add_point_with_axes(ax, pcam_rob, cam_axes, 'camera', 'b')
+            hf.add_point_with_axes(ax, ppiece_robot, piece_axes, 'piece', 'g')
+
+            hf.show_mat3d(fig, ax, 'apriltags representation')
+        return 
+
 
 
 

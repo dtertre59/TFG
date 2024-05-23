@@ -18,6 +18,7 @@ import numpy as np
 import time
 import depthai as dai
 import cv2
+import open3d as o3d
 from pathlib import Path
 
 from models.vectors import Vector2D
@@ -86,7 +87,7 @@ class Camera(CameraConfig):
 
         camRgb.isp.link(sync.inputs["rgb"])
         sync.out.link(xOut.input)
-        xOut.setStreamName("rgb out")
+        xOut.setStreamName("out")
 
         print('Cámara iniciada')
         return
@@ -167,26 +168,28 @@ class Camera(CameraConfig):
         sync.out.link(xOut.input)
         xOut.setStreamName("out")
 
-        inConfig = self.pipeline.create(dai.node.XLinkIn)
-        inConfig.setStreamName("config")
-        inConfig.out.link(pointcloud.inputConfig)
+        # inConfig = self.pipeline.create(dai.node.XLinkIn)
+        # inConfig.setStreamName("config")
+        # inConfig.out.link(pointcloud.inputConfig)
 
 
-        xoutDepth = self.pipeline.create(dai.node.XLinkOut)
-        xoutDepth.setStreamName("depth")
-
-        depth.disparity.link(xoutDepth.input)
+        # xoutDepth = self.pipeline.create(dai.node.XLinkOut)
+        # xoutDepth.setStreamName("depth")
+        # depth.disparity.link(xoutDepth.input)
 
         print('Cámara iniciada')
 
         return
+
+
+    # ----- RUNS ----- # 
 
     # RUN camera with OPTIONS
     def run_with_options(self, directory: str|None = None, name: str = 'img', crop_size: int|bool = False) -> None:
         with dai.Device(self.pipeline) as self.device:
             print('Camara en funcionamiento')
             
-            q = self.device.getOutputQueue(name="rgb out", maxSize=4, blocking=False)
+            q = self.device.getOutputQueue(name="out", maxSize=4, blocking=False)
 
             # descargas
             if not directory:
@@ -234,22 +237,12 @@ class Camera(CameraConfig):
             return
 
     # RUN camera with CONDITION FUNCTION
-    def run_with_condition(self, trigger_func = None, *args, **kwargs) -> np.ndarray|None|dict:
+    def run_with_condition(self, trigger_func = None, *args, **kwargs) -> None|dict:
         start_time = time.time()
         with dai.Device(self.pipeline) as self.device:
             print('Camara en funcionamiento')
-            # For now, RGB needs fixed focus to properly align with depth.
-            # This value was used during calibration
-            # try:
-            #     calibData = self.device.readCalibration2()
-            #     lensPosition = calibData.getLensPosition(dai.CameraBoardSocket.CAM_A)
-            #     if lensPosition:
-            #         camRgb.initialControl.setManualFocus(lensPosition)
-            # except:
-            #     raise
-            # self.device.startPipeline(self.pipeline) # esta dentro del with
-            
-            q = self.device.getOutputQueue(name="rgb out", maxSize=4, blocking=False)
+
+            q = self.device.getOutputQueue(name="out", maxSize=4, blocking=False)
 
             flag = False
 
@@ -261,14 +254,6 @@ class Camera(CameraConfig):
                 # ----- in rgb
                 if inColor:
                     frame = inColor.getCvFrame()
-                    # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    # frame = cv2.resize(frame, (1280, 720))
-
-                    # trigger function
-                    # if trigger_func:
-                    #         flag, ref, pieces = trigger_func(frame, self, *args, **kwargs)
-                    # Filtrar kwargs para que solo contengan los argumentos esperados por trigger_func
-                    # expected_kwargs = {key: value for key, value in kwargs.items() if key in trigger_func.__code__.co_varnames}
 
                     if trigger_func:
                             results_kwargs = trigger_func(frame, self, *args, **kwargs)
@@ -276,7 +261,7 @@ class Camera(CameraConfig):
                             frame_resized = cv2.resize(frame, (1280, 720))
                             cv2.imshow("OAK-D-Lite", frame_resized)
 
-                            if flag and ((time.time()-start_time)>10): # ponemos 8 sergundos de enfoque
+                            if flag and ((time.time()-start_time)>100): # ponemos 8 sergundos de enfoque
                                 cv2.destroyAllWindows()
                                 return results_kwargs
                     
@@ -291,9 +276,197 @@ class Camera(CameraConfig):
             return
 
     # run camera with pointcloud   
-    def run_with_pointcloud(self):
-        pass
+    def run_with_pointcloud(self, show3d:bool = False):
+        start_time = time.time()
+        with dai.Device(self.pipeline) as self.device:
+            print('Camara en funcionamiento')
+ 
+            q = self.device.getOutputQueue(name="out", maxSize=4, blocking=False)
+
+            # pclConfIn = self.device.getInputQueue(name="config", maxSize=4, blocking=False)
+            # # depth camara
+            # qDepth = self.device.getOutputQueue(name="depth", maxSize=4, blocking=False)
+            
+
+            pointcloud = o3d.geometry.PointCloud()      
+            if show3d:
+                # visualizador o3d
+                vis = o3d.visualization.Visualizer()
+                vis.create_window()
+                vis.add_geometry(pointcloud)
+                # Eje de coordenadas
+                coordinateFrame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=400, origin=[0,0,0])
+                vis.add_geometry(coordinateFrame)
+
+            first = True
+            rot = 0
+            picture_counter = 0
+            flag = False
+
+            while self.device.isPipelineRunning():
+                
+                inMessage = q.get()
+                inColor = inMessage["rgb"]
+                inPointCloud = inMessage["pcl"]
+
+                # inDepth = qDepth.tryGet()
+                
+
+
+                # ----- in rgb
+                if inColor:
+                    frame = inColor.getCvFrame()
+                    frameRGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    frame_resized = cv2.resize(frame, (1280, 720))
+                    cv2.imshow("OAK-D-Lite", frame_resized)
+
+                # ----- in depth
+                # if inDepth is not None:
+                #     frame = inDepth.getCvFrame()
+                #     # pintar frame
+                #     cv2.imshow("depth", frame)
+
+                # ----- in pointloud
+                if inPointCloud:
+                    pass
+                    # resolucion pixeles = 1280*720
+                    # hei = inPointCloud.getHeight()
+                    # wid = inPointCloud.getWidth()
+                    # print('width: ', wid, '       height: ', hei)
+                    # asignamos puntos
+                    points = inPointCloud.getPoints().astype(np.float64)
+                    # print(points[7200:14399])
+                    pointcloud.points = o3d.utility.Vector3dVector(points)
+                    # asignamos colores
+                    colors = (frameRGB.reshape(-1, 3) / 255.0).astype(np.float64)
+                    pointcloud.colors = o3d.utility.Vector3dVector(colors)
+                    
+                    if show3d:
+                        vis.update_geometry(pointcloud)
+
+                    # # SEGUNDO METODO
+                    # pointcloud = o3d.geometry.PointCloud()
+                    # pointcloud.points = o3d.utility.Vector3dVector(points)
+                    # pointcloud.colors = pcd.colors
+                    # # Visualizar la nube de puntos
+                    # o3d.visualization.draw_geometries([pointcloud])
+                if show3d:
+                    vis.poll_events()
+                    vis.update_renderer()
+
+                    
+                # ----- teclas ----- # 
+                key = cv2.waitKey(1)
+                if key == ord('q'):
+                    break
+        if show3d:
+            vis.destroy_window()
+        cv2.destroyAllWindows()
+        return
     
+    # run camera with pointcloud   
+    def run_with_pointcloud_with_condition(self, show3d:bool = False, trigger_func = None, *args, **kwargs) -> None|dict:
+        start_time = time.time()
+        with dai.Device(self.pipeline) as self.device:
+            print('Camara en funcionamiento')
+ 
+            q = self.device.getOutputQueue(name="out", maxSize=4, blocking=False)
+
+            # pclConfIn = self.device.getInputQueue(name="config", maxSize=4, blocking=False)
+            # # depth camara
+            # qDepth = self.device.getOutputQueue(name="depth", maxSize=4, blocking=False)
+            
+
+            pointcloud = o3d.geometry.PointCloud()      
+            if show3d:
+                # visualizador o3d
+                vis = o3d.visualization.Visualizer()
+                vis.create_window()
+                vis.add_geometry(pointcloud)
+                # Eje de coordenadas
+                coordinateFrame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=400, origin=[0,0,0])
+                vis.add_geometry(coordinateFrame)
+
+            first = True
+            rot = 0
+            picture_counter = 0
+            flag = False
+
+            while self.device.isPipelineRunning():
+                
+                inMessage = q.get()
+                inColor = inMessage["rgb"]
+                inPointCloud = inMessage["pcl"]
+
+                # inDepth = qDepth.tryGet()
+                
+
+
+                # ----- in rgb
+                if inColor:
+                    frame = inColor.getCvFrame()
+                    frameRGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    if not trigger_func:
+                        frame_resized = cv2.resize(frame, (1280, 720))
+                        cv2.imshow("OAK-D-Lite", frame_resized)
+
+                # ----- in depth
+                # if inDepth is not None:
+                #     frame = inDepth.getCvFrame()
+                #     # pintar frame
+                #     cv2.imshow("depth", frame)
+
+                # ----- in pointloud
+                if inPointCloud:
+
+                    # resolucion pixeles = 1280*720
+                    # hei = inPointCloud.getHeight()
+                    # wid = inPointCloud.getWidth()
+                    # print('width: ', wid, '       height: ', hei)
+                    # asignamos puntos
+                    points = inPointCloud.getPoints().astype(np.float64)
+                    # print(points[7200:14399])
+                    pointcloud.points = o3d.utility.Vector3dVector(points)
+                    # asignamos colores
+                    colors = (frameRGB.reshape(-1, 3) / 255.0).astype(np.float64)
+                    pointcloud.colors = o3d.utility.Vector3dVector(colors)
+                    
+                    if show3d:
+                        vis.update_geometry(pointcloud)
+
+                    # # SEGUNDO METODO
+                    # pointcloud = o3d.geometry.PointCloud()
+                    # pointcloud.points = o3d.utility.Vector3dVector(points)
+                    # pointcloud.colors = pcd.colors
+                    # # Visualizar la nube de puntos
+                    # o3d.visualization.draw_geometries([pointcloud])
+                if show3d:
+                    vis.poll_events()
+                    vis.update_renderer()
+
+
+                if inColor and inPointCloud:
+                     if trigger_func:
+                            results_kwargs = trigger_func(frame, self, *args, **kwargs)
+                            flag = results_kwargs.get('flag')
+                            frame_resized = cv2.resize(frame, (1280, 720))
+                            cv2.imshow("OAK-D-Lite", frame_resized)
+
+                            if flag and ((time.time()-start_time)>20): # ponemos 8 sergundos de enfoque
+                                # añadir la nube de puntos en el retorno
+                                results_kwargs['frame'] = frame
+                                results_kwargs['pointcloud'] = hf.invert_pointcloud(pointcloud)
+                                cv2.destroyAllWindows()
+                                return results_kwargs
+                    
+                # ----- teclas ----- # 
+                key = cv2.waitKey(1)
+                if key == ord('q'):
+                    break
+        if show3d:
+            vis.destroy_window()
+        cv2.destroyAllWindows()
+        return
 
     # PRUEBAS
 

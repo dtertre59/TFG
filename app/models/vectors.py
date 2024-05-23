@@ -26,6 +26,9 @@ class Vector2D():
     def __str__(self) -> str:
         return f"Vetor2D: [x={self.x}, y={self.y}]"
     
+    def get_array(self) -> np.ndarray:
+        return np.array([self.x, self.y])
+    
 
 class Vector3D(Vector2D):
     @overload

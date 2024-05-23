@@ -117,7 +117,6 @@ class Coordinator():
         # condicion de bandera
         if (pieces != []) and (ref != None):
             flag = True
-
         return flag, ref, pieces
         
 

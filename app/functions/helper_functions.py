@@ -302,7 +302,7 @@ def invert_pointcloud(pointcloud: o3d.geometry.PointCloud) -> o3d.geometry.Point
 
 # PIXEL to 3D point
 def pixel_to_point3d(pointcloud: o3d.geometry.PointCloud, resolution: np.ndarray, pixel: np.ndarray) -> np.ndarray:
-    points = points = np.asarray(pointcloud.points)
+    points = np.asarray(pointcloud.points)
     # calculate pixel index
     index = (resolution[0]*pixel[1] + pixel[0])-1
     # 3d point
