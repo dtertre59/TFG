@@ -10,6 +10,8 @@
 import cv2
 import numpy as np
 
+from functions import helper_functions as hf
+
 from models.camera import CameraConfig, Camera
 from models.vectors import Vector2D
 from models.constants import RobotCte, ColorBGR
@@ -101,7 +103,7 @@ class Coordinator():
                         # 1. apriltag de ref
                         ref = pieceA
                     # QUITAR
-                    ref = pieceA
+                    # ref = pieceA
                 # 2. piezas geretales
                 for pieceN2 in piecesN2:
                     pieces.append(Piece(pieceN2))
@@ -238,29 +240,34 @@ class Coordinator():
         return True
     
     @staticmethod
-    def the_whole_process_2(robot: Robot, camera: Camera, apriltag: Apriltag, nn_pose_model: YoloPoseEstimation) -> None:
+    def the_whole_process_2(camera: Camera, apriltag: Apriltag, nn_pose_model: YoloPoseEstimation) -> None:
         print()
         # 1. Movemos robot a la posicion de visualizacion de las piezas
-        try:
-            print('Movimientos iniciales:')
-            robot.gripper_control(True)
-            robot.move(RobotCte.POSE_SAFE_APRILTAG_REF)
-            input('aaaaaaaaaa')
-            robot.move(RobotCte.POSE_DISPLAY)
-        except Exception as e:
-            print(str(e))
-            return
+        # try:
+        #     print('Movimientos iniciales:')
+        #     robot.gripper_control(True)
+        #     robot.move(RobotCte.POSE_SAFE_APRILTAG_REF)
+        #     input('aaaaaaaaaa')
+        #     robot.move(RobotCte.POSE_DISPLAY)
+        # except Exception as e:
+        #     print(str(e))
+        #     return
         
         # 2. detecciones
         print()
         print('Inicio de detecciones:')
         try:
-            frame, ref, pieces = camera.run_with_condition(Coordinator.detections, apriltag, nn_pose_model, paint_frame = True)
-        except:
+            r_kwargs = camera.run_with_pointcloud_with_condition(show3d=False, trigger_func=Coordinator.detections, nn_model=nn_pose_model, apriltag=apriltag, paint_frame=True)
+        except Exception as e:
             print()
-            print('Salida desde camara')
+            print('salida de camara: ',str(e))
             return
         
+        ref = r_kwargs['ref']
+        pieces = r_kwargs['pieces']
+        frame = r_kwargs['frame']
+        pointcloud = r_kwargs['pointcloud']
+
         cv2.imshow('Detecciones',cv2.resize(frame, (1280, 720)))
         cv2.waitKey(0)
         cv2.destroyAllWindows()
@@ -269,16 +276,22 @@ class Coordinator():
         # 3.1 Se elige la primera pieza para continuar el proceso
         piece = pieces[0]
         # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
-        piece.calculatePose(ref, RobotCte.T_REF_TO_ROBOT, verbose=True, matplot_representation=False)
-        
+        # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
+        point, p_ref = piece.calculatePose_v2(pointcloud, ref,t_ref_to_robot=RobotCte.T_REF_TO_ROBOT,  matplot_representation=True)
+
+        cube = hf.create_cube(point=point, size = [5,5,5])
+        cube2 = hf.create_cube(point=p_ref, size = [5,5,5], color = np.array([0,0,1]))
+        axes = hf.create_axes_with_lineSet()
+        hf.o3d_visualization([pointcloud, cube, cube2, axes])
+        exit(1)
         # 4. movimiento combinado: coger la pieza y dejarla en su respectivo hoyo (posicion conocida)
-        try:
-            print()
-            print('Inicio de movimientos combinados:')
-            Coordinator.combinated_movement(robot, piece)
-        except Exception as e:
-            print(str(e))
-            return False
+        # try:
+        #     print()
+        #     print('Inicio de movimientos combinados:')
+        #     Coordinator.combinated_movement(robot, piece)
+        # except Exception as e:
+        #     print(str(e))
+        #     return False
 
         return True
 

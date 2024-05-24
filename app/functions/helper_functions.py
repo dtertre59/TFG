@@ -53,6 +53,31 @@ def crop_frame(frame: np.ndarray, crop_size) -> np.ndarray:
 
 # -------------------- OPERACIONES --------------------------------------------------------------------------------------- #
 
+# Rotacion respecto al eje z:
+def rotation_matrix_z(theta_degrees: float) -> np.ndarray:
+    # Convert degrees to radians
+    theta = np.radians(theta_degrees)
+    
+    # Compute the cosine and sine of the angle
+    cos_theta = np.cos(theta)
+    sin_theta = np.sin(theta)
+    
+    # Create the rotation matrix
+    R_z = np.array([
+        [cos_theta, -sin_theta, 0],
+        [sin_theta, cos_theta, 0],
+        [0, 0, 1]
+    ])
+    
+    return R_z
+
+def transformation_matrix(R: np.ndarray, t: np.ndarray) -> np.ndarray:
+    T = np.eye(4)
+    T[:3, :3] = R
+    T[:3, 3] = t
+    return T
+
+
 
 
 # POINT reference system transformation  FALTA EN INGLES
@@ -99,6 +124,28 @@ def points_distance(point1: np.ndarray, point2: np.ndarray) -> float:
     distance = np.linalg.norm(point2 - point1)
     return distance
 
+# ANGLE between vectors
+def angle_between_vectors(v1: np.ndarray, v2: np.ndarray) -> float:
+     # Calcular el producto punto
+    dot_product = np.dot(v1, v2)
+    
+    # Calcular las magnitudes de los vectores
+    magnitude_v1 = np.linalg.norm(v1)
+    magnitude_v2 = np.linalg.norm(v2)
+    
+    # Calcular el coseno del ángulo
+    cos_theta = dot_product / (magnitude_v1 * magnitude_v2)
+    
+    # Asegurarse de que el valor esté dentro del rango [-1, 1]
+    cos_theta = np.clip(cos_theta, -1.0, 1.0)
+    
+    # Calcular el ángulo en radianes
+    theta_radians = np.arccos(cos_theta)
+    
+    # Convertir el ángulo a grados
+    theta_degrees = np.degrees(theta_radians)
+    
+    return theta_degrees
 
 
 # -------------------- MATPLOT ------------------------------------------------------------------------------------------- #

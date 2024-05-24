@@ -78,16 +78,6 @@ def main_camera_detect():
     hf.o3d_visualization([pointcloud])
 
 
-    # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
-    point, p_ref = piece.calculatePose_v2(pointcloud, ref)
-    cv2.imshow('aaa', frame)
-    cv2.waitKey()
-    cube = hf.create_cube(point=point, size = [5,5,5])
-    cube2 = hf.create_cube(point=p_ref, size = [5,5,5], color = np.array([0,0,1]))
-    hf.o3d_visualization([pointcloud, cube, cube2])
-    # print(ref)
-    # print(piece)
-    
 
 
 
@@ -140,21 +130,21 @@ def main2():
     print()
 
     # 1. Instancias
-    robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
+    # robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
     # camera = Camera(width=3840, height=2160, fx= 2996.7346441158315, fy=2994.755126405525) 
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
     # camera = Camera(width=1280, height=720, fx= 998.911548, fy=998.2517088)
     apriltag = Apriltag(family='tag36h11', size=0.015)
-    nn_pose_model = YoloPoseEstimation(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8s_pose_v3.pt'))  
+    nn_pose_model = YoloPoseEstimation(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8s_pose_v5.pt'))  
 
     # 2. Init
     print('Inicio: ')
     try:
         # 2.1 robot
-        robot.connect()
-        robot.setup()
+        # robot.connect()
+        # robot.setup()
         # 2.2 camera
-        camera.init_rgb()
+        camera.init_rgb_and_pointcloud()
         flag = True
     except Exception as e:
         print(str(e))
@@ -163,7 +153,7 @@ def main2():
     
     # 3. Proceso completo de una pieza:
     while flag:
-        flag = Coordinator.the_whole_process_2(robot, camera, apriltag, nn_pose_model)
+        flag = Coordinator.the_whole_process_2(camera, apriltag, nn_pose_model)
         if not flag:
             break
 
@@ -213,6 +203,6 @@ def main2():
 
 if __name__ == '__main__':
     # main_camera()
-    main_camera_detect()
+    # main_camera_detect()
     # main()
-    # main2()
+    main2()

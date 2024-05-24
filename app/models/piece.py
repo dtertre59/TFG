@@ -151,7 +151,7 @@ class PieceN2(PieceBase):
         cv2.circle(frame, tuple(self.corners[2]), 3, ColorBGR.BLACK, -1)
         cv2.circle(frame, tuple(self.corners[3]), 3, ColorBGR.BLACK, -1)
         # Dibujar el recuadro del AprilTag
-        cv2.line(frame, (self.corners[0][0], self.corners[0][1]), (self.corners[1][0], self.corners[1][1]), ColorBGR.BLACK, 2, cv2.LINE_AA, 0)
+        cv2.line(frame, (self.corners[0][0], self.corners[0][1]), (self.corners[1][0], self.corners[1][1]), ColorBGR.RED, 2, cv2.LINE_AA, 0)
         cv2.line(frame, (self.corners[1][0], self.corners[1][1]), (self.corners[2][0], self.corners[2][1]), ColorBGR.BLACK, 2, cv2.LINE_AA, 0)
         cv2.line(frame, (self.corners[2][0], self.corners[2][1]), (self.corners[3][0], self.corners[3][1]), ColorBGR.BLACK, 2, cv2.LINE_AA, 0)
         cv2.line(frame, (self.corners[3][0], self.corners[3][1]), (self.corners[0][0], self.corners[0][1]), ColorBGR.BLACK, 2, cv2.LINE_AA, 0)
@@ -321,44 +321,68 @@ class Piece(PieceBase):
         # print(t_ref_to_robot)
         t_ref_to_cam = ref.T
         pref_cam = hf.point_tansf(t_ref_to_cam, np.array([0 ,0, 0]))
+        # en m
+        pref_cam_pointcloud = pref_cam.copy()
         # hacemos espejo por culpa del sistemade ref
-        pref_cam[0] = (-1) * pref_cam[0]
-        pref_cam[1] = (-1) * pref_cam[1]
+        pref_cam_pointcloud[0] = (-1) * pref_cam_pointcloud[0]
+        pref_cam_pointcloud[1] = (-1) * pref_cam_pointcloud[1]
+        pref_cam_pointcloud *= 1000 # se pasa a mm
 
-        # nos falta esta t_piece to cam ----------------------------------------------------------------------------------
-        ppiece_cam = hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=self.center.get_array())
+        # nos falta esta t_piece_to_cam ----------------------------------------------------------------------------------
+        ppiece_cam= hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=self.center.get_array())
+        ppiece_cam[0] *= -1
+        ppiece_cam[1] *= -1
+        ppiece_cam /= 1000 # en m
+        ppiece_cam_pointcloud = ppiece_cam.copy()
+        # espejo
+        ppiece_cam_pointcloud[0] = (-1) * ppiece_cam_pointcloud[0]
+        ppiece_cam_pointcloud[1] = (-1) * ppiece_cam_pointcloud[1]
+        ppiece_cam_pointcloud *= 1000   # en mm
+
+
+        # print('centro de la pieza cloud: ', ppiece_cam_pointcloud)
+        # print('centro del apriltag cloud: ', pref_cam_pointcloud)
 
         print('centro de la pieza: ', ppiece_cam)
-        print('centro del apriltag: ', pref_cam*1000)
-        return ppiece_cam, pref_cam*1000
-        t_piece_to_cam = self.T
+        print('centro del apriltag: ', pref_cam)
 
+        # rotacion de la pieza respecto al de ref --------------------------------------
+        p1 = ref.corners[0]
+        p2 = ref.corners[1]
+        xRef = p2 - p1
+        print(xRef)
+        print(self.corners[0])
+        p11 = Vector2D(np.array(self.corners[0]))
+        print(p11)
+        p22 = Vector2D(np.array(self.corners[1]))
+
+        xPiece = p22 - p11
+
+        degrees = hf.angle_between_vectors(xRef.get_array(), xPiece.get_array())
+
+
+        # degrees = 45
+        rot_piece_to_ref = hf.rotation_matrix_z(degrees)
+        rot_ref_to_cam = t_ref_to_cam[:3,:3].copy()
+        
+        rot_piece_to_cam = np.dot(rot_ref_to_cam, rot_piece_to_ref)
+        
+        
+        t_piece_to_cam = hf.transformation_matrix(rot_piece_to_cam, ppiece_cam)
+        print('pieza a camara: ',t_piece_to_cam)
+        print('ref a camara: ',t_ref_to_cam)
+        
         # --------------------------------------------------------------------------------------------------
-        # 1. metodo
-        # puntos de origen de los sistemas de coordenadas
-        pcam_cam = pref_ref = ppieze_pieze = prob_rob = np.array([0 ,0, 0])
-
-        # puntos respecto de la camara (ref, pieze )
-        pref_cam = hf.point_tansf(t_ref_to_cam, pref_ref)
-        ppieze_cam = hf.point_tansf(t_piece_to_cam, ppieze_pieze)
-        
-        # puntos respecto de ref (cam -> ref)
-        pcam_ref = hf.point_tansf(np.linalg.inv(t_ref_to_cam), pcam_cam)
-        ppieze_ref = hf.point_tansf(np.linalg.inv(t_ref_to_cam), ppieze_cam)
-
-        # puntos respecto a la base del robot
-        t_ref_to_robot = t_ref_to_robot
-        
-        pcam_rob = hf.point_tansf(t_ref_to_robot, pcam_ref)
-        pref_rob = hf.point_tansf(t_ref_to_robot, pref_ref)
-        ppieze_rob = hf.point_tansf(t_ref_to_robot, ppieze_ref)
-
-        # 2. metodo
+        # 2 metodo (1 en la v1)
         t_piece_to_ref = np.dot(np.linalg.inv(t_ref_to_cam), t_piece_to_cam)
         t_piece_to_robot = np.dot(t_ref_to_robot,t_piece_to_ref)
         t_cam_to_robot = np.dot(t_ref_to_robot, np.linalg.inv(t_ref_to_cam))
 
         ppiece_robot = hf.point_tansf(t_piece_to_robot, np.array([0,0,0]))
+        pcam_robot = hf.point_tansf(t_cam_to_robot, np.array([0,0,0]))
+        pref_robot = hf.point_tansf(t_ref_to_robot, np.array([0,0,0]))
+        probot_robot = np.array([0,0,0])
+
 
         pose_robot = hf.pose_transf(t_piece_to_robot, np.array([0,0,0]))
         # print('Matriz de transicion de la pieza al robot: ', t_piece_to_robot)
@@ -384,13 +408,14 @@ class Piece(PieceBase):
             cam_axes = np.dot(t_cam_to_robot[:3, :3], robot_axes.T).T
 
             fig, ax = hf.init_mat3d()
-            hf.add_point_with_axes(ax, prob_rob, robot_axes, 'robot', 'k')
-            hf.add_point_with_axes(ax, pref_rob, ref_axes, 'ref', 'r')
-            hf.add_point_with_axes(ax, pcam_rob, cam_axes, 'camera', 'b')
+            hf.add_point_with_axes(ax, probot_robot, robot_axes, 'robot', 'k')
+            hf.add_point_with_axes(ax, pref_robot, ref_axes, 'ref', 'r')
+            hf.add_point_with_axes(ax, pcam_robot, cam_axes, 'camera', 'b')
             hf.add_point_with_axes(ax, ppiece_robot, piece_axes, 'piece', 'g')
 
             hf.show_mat3d(fig, ax, 'apriltags representation')
-        return 
+        
+        return ppiece_cam_pointcloud, pref_cam_pointcloud
 
 
 
