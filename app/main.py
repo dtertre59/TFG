@@ -35,11 +35,11 @@ def main_camera():
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563)
     # camera = Camera(width=1280, height=720, fx= 1498.367322, fy=1497.377563)
 
-    # camera.init_rgb()
-    camera.init_rgb_and_pointcloud()
+    camera.init_rgb()
+    # camera.init_rgb_and_pointcloud()
 
-    # camera.run_with_options(name='square', crop_size=640)
-    camera.run_with_pointcloud(show3d=False)
+    camera.run_with_options(name='irregular', crop_size=640)
+    # camera.run_with_pointcloud(show3d=False)
 
 
 # PRUEBAS DE DETECCIONES
@@ -47,35 +47,35 @@ def main_camera_detect():
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563)
     apriltag = Apriltag(family='tag36h11', size=0.015)
     nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_od_v1.pt'))
-    nn_pose_model = YoloPoseEstimation(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8s_pose_v5.pt'))
+    nn_pose_model = YoloPoseEstimation(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8s_pose_irr_v1.pt'))
     
     
-    # camera.init_rgb()
-    camera.init_rgb_and_pointcloud()
+    camera.init_rgb()
+    # camera.init_rgb_and_pointcloud()
 
 
     # camera.run_with_condition(Coordinator.apriltag_detections, apriltag, paint_frame = True)
     # camera.run_with_condition(Coordinator.nn_object_detections,  nn_od_model, paint_frame = True)
-    # camera.run_with_condition(Coordinator.nn_poseEstimation_detections,  nn_pose_model, paint_frame = True)
+    camera.run_with_condition(Coordinator.nn_poseEstimation_detections,  nn_pose_model, paint_frame = True)
 
     # camera.run_with_pointcloud_with_condition(show3d=False, trigger_func=Coordinator.apriltag_detections, apriltag=apriltag, paint_frame = True)
     
     
-    try:
-        # camera.run_with_condition(Coordinator.detections, nn_od_model, apriltag, paint_frame = True)
-        r_kwargs = camera.run_with_pointcloud_with_condition(show3d=False, trigger_func=Coordinator.detections, nn_model=nn_pose_model, apriltag=apriltag, paint_frame = True)
-    except Exception as e:
-        print('salida de camara: ',str(e))
-        return
+    # try:
+    #     # camera.run_with_condition(Coordinator.detections, nn_od_model, apriltag, paint_frame = True)
+    #     r_kwargs = camera.run_with_pointcloud_with_condition(show3d=False, trigger_func=Coordinator.detections, nn_model=nn_pose_model, apriltag=apriltag, paint_frame = True)
+    # except Exception as e:
+    #     print('salida de camara: ',str(e))
+    #     return
     
-    # 1. para el modo 2 encesitamos sacar la pointcloud. o por lo menos el punto 3d del centro de la pieza
+    # # 1. para el modo 2 encesitamos sacar la pointcloud. o por lo menos el punto 3d del centro de la pieza
 
-    ref = r_kwargs['ref']
-    piece = r_kwargs['pieces'][0]
-    frame = r_kwargs['frame']
-    pointcloud = r_kwargs['pointcloud']
+    # ref = r_kwargs['ref']
+    # piece = r_kwargs['pieces'][0]
+    # frame = r_kwargs['frame']
+    # pointcloud = r_kwargs['pointcloud']
 
-    hf.o3d_visualization([pointcloud])
+    # hf.o3d_visualization([pointcloud])
 
 
 
@@ -202,7 +202,7 @@ def main2():
 
 
 if __name__ == '__main__':
-    # main_camera()
+    main_camera()
     # main_camera_detect()
     # main()
-    main2()
+    # main2()
