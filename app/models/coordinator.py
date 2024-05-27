@@ -240,18 +240,17 @@ class Coordinator():
         return True
     
     @staticmethod
-    def the_whole_process_2(camera: Camera, apriltag: Apriltag, nn_pose_model: YoloPoseEstimation) -> None:
+    def the_whole_process_2(robot: Robot, camera: Camera, apriltag: Apriltag, nn_pose_model: YoloPoseEstimation) -> None:
         print()
         # 1. Movemos robot a la posicion de visualizacion de las piezas
-        # try:
-        #     print('Movimientos iniciales:')
-        #     robot.gripper_control(True)
-        #     robot.move(RobotCte.POSE_SAFE_APRILTAG_REF)
-        #     input('aaaaaaaaaa')
-        #     robot.move(RobotCte.POSE_DISPLAY)
-        # except Exception as e:
-        #     print(str(e))
-        #     return
+        try:
+            print('Movimientos iniciales:')
+            robot.gripper_control(True)
+            # robot.move(RobotCte.POSE_SAFE_APRILTAG_REF)
+            robot.move(RobotCte.POSE_DISPLAY)
+        except Exception as e:
+            print(str(e))
+            return
         
         # 2. detecciones
         print()
@@ -277,6 +276,7 @@ class Coordinator():
         piece = pieces[0]
         # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
         # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
+        print(piece)
         point, p_ref = piece.calculatePose_v2(pointcloud, ref,t_ref_to_robot=RobotCte.T_REF_TO_ROBOT,  matplot_representation=True)
 
         cube = hf.create_cube(point=point, size = [5,5,5])

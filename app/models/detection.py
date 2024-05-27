@@ -172,9 +172,10 @@ class YoloPoseEstimation(YoloBaseModel):
                     piece_color = ColorBGR.get_piece_color(name=piece_name)
                     coordinates = detection.boxes.xyxy[index].numpy()
                     bbox = BoundingBox(p1 = np.array([int(coordinates[0]), int(coordinates[1])]), p2=np.array([int(coordinates[2]), int(coordinates[3])]))                    
-                    center = detection.keypoints.xy[index][-1].int().tolist()
-                    corners = detection.keypoints.xy[index][:-1].int().tolist()
-                    piece = PieceN2(name=piece_name, color=piece_color, bbox=bbox, center=Vector2D(center[0], center[1]), corners=corners)
+                    # center = detection.keypoints.xy[index][-1].int().tolist()
+                    # corners = detection.keypoints.xy[index][:-1].int().tolist()
+                    keypoints = detection.keypoints.xy[index].int().tolist()
+                    piece = PieceN2(name=piece_name, color=piece_color, bbox=bbox, keypoints=keypoints)
                     self.pieces.append(piece)
         return
     

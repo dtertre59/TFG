@@ -126,11 +126,13 @@ class PieceN(PieceBase):
         return
 
 class PieceN2(PieceBase):
-    def __init__(self, name: str, color: tuple, bbox: BoundingBox, center: Vector2D, corners) -> None:
+    def __init__(self, name: str, color: tuple, bbox: BoundingBox, keypoints) -> None:
         super().__init__(name, color)
         self.bbox = bbox
-        self.center = center
-        self.corners = corners
+        self.keypoints = keypoints
+
+        self.center = None
+        self.corners = None
 
     def __str__(self, title: str = 'Pieza tipo N2') -> str:
         textb = super().__str__(title)
@@ -143,18 +145,30 @@ class PieceN2(PieceBase):
         cv2.putText(frame, self.name, (int(self.bbox.p1.x), int(self.bbox.p1.y) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, self.color, 2)
         # Cuadrado boundingbox
         self.bbox.paint(frame, self.color)
-        # centro
-        cv2.circle(frame, (self.center.x, self.center.y), 3, ColorBGR.BLACK, -1)
+
+        # keypoints
+        for keypoint in self.keypoints:
+            # point
+            cv2.circle(frame, tuple(keypoint), 3, ColorBGR.RED, -1)
+        
+        
         # corners
-        cv2.circle(frame, tuple(self.corners[0]), 3, ColorBGR.BLACK, -1)
-        cv2.circle(frame, tuple(self.corners[1]), 3, ColorBGR.BLACK, -1)
-        cv2.circle(frame, tuple(self.corners[2]), 3, ColorBGR.BLACK, -1)
-        cv2.circle(frame, tuple(self.corners[3]), 3, ColorBGR.BLACK, -1)
-        # Dibujar el recuadro del AprilTag
-        cv2.line(frame, (self.corners[0][0], self.corners[0][1]), (self.corners[1][0], self.corners[1][1]), ColorBGR.RED, 2, cv2.LINE_AA, 0)
-        cv2.line(frame, (self.corners[1][0], self.corners[1][1]), (self.corners[2][0], self.corners[2][1]), ColorBGR.BLACK, 2, cv2.LINE_AA, 0)
-        cv2.line(frame, (self.corners[2][0], self.corners[2][1]), (self.corners[3][0], self.corners[3][1]), ColorBGR.BLACK, 2, cv2.LINE_AA, 0)
-        cv2.line(frame, (self.corners[3][0], self.corners[3][1]), (self.corners[0][0], self.corners[0][1]), ColorBGR.BLACK, 2, cv2.LINE_AA, 0)
+        # cv2.circle(frame, tuple(self.corners[0]), 3, ColorBGR.BLACK, -1)
+        # cv2.circle(frame, tuple(self.corners[1]), 3, ColorBGR.BLACK, -1)
+        # cv2.circle(frame, tuple(self.corners[2]), 3, ColorBGR.BLACK, -1)
+        # cv2.circle(frame, tuple(self.corners[3]), 3, ColorBGR.BLACK, -1)
+        # Dibujar esqueleto de la pieza
+        for index, keypoint in enumerate(self.keypoints):
+        #    print(index)
+           try:
+                cv2.line(frame, (self.keypoints[index][0], self.keypoints[index][1]), (self.keypoints[index+1][0], self.keypoints[index+1][1]), ColorBGR.RED, 2, cv2.LINE_AA, 0)
+           except:
+               pass 
+           
+        # cv2.line(frame, (self.keypoints[0][0], self.keypoints[0][1]), (self.keypoints[1][0], self.keypoints[1][1]), ColorBGR.GREEN, 2, cv2.LINE_AA, 0)
+        # cv2.line(frame, (self.keypoints[1][0], self.keypoints[1][1]), (self.keypoints[2][0], self.keypoints[2][1]), ColorBGR.GREEN, 2, cv2.LINE_AA, 0)
+        # cv2.line(frame, (self.keypoints[2][0], self.keypoints[2][1]), (self.keypoints[3][0], self.keypoints[3][1]), ColorBGR.GREEN, 2, cv2.LINE_AA, 0)
+        # cv2.line(frame, (self.keypoints[3][0], self.keypoints[3][1]), (self.keypoints[0][0], self.keypoints[0][1]), ColorBGR.BLACK, 2, cv2.LINE_AA, 0)
         
 
         return
@@ -205,8 +219,8 @@ class Piece(PieceBase):
             self.bbox = pieceN2.bbox
 
             # keypoints
-            self.center= pieceN2.center
-            self.corners = pieceN2.corners
+            self.center= Vector2D(pieceN2.keypoints[2][0], pieceN2.keypoints[2][1])
+            self.corners = pieceN2.keypoints[-2:]
 
             # pointcloud + algebra
             self.T = None
@@ -329,9 +343,15 @@ class Piece(PieceBase):
         pref_cam_pointcloud *= 1000 # se pasa a mm
 
         # nos falta esta t_piece_to_cam ----------------------------------------------------------------------------------
+        # punto en 3d respecto de la camara
+        print(self.center.get_array())
+        input('centro de la imagen')
         ppiece_cam= hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=self.center.get_array())
-        ppiece_cam[0] *= -1
-        ppiece_cam[1] *= -1
+        # rotamoce 180 para ajustar sistema de referencia
+        rot = hf.rotation_matrix_z(180)
+        ppiece_cam = hf.point_tansf(rot, ppiece_cam)
+        # ppiece_cam[0] *= -1
+        # ppiece_cam[1] *= -1
         ppiece_cam /= 1000 # en m
         ppiece_cam_pointcloud = ppiece_cam.copy()
         # espejo

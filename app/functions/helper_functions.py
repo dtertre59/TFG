@@ -83,14 +83,20 @@ def transformation_matrix(R: np.ndarray, t: np.ndarray) -> np.ndarray:
 # POINT reference system transformation  FALTA EN INGLES
 def point_tansf(T: np.ndarray, point: np.ndarray) -> np.ndarray:
     # Agrega una coordenada homogénea al punto
-    h_point= np.append(point, 1)
+    if T.shape == (4,4):
+        h_point= np.append(point, 1)
+    else:
+        h_point = point
     # Multiplica la matriz de transformación por el punto homogéneo
     h_t_point = np.dot(T, h_point)
 
-    # Normaliza dividiendo por la coordenada homogénea final
-    t_point = np.array([h_t_point[0] / h_t_point[3], 
-               h_t_point[1] / h_t_point[3],
-               h_t_point[2] / h_t_point[3]])
+    if T.shape == (4,4):
+        # Normaliza dividiendo por la coordenada homogénea final
+        t_point = np.array([h_t_point[0] / h_t_point[3], 
+                h_t_point[1] / h_t_point[3],
+                h_t_point[2] / h_t_point[3]])
+    else:
+        t_point = h_t_point
     return t_point
 
 # ROTATION
