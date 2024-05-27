@@ -161,7 +161,7 @@ class PieceN2(PieceBase):
         for index, keypoint in enumerate(self.keypoints):
         #    print(index)
            try:
-                cv2.line(frame, (self.keypoints[index][0], self.keypoints[index][1]), (self.keypoints[index+1][0], self.keypoints[index+1][1]), ColorBGR.RED, 2, cv2.LINE_AA, 0)
+                cv2.line(frame, (self.keypoints[index][0], self.keypoints[index][1]), (self.keypoints[index+1][0], self.keypoints[index+1][1]), ColorBGR.BLUE, 2, cv2.LINE_AA, 0)
            except:
                pass 
            
@@ -219,8 +219,12 @@ class Piece(PieceBase):
             self.bbox = pieceN2.bbox
 
             # keypoints
-            self.center= Vector2D(pieceN2.keypoints[2][0], pieceN2.keypoints[2][1])
-            self.corners = pieceN2.keypoints[-2:]
+            if pieceN2.name == 'square':
+                self.center= Vector2D(pieceN2.keypoints[-1][0], pieceN2.keypoints[-1][1])
+                self.corners = pieceN2.keypoints[:-1]
+            else:
+                self.center= Vector2D(pieceN2.keypoints[-1][0], pieceN2.keypoints[-1][1])
+                self.corners = pieceN2.keypoints[:-1]
 
             # pointcloud + algebra
             self.T = None
@@ -325,46 +329,34 @@ class Piece(PieceBase):
             hf.show_mat3d(fig, ax, 'apriltags representation')
         return 
     
-
     # Calculate pose modo 2
     def calculatePose_v2(self, pointcloud, ref: PieceA, t_ref_to_robot: np.ndarray = np.eye(4),verbose: bool = True, matplot_representation: bool = False):
         if not pointcloud:
             print('Not pointcloud')
             return 
         
-        # print(t_ref_to_robot)
+        
+        # referencia respecto de la camara -----------------------------------------------------------------------------
         t_ref_to_cam = ref.T
         pref_cam = hf.point_tansf(t_ref_to_cam, np.array([0 ,0, 0]))
         # en m
         pref_cam_pointcloud = pref_cam.copy()
         # hacemos espejo por culpa del sistemade ref
-        pref_cam_pointcloud[0] = (-1) * pref_cam_pointcloud[0]
-        pref_cam_pointcloud[1] = (-1) * pref_cam_pointcloud[1]
+        rot = hf.rotation_matrix_z(180)
+        pref_cam_pointcloud = hf.point_tansf(rot, pref_cam_pointcloud)
         pref_cam_pointcloud *= 1000 # se pasa a mm
 
-        # nos falta esta t_piece_to_cam ----------------------------------------------------------------------------------
-        # punto en 3d respecto de la camara
-        print(self.center.get_array())
-        input('centro de la imagen')
-        ppiece_cam= hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=self.center.get_array())
-        # rotamoce 180 para ajustar sistema de referencia
+        # pieza respecto de la camara: nos falta esta t_piece_to_cam ----------------------------------------------------------------------------------
+        # 1. punto en 3d respecto de la camara
+        ppiece_cam_pointcloud= hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=self.center.get_array())
+        ppiece_cam = ppiece_cam_pointcloud.copy()
+        # 2. rotamoce 180 respecto de z para ajustar sistema de referencia
         rot = hf.rotation_matrix_z(180)
         ppiece_cam = hf.point_tansf(rot, ppiece_cam)
-        # ppiece_cam[0] *= -1
-        # ppiece_cam[1] *= -1
         ppiece_cam /= 1000 # en m
-        ppiece_cam_pointcloud = ppiece_cam.copy()
-        # espejo
-        ppiece_cam_pointcloud[0] = (-1) * ppiece_cam_pointcloud[0]
-        ppiece_cam_pointcloud[1] = (-1) * ppiece_cam_pointcloud[1]
-        ppiece_cam_pointcloud *= 1000   # en mm
 
-
-        # print('centro de la pieza cloud: ', ppiece_cam_pointcloud)
-        # print('centro del apriltag cloud: ', pref_cam_pointcloud)
-
-        print('centro de la pieza: ', ppiece_cam)
-        print('centro del apriltag: ', pref_cam)
+        # print('centro de la pieza: ', ppiece_cam)
+        # print('centro del apriltag: ', pref_cam)
 
         # rotacion de la pieza respecto al de ref --------------------------------------
         p1 = ref.corners[0]
@@ -382,7 +374,7 @@ class Piece(PieceBase):
 
 
         # degrees = 45
-        rot_piece_to_ref = hf.rotation_matrix_z(degrees)
+        rot_piece_to_ref = hf.rotation_matrix_z(45)# degrees)
         rot_ref_to_cam = t_ref_to_cam[:3,:3].copy()
         
         rot_piece_to_cam = np.dot(rot_ref_to_cam, rot_piece_to_ref)
@@ -417,7 +409,7 @@ class Piece(PieceBase):
             print('Pieza seleccionada: ', self.name)
             print('Pose: ', self.pose)
 
-        # 3D representation
+        # 3D representation --------------------------------------------------
         if matplot_representation:
             size = 0.2
             robot_axes = np.array([[size, 0, 0],
@@ -434,8 +426,20 @@ class Piece(PieceBase):
             hf.add_point_with_axes(ax, ppiece_robot, piece_axes, 'piece', 'g')
 
             hf.show_mat3d(fig, ax, 'apriltags representation')
-        
-        return ppiece_cam_pointcloud, pref_cam_pointcloud
+
+
+        # REPRESENTACION CON OPEN3D--------------------------------------------------------------------------
+        ppcloud = hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=ref.center.get_array())
+
+        cube = hf.create_cube(point=ppcloud, size = [5,5,5])
+        cube2 = hf.create_cube(point=pref_cam_pointcloud, size = [5,5,5], color = np.array([0,0,1]))
+        axes = hf.create_axes_with_lineSet()
+
+        print('apriltag lib. center: ', pref_cam_pointcloud)
+        print('apriltag pointcloud cent: ', ppcloud)
+        hf.o3d_visualization([pointcloud, cube, cube2, axes])
+
+        return
 
 
 

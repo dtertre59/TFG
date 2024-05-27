@@ -20,6 +20,9 @@ from models.robot import Robot
 from models.detection import Apriltag, YoloObjectDetection, YoloPoseEstimation
 from models.coordinator import Coordinator
 
+# QUITAR
+from models.piece import PieceA
+
 
 # -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
 
@@ -32,9 +35,10 @@ robot_config_filename = config_filename = str(Path(__file__).resolve().parent / 
 
 # main para testing de camera
 def main_camera():
+    # camera = Camera(width=3840, height=2160, fx = 2996.7346441158315, fy = 2994.755126405525)
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563)
     # camera = Camera(width=1280, height=720, fx= 1498.367322, fy=1497.377563)
-
+    
     camera.init_rgb()
     # camera.init_rgb_and_pointcloud()
 
@@ -77,8 +81,63 @@ def main_camera_detect():
 
     # hf.o3d_visualization([pointcloud])
 
+# PRUEBAS POINTCLOUD
+def main_camera_point():
+    camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563)
+    
+    apriltag = Apriltag(family='tag36h11', size=0.015)
+
+    camera.init_rgb_and_pointcloud()
+
+    r_kwargs = camera.run_with_pointcloud_with_condition(show3d=False, trigger_func=Coordinator.apriltag_detections, apriltag=apriltag, paint_frame=True)
+
+    pointcloud = r_kwargs['pointcloud']
+    frame = r_kwargs['frame']
+
+    ref1: PieceA = r_kwargs['pieces'][0]
+    ref2 : PieceA = r_kwargs['pieces'][1]
 
 
+
+    refs: list[PieceA]= r_kwargs['pieces']
+    
+    def transf_to_cloud(pieceA: PieceA) -> np.ndarray:
+        t_april_to_cam = pieceA.T
+        pref_cam = hf.point_tansf(t_april_to_cam, np.array([0 ,0, 0]))
+        # en m
+        pref_cam_pointcloud = pref_cam.copy()
+        # hacemos espejo por culpa del sistemade ref
+        rot = hf.rotation_matrix_z(180)
+        pref_cam_pointcloud = hf.point_tansf(rot, pref_cam_pointcloud)
+        pref_cam_pointcloud *= 1000 # se pasa a mm
+        return pref_cam_pointcloud
+    
+
+    ps_pointcloud = []
+    ps_april = []
+    
+    for ref in refs:
+        ps_pointcloud.append(hf.pixel_to_point3d(pointcloud=pointcloud, resolution=np.array([1920,1080]), pixel=ref.center.get_array()))
+        # print(ps_pointcloud)
+        ps_april.append(transf_to_cloud(ref))
+
+    cubesm = []
+    cubesb = []
+
+    for p_pointcloud in ps_pointcloud:
+        cubesm.append(hf.create_cube(point=p_pointcloud, size = [5,5,5], color = np.array([0,0,1])))
+
+    for p_april in ps_april:
+        cubesb.append(hf.create_cube(point=p_april, size = [5,5,5], color = np.array([0,1,0])))
+
+    cubes = cubesm + cubesb
+
+
+    axes = hf.create_axes_with_lineSet()
+
+    geometries = [pointcloud,axes] + cubes
+
+    hf.o3d_visualization(geometries=geometries)
 
 
 # MAIN V1. Con red neuronal-object detection y apriltags
@@ -135,7 +194,7 @@ def main2():
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
     # camera = Camera(width=1280, height=720, fx= 998.911548, fy=998.2517088)
     apriltag = Apriltag(family='tag36h11', size=0.015)
-    nn_pose_model = YoloPoseEstimation(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8s_pose_irr_v2.pt'))  
+    nn_pose_model = YoloPoseEstimation(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8s_pose_v5.pt'))  
 
     # 2. Init
     print('Inicio: ')
@@ -173,6 +232,7 @@ def main2():
 
 if __name__ == '__main__':
     # main_camera()
-    main_camera_detect()
+    # main_camera_detect()
+    main_camera_point()
     # main()
     # main2()

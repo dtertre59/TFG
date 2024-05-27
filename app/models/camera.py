@@ -96,10 +96,9 @@ class Camera(CameraConfig):
     def init_rgb_and_pointcloud(self):
          # Create pipeline
         self.pipeline = dai.Pipeline()
-        # self.device = dai.Device()
 
+        # Create nodes
         camRgb = self.pipeline.create(dai.node.ColorCamera)
-
         monoLeft = self.pipeline.create(dai.node.MonoCamera)
         monoRight = self.pipeline.create(dai.node.MonoCamera)
 
@@ -122,7 +121,7 @@ class Camera(CameraConfig):
         elif self.resolution.y == 3120:
             camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_13_MP)
 
-        camRgb.setFps(15)
+        camRgb.setFps(10)
 
         # For now, RGB needs fixed focus to properly align with depth.
         # This value was used during calibration
@@ -452,7 +451,7 @@ class Camera(CameraConfig):
                             frame_resized = cv2.resize(frame, (1280, 720))
                             cv2.imshow("OAK-D-Lite", frame_resized)
 
-                            if flag and ((time.time()-start_time)>20): # ponemos 8 sergundos de enfoque
+                            if flag and ((time.time()-start_time)>15): # ponemos 8 sergundos de enfoque
                                 # añadir la nube de puntos en el retorno
                                 results_kwargs['frame'] = frame
                                 results_kwargs['pointcloud'] = hf.invert_pointcloud(pointcloud)

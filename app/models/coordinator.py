@@ -103,7 +103,7 @@ class Coordinator():
                         # 1. apriltag de ref
                         ref = pieceA
                     # QUITAR
-                    # ref = pieceA
+                    ref = pieceA
                 # 2. piezas geretales
                 for pieceN2 in piecesN2:
                     pieces.append(Piece(pieceN2))
@@ -169,6 +169,7 @@ class Coordinator():
         secure_pose = pose
         secure_pose[2] = RobotCte.SAFE_Z
         robot.move(secure_pose)
+        input('en posicion segura')
         # 2. encima de la pieza + rotation + gripper off
         robot.gripper_control(False)
         # 3. bajar para coger la pieza
@@ -246,7 +247,7 @@ class Coordinator():
         try:
             print('Movimientos iniciales:')
             robot.gripper_control(True)
-            # robot.move(RobotCte.POSE_SAFE_APRILTAG_REF)
+            robot.move(RobotCte.POSE_SAFE_APRILTAG_REF)
             robot.move(RobotCte.POSE_DISPLAY)
         except Exception as e:
             print(str(e))
@@ -273,25 +274,20 @@ class Coordinator():
 
         # 3. calcular pose
         # 3.1 Se elige la primera pieza para continuar el proceso
-        piece = pieces[0]
+        piece: Piece = pieces[0]
         # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
         # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
         print(piece)
-        point, p_ref = piece.calculatePose_v2(pointcloud, ref,t_ref_to_robot=RobotCte.T_REF_TO_ROBOT,  matplot_representation=True)
+        piece.calculatePose_v2(pointcloud, ref,t_ref_to_robot=RobotCte.T_REF_TO_ROBOT,  matplot_representation=False)
 
-        cube = hf.create_cube(point=point, size = [5,5,5])
-        cube2 = hf.create_cube(point=p_ref, size = [5,5,5], color = np.array([0,0,1]))
-        axes = hf.create_axes_with_lineSet()
-        hf.o3d_visualization([pointcloud, cube, cube2, axes])
-        exit(1)
         # 4. movimiento combinado: coger la pieza y dejarla en su respectivo hoyo (posicion conocida)
-        # try:
-        #     print()
-        #     print('Inicio de movimientos combinados:')
-        #     Coordinator.combinated_movement(robot, piece)
-        # except Exception as e:
-        #     print(str(e))
-        #     return False
+        try:
+            print()
+            print('Inicio de movimientos combinados:')
+            Coordinator.combinated_movement(robot, piece)
+        except Exception as e:
+            print(str(e))
+            return False
 
         return True
 
