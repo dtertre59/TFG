@@ -55,8 +55,8 @@ def main_camera_detect():
 
 
     # camera.run_with_condition(Coordinator.apriltag_detections, apriltag, paint_frame = True)
-    # camera.run_with_condition(Coordinator.nn_object_detections,  nn_od_model, paint_frame = True)
-    camera.run_with_condition(Coordinator.nn_poseEstimation_detections,  nn_pose_model, paint_frame = True)
+    camera.run_with_condition(Coordinator.nn_object_detections,  nn_od_model, paint_frame = True)
+    # camera.run_with_condition(Coordinator.nn_poseEstimation_detections,  nn_pose_model, paint_frame = True)
 
     # camera.run_with_pointcloud_with_condition(show3d=False, trigger_func=Coordinator.apriltag_detections, apriltag=apriltag, paint_frame = True)
     
@@ -173,6 +173,6 @@ def main2():
 
 if __name__ == '__main__':
     # main_camera()
-    # main_camera_detect()
+    main_camera_detect()
     # main()
-    main2()
+    # main2()
