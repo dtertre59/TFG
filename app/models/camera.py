@@ -20,6 +20,7 @@ import depthai as dai
 import cv2
 import open3d as o3d
 from pathlib import Path
+import argparse
 
 from models.vectors import Vector2D
 from models.piece import PieceA, Piece
@@ -94,8 +95,26 @@ class Camera(CameraConfig):
     
     # INIT camera RGB and pointcloud
     def init_rgb_and_pointcloud(self):
-         # Create pipeline
+
+        # Ruta al archivo de calibración JSON
+        calibJsonFile = str((Path(__file__).parent.parent.resolve() / 'assets' / 'oakd' / 'depthai_calibration.json'))
+
+        # Parsear argumentos de línea de comandos
+        parser = argparse.ArgumentParser()
+        parser.add_argument('calibJsonFile', nargs='?', help="Path to calibration file in json", default=calibJsonFile)
+        args = parser.parse_args()
+
+
+        # Cargar datos de calibración
+        try:
+            calibData = dai.CalibrationHandler(args.calibJsonFile)
+        except RuntimeError as e:
+            raise RuntimeError(f"Error loading calibrtion data: {e}")
+
+
+        # Create pipeline
         self.pipeline = dai.Pipeline()
+        self.pipeline.setCalibrationData(calibrationDataHandler=calibData)
 
         # Create nodes
         camRgb = self.pipeline.create(dai.node.ColorCamera)
@@ -123,15 +142,15 @@ class Camera(CameraConfig):
 
         camRgb.setFps(10)
 
-        # For now, RGB needs fixed focus to properly align with depth.
-        # This value was used during calibration
-        try:
-            calibData = dai.Device().readCalibration2()
-            lensPosition = calibData.getLensPosition(dai.CameraBoardSocket.CAM_A)
-            if lensPosition:
-                camRgb.initialControl.setManualFocus(lensPosition)
-        except:
-            raise
+        # # For now, RGB needs fixed focus to properly align with depth.
+        # # This value was used during calibration
+        # try:
+        #     calibData = dai.Device().readCalibration2()
+        #     lensPosition = calibData.getLensPosition(dai.CameraBoardSocket.CAM_A)
+        #     if lensPosition:
+        #         camRgb.initialControl.setManualFocus(lensPosition)
+        # except:
+            # raise
 
     
         # Properties MONO CAMS
@@ -143,10 +162,10 @@ class Camera(CameraConfig):
 
 
         depth.setDefaultProfilePreset(dai.node.StereoDepth.PresetMode.HIGH_DENSITY)
-        # depth.initialConfig.setMedianFilter(dai.MedianFilter.KERNEL_7x7)
+        depth.initialConfig.setMedianFilter(dai.MedianFilter.KERNEL_7x7)
 
         depth.setLeftRightCheck(True)
-        # depth.setExtendedDisparity(False)
+        depth.setExtendedDisparity(False)
         depth.setSubpixel(True)
         depth.setDepthAlign(dai.CameraBoardSocket.CAM_A)
 
@@ -154,6 +173,7 @@ class Camera(CameraConfig):
         config.postProcessing.thresholdFilter.minRange = 100
         config.postProcessing.thresholdFilter.maxRange = 1000
         depth.initialConfig.set(config)
+
 
         # otras caracteristicas
         monoLeft.out.link(depth.left)

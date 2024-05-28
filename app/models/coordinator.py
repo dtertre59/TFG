@@ -291,3 +291,53 @@ class Coordinator():
 
         return True
 
+    @staticmethod
+    def the_whole_process_3(robot: Robot, camera: Camera, apriltag: Apriltag, nn_od_model: YoloObjectDetection) -> None:
+        print()
+        # 1. Movemos robot a la posicion de visualizacion de las piezas
+        try:
+            print('Movimientos iniciales:')
+            robot.move(RobotCte.POSE_SAFE_APRILTAG_REF)
+            robot.gripper_control(True)
+            robot.move(RobotCte.POSE_DISPLAY)
+        except Exception as e:
+            print(str(e))
+            return
+        
+        # 2. detecciones
+        print()
+        print('Inicio de detecciones:')
+        try:
+            r_kwargs = camera.run_with_pointcloud_with_condition(show3d=False, trigger_func=Coordinator.detections, nn_model=nn_od_model, apriltag=apriltag, paint_frame=True)
+        except Exception as e:
+            print()
+            print('salida de camara: ',str(e))
+            return
+        
+        ref = r_kwargs['ref']
+        pieces = r_kwargs['pieces']
+        frame = r_kwargs['frame']
+        pointcloud = r_kwargs['pointcloud']
+
+        cv2.imshow('Detecciones',cv2.resize(frame, (1280, 720)))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        # 3. calcular pose
+        # 3.1 Se elige la primera pieza para continuar el proceso
+        piece: Piece = pieces[0]
+        # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
+        # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
+        print(piece)
+        piece.calculatePose_v3(pointcloud, ref,t_ref_to_robot=RobotCte.T_REF_TO_ROBOT,  matplot_representation=False)
+
+        # 4. movimiento combinado: coger la pieza y dejarla en su respectivo hoyo (posicion conocida)
+        try:
+            print()
+            print('Inicio de movimientos combinados:')
+            Coordinator.combinated_movement(robot, piece)
+        except Exception as e:
+            print(str(e))
+            return False
+
+        return True

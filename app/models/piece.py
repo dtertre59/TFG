@@ -12,7 +12,7 @@ import open3d as o3d
 from typing import overload, Union
 
 from models.vectors import Vector2D, Vector3D, Vector6D
-from models.constants import ColorBGR
+from models.constants import ColorBGR, CameraCte
 
 from functions import helper_functions as hf
 
@@ -441,7 +441,52 @@ class Piece(PieceBase):
 
         return
 
+    # Calculate pose modo 3
+    def calculatePose_v3(self, pointcloud, ref: PieceA, t_ref_to_robot: np.ndarray = np.eye(4),verbose: bool = True, matplot_representation: bool = False):
+        if not pointcloud:
+            print('Not pointcloud')
+            return 
+        
+        # PIXEL Y CLOUD -------------------------------------------------------------------------------------
+        
+        pref_cloud = hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=ref.center.get_array())
+        ppiece_cloud = hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=self.center.get_array())
 
+        # MATRIZ TRANSFORMACION APRIL ----------------------------------------------------------------------
+        t_ref_to_cam = ref.T
+        pref_good = hf.point_tansf(t_ref_to_cam, np.array([0 ,0, 0])) # en m
+        pref_good *= 1000 # se pasa a mm
+
+        ppiece_good_mm = hf.point_tansf(T=CameraCte.T_pointcloud_to_good_pointcloud, point=ppiece_cloud)
+        ppiece_good_m = ppiece_good_mm/1000
+
+        # PASO AL SISTEMA DE REF DEL ROBOT ----------------------------------------------------------------
+        rot_piece_to_cam = hf.rotation_matrix_z(0)
+        t_piece_to_cam = hf.transformation_matrix(rot_piece_to_cam, ppiece_good_m)
+        t_piece_to_ref = np.dot(np.linalg.inv(t_ref_to_cam), t_piece_to_cam)
+        t_piece_to_robot = np.dot(t_ref_to_robot,t_piece_to_ref)
+
+        ppiece_robot = hf.point_tansf(t_piece_to_robot, np.array([0,0,0]))
+        pose_robot = hf.pose_transf(t_piece_to_robot, np.array([0,0,0]))
+        pose_robot[3:] = [0.028,0,3.318]
+
+        self.point3d = Vector3D(ppiece_robot)
+        self.pose = Vector6D(pose_robot)
+
+
+        # REPRESENTACION CON OPEN3D--------------------------------------------------------------------------
+
+        cube = hf.create_cube(point=pref_cloud, size = [5,5,5], color = np.array([0,0,1]))
+        cube2 = hf.create_cube(point=pref_good, size = [5,5,5], color = np.array([0,1,0]))
+
+        cube11 = hf.create_cube(point=ppiece_cloud, size = [5,5,5], color = np.array([0,0,1]))
+        cube22 = hf.create_cube(point=ppiece_good_mm, size = [5,5,5], color = np.array([0,1,0]))
+
+        axes = hf.create_axes_with_lineSet()
+
+        hf.o3d_visualization([pointcloud, cube, cube2,cube11, cube22, axes])
+
+        return
 
 
 

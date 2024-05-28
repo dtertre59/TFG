@@ -138,12 +138,6 @@ class Robot():
             if state is None:
                 raise RobotException('No se recibe el estado')
             
-            # comprobamos que el programa del robot esta en funcionamiento
-            program_running = state.output_int_register_0
-            if not program_running:
-                raise RobotException('No está activado el programa en PolyScope')
-            # comprobamos estado del robot (parado=0, en movimiento = 1)
-            robot_aviable = state.output_int_register_1
 
             # funcion de transformacion inversa
             def list_to_setp(sp, list):
@@ -153,6 +147,16 @@ class Robot():
 
             # list_to_setp(self.setp, vector) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
             # self.con.send(self.setp)
+
+
+            # comprobamos que el programa del robot esta en funcionamiento
+            program_running = state.output_int_register_0
+            if not program_running:
+                raise RobotException('No está activado el programa en PolyScope')
+
+
+            # comprobamos estado del robot (parado=0, en movimiento = 1)
+            robot_aviable = state.output_int_register_1
 
             # do something...
             if move_completed == False and robot_aviable == 1 and init == 1:

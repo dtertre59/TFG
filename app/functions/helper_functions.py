@@ -349,7 +349,8 @@ def invert_pointcloud(pointcloud: o3d.geometry.PointCloud) -> o3d.geometry.Point
     # points
     points = np.asarray(pointcloud.points)
     # We invert points with respect to the x-axis because it's mirrored
-    points[:,0] *= -1
+    # points[:,0] *= -1
+    points[:,1] *= -1
     pointcloud.points = o3d.utility.Vector3dVector(points)
     return pointcloud
 

@@ -36,6 +36,13 @@ class ColorBGR():
         return color
 
 
+class CameraCte():
+    T_pointcloud_to_good_pointcloud = np.array([[    0.99997,   0.0037492,   -0.007014,      11.377],
+                                                [ -0.0034771,     0.99926,    0.038411,     -18.397],
+                                                [  0.0071528,   -0.038386,     0.99924,     -18.176],
+                                                [          0,           0,           0,           1]])
+
+
 class RobotCte():
    
 
