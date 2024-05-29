@@ -214,16 +214,18 @@ class Robot():
 # robot_config_filename = config_filename = str(Path(__file__).resolve().parent.parent / 'assets' / 'ur3e' / 'configuration_1.xml')
 # robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
 
+# robot.connect()
+# robot.setup()
+# POSE_STANDAR = np.array([-0.128, -0.298, 0.180, 0.025, 0, 2.879])
+# POSE_DISPLAY = np.array([-0.125, -0.166, 0.270, 1.454, -1.401, -4.095])
+# robot.move(POSE_STANDAR)
+# robot.move(POSE_DISPLAY)
 
 # def rx_ry_para(angulo_rotacion):
 #     ang_rad = angulo_rotacion * (np.pi/180)
 #     rx = np.pi * np.sin(ang_rad/2)
 #     ry = np.pi * np.cos(ang_rad/2)
 #     return np.array([rx, ry, 0])
-
-# robot.connect()
-# robot.setup()
-# robot.move(RobotConstants.POSE_DISPLAY)
 
 # new_rot = RobotConstants.POSE_DISPLAY[-3:]
 

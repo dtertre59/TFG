@@ -17,7 +17,7 @@ from models.vectors import Vector2D
 from models.constants import RobotCte, ColorBGR
 from models.piece import BoundingBox, PieceA, PieceN, PieceN2, Piece
 from models.robot import Robot
-from models.detection import Apriltag, YoloObjectDetection, YoloPoseEstimation
+from models.detection import Apriltag, YoloObjectDetection, YoloPoseEstimation, ClassicAV
 
 # -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
 
@@ -29,6 +29,20 @@ from models.detection import Apriltag, YoloObjectDetection, YoloPoseEstimation
 class Coordinator():
 
     """ ----- DETECCIONES ----- """
+
+    @staticmethod
+    def classicAV_detections(frame, classicAV: ClassicAV, paint_frame: bool) -> dict:
+        classicAV.detect(frame)
+        # 2. verificacion y paint
+        if classicAV.piece:
+            if paint_frame:
+                # classicAV.paint(frame)
+                pass
+            flag = True
+        else:
+            flag = False
+        return {'flag': flag, 'pieces': classicAV.piece}
+
 
     @staticmethod
     def apriltag_detections(frame, camera: Camera, apriltag: Apriltag, paint_frame: bool = True) -> dict:
@@ -70,15 +84,38 @@ class Coordinator():
             flag = False
         return {'flag': flag, 'pieces': nn_model.pieces}
 
-
-
     @staticmethod
-    def combined_pieces(piecesA: list[PieceA]|None, piecesN: list[PieceN]|None, piecesN2: list[PieceN2]|None) -> tuple[bool, PieceA|None|bool, list[Piece]]:
+    def combined_pieces(piecesA: list[PieceA]|None, piecesN: list[PieceN]|None, piecesN2: list[PieceN2]|None, combine_pieces: bool = True) -> tuple[bool, PieceA|None|bool, list[Piece]]:
         """combinar detecciones en una sola"""
         flag = False
         ref = None
         pieces = []
 
+        # No combinar piezas
+        if combine_pieces == False:
+            # 1. adquirimos referencia
+            if piecesA != None:
+                for pieceA in piecesA:
+                    if pieceA.name == '4':
+                        # 1. apriltag de ref
+                        ref = pieceA
+            # 2. adquirimos piezas de piecesN
+            if piecesN != None:
+                for pieceN in piecesN:
+                    pieces.append(Piece(pieceN))
+            # 3. adquirimos piezas de pieceN2
+            if piecesN2 != None:
+                for pieceN2 in piecesN2:
+                    pieces.append(Piece(pieceN2))
+
+            # 4. # condicion de bandera
+            if (pieces != []) and (ref != None):
+                flag = True
+
+            return flag, ref, pieces
+
+
+        # Combinar piezas
         if piecesA != None:
             # Modo 1
             if piecesN != None: 
@@ -121,9 +158,8 @@ class Coordinator():
             flag = True
         return flag, ref, pieces
         
-
     @staticmethod
-    def detections(frame: np.ndarray, camera: Camera, nn_model: YoloObjectDetection|YoloPoseEstimation, apriltag: Apriltag|None = None, paint_frame: bool = True) -> dict:
+    def detections(frame: np.ndarray, camera: Camera, nn_model: YoloObjectDetection|YoloPoseEstimation, apriltag: Apriltag|None = None, combine_pieces: bool = True, paint_frame: bool = True) -> dict:
         at_kwargs = {'pieces': None}
         od_kwargs = {'pieces': None}
         pose_kwargs = {'pieces': None}
@@ -134,7 +170,7 @@ class Coordinator():
         elif type(nn_model) == YoloPoseEstimation:
             pose_kwargs = Coordinator.nn_poseEstimation_detections(frame, camera, nn_model, paint_frame=False)
 
-        flag, ref, pieces = Coordinator.combined_pieces(at_kwargs['pieces'], od_kwargs['pieces'], pose_kwargs['pieces'])
+        flag, ref, pieces = Coordinator.combined_pieces(at_kwargs['pieces'], od_kwargs['pieces'], pose_kwargs['pieces'], combine_pieces)
 
         if paint_frame:
             if ref: # si la ref es False nos encotramos en el modo 3 donde no hay ref (conocemos la pos de la camara)
@@ -248,7 +284,7 @@ class Coordinator():
             print('Movimientos iniciales:')
             robot.gripper_control(True)
             robot.move(RobotCte.POSE_SAFE_APRILTAG_REF)
-            robot.move(RobotCte.POSE_DISPLAY)
+            robot.move(RobotCte.POSE_DISPLAY_2)
         except Exception as e:
             print(str(e))
             return
@@ -297,9 +333,8 @@ class Coordinator():
         # 1. Movemos robot a la posicion de visualizacion de las piezas
         try:
             print('Movimientos iniciales:')
-            robot.move(RobotCte.POSE_SAFE_APRILTAG_REF)
-            robot.gripper_control(True)
-            robot.move(RobotCte.POSE_DISPLAY)
+            robot.move(RobotCte.POSE_STANDAR_2)
+            robot.move(RobotCte.POSE_DISPLAY_2)
         except Exception as e:
             print(str(e))
             return
@@ -308,7 +343,7 @@ class Coordinator():
         print()
         print('Inicio de detecciones:')
         try:
-            r_kwargs = camera.run_with_pointcloud_with_condition(show3d=False, trigger_func=Coordinator.detections, nn_model=nn_od_model, apriltag=apriltag, paint_frame=True)
+            r_kwargs = camera.run_with_pointcloud_with_condition(show3d=False, trigger_func=Coordinator.detections, nn_model=nn_od_model, apriltag=apriltag, combine_pieces = False, paint_frame=True)
         except Exception as e:
             print()
             print('salida de camara: ',str(e))
@@ -326,8 +361,10 @@ class Coordinator():
         # 3. calcular pose
         # 3.1 Se elige la primera pieza para continuar el proceso
         piece: Piece = pieces[0]
-        # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
-        # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
+        # 3.2 Calcular centro con Vision artificial clasica
+        piece.calculate_center(frame)
+
+        # 3.3 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot teniendo el centro en la imagen
         print(piece)
         piece.calculatePose_v3(pointcloud, ref,t_ref_to_robot=RobotCte.T_REF_TO_ROBOT,  matplot_representation=False)
 

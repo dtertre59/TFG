@@ -215,7 +215,9 @@ class Camera(CameraConfig):
                 if crop_size:
                     directory = Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / 'train_640' / name
                 else:
-                    directory = Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / 'train' / name
+                    directory = Path(__file__).resolve().parent.parent / 'assets' / 'pictures' / name
+
+                
             picture_counter = hf.obtain_last_number(directory, name) + 1
 
             while self.device.isPipelineRunning():
@@ -280,7 +282,8 @@ class Camera(CameraConfig):
                             frame_resized = cv2.resize(frame, (1280, 720))
                             cv2.imshow("OAK-D-Lite", frame_resized)
 
-                            if flag and ((time.time()-start_time)>100): # ponemos 8 sergundos de enfoque
+                            if flag and ((time.time()-start_time)>8): # ponemos 8 sergundos de enfoque
+                                results_kwargs['frame'] = frame
                                 cv2.destroyAllWindows()
                                 return results_kwargs
                     

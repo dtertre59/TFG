@@ -53,6 +53,14 @@ def crop_frame(frame: np.ndarray, crop_size) -> np.ndarray:
 
 # -------------------- OPERACIONES --------------------------------------------------------------------------------------- #
 
+
+# GERERAR matriz de transformacion
+def transformation_matrix(R: np.ndarray, t: np.ndarray) -> np.ndarray:
+    T = np.eye(4)
+    T[:3, :3] = R
+    T[:3, 3] = t
+    return T
+
 # Rotacion respecto al eje z:
 def rotation_matrix_z(theta_degrees: float) -> np.ndarray:
     # Convert degrees to radians
@@ -70,13 +78,6 @@ def rotation_matrix_z(theta_degrees: float) -> np.ndarray:
     ])
     
     return R_z
-
-def transformation_matrix(R: np.ndarray, t: np.ndarray) -> np.ndarray:
-    T = np.eye(4)
-    T[:3, :3] = R
-    T[:3, 3] = t
-    return T
-
 
 
 
@@ -120,6 +121,7 @@ def pose_transf(T: np.ndarray, point: np.ndarray) -> np.ndarray:
     return pose
 
 
+
 # POINTS disctance
 def points_distance(point1: np.ndarray, point2: np.ndarray) -> float:
     # 1. forma -> trigonometria
@@ -153,6 +155,56 @@ def angle_between_vectors(v1: np.ndarray, v2: np.ndarray) -> float:
     
     return theta_degrees
 
+# METODO de Procrustes. ajuste de puntos:
+def procrustes_method(P, P_prime, verbose: bool = False) -> np.ndarray:
+    """
+    Calcula la matriz de transformación (rotación y traslación) entre dos conjuntos de puntos 3D.
+
+    Parámetros:
+    P (np.array): Matriz de puntos en el sistema de coordenadas original (3 x N).
+    P_prime (np.array): Matriz de puntos en el nuevo sistema de coordenadas (3 x N).
+
+    Retorna:
+    np.array: Matriz de transformación 4x4.
+    """
+
+    # Calcular centroides
+    C_P = P.mean(axis=1, keepdims=True)
+    C_P_prime = P_prime.mean(axis=1, keepdims=True)
+
+    # Centrar los puntos alrededor del origen
+    P_cent = P - C_P
+    P_prime_cent = P_prime - C_P_prime
+
+    # Calcular la matriz de covarianza
+    H = np.dot(P_cent, P_prime_cent.T)
+
+    # Descomposición en valores singulares (SVD)
+    U, S, Vt = np.linalg.svd(H)
+    V = Vt.T
+
+    # Calcular la matriz de rotación
+    R = np.dot(V, U.T)
+
+    # Asegurarse de que la rotación es válida
+    if np.linalg.det(R) < 0:
+        V[:, -1] *= -1
+        R = np.dot(V, U.T)
+
+    # Calcular el vector de traslación
+    t = C_P_prime - np.dot(R, C_P)
+
+    # Crear la matriz de transformación completa
+    T = np.identity(4)
+    T[:3, :3] = R
+    T[:3, 3] = t.flatten()
+    
+    if verbose:
+        print("Matriz de transformación:")
+        print(T)
+
+    return T
+
 
 # -------------------- MATPLOT ------------------------------------------------------------------------------------------- #
 
@@ -175,35 +227,6 @@ def show_mat3d(fig: Figure, ax: Axes, name: str = '', legend: bool = True) -> No
         ax.legend()
     plt.show()
     return
-
-# ----REVISAR
-# PRINT 3D representation
-# def print_3d_rep(ax: Axes, t, scale: float = 1, c: str = 'k', pointname: str = None, ax_ref: bool = False):
-#     axis = np.array([[scale, 0, 0], [0, scale, 0], [0, 0, scale]])  # Ejes unitarios
-#     if ax_ref == True:
-#         axis = np.array([[scale, 0, 0], [0, -scale, 0], [0, 0, -scale]])  # Ejes unitarios
-#     point = t[:3, 3]
-#     rot = t[:3, :3]
-#     rot_x = t[:3, 0]
-#     rot_y = t[:3, 1]
-#     rot_z = t[:3, 2]
-#     # print('Point: ',point)
-#     # transformacion de ejes
-#     axis = np.dot(rot, axis.T).T
-#     # point
-#     ax.scatter(point[0], point[1], point[2], c=c, marker='o', label=pointname)
-#     # axis
-#     # ax.quiver(point[0], point[1], point[2], rot_x[0], rot_x[1], rot_x[2], length=0.5, color='r')  # Eje X (rojo)
-#     # ax.quiver(point[0], point[1], point[2],  rot_y[0], rot_y[1], rot_y[2], length=0.5, color='g')  # Eje Y (verde)
-#     # ax.quiver(point[0], point[1], point[2],  rot_z[0], rot_z[1], rot_z[2], length=0.5, color='b')  # Eje Z (azul)
-#     ax.quiver(point[0], point[1], point[2], axis[0][0], axis[0][1], axis[0][2], length=0.5, color='r')  # Eje X (rojo)
-#     ax.quiver(point[0], point[1], point[2], axis[1][0], axis[1][1], axis[1][2], length=0.5, color='g')  # Eje Y (verde)
-#     ax.quiver(point[0], point[1], point[2], axis[2][0], axis[2][1], axis[2][2], length=0.5, color='b')  # Eje Z (azul)
-
-#     # unir con el ref -> Dibujar la línea que conecta los puntos
-#     ax.plot([0,point[0]], [0, point[1]], [0, point[2]], color='y')
-# #---------------------- 
-
 
 # POINT
 def add_point(ax: Axes, point: np.ndarray, name: str, c: str = 'k') -> None:

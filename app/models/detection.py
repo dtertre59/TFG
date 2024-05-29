@@ -188,7 +188,14 @@ class YoloPoseEstimation(YoloBaseModel):
         return 
 
 
+# -------------------- CLASSIC AV ---------------------------------------------------------------------------------------- #
 
+class ClassicAV():
+    def __init__(self, piece: Piece) -> None:
+        self.piece = piece
 
     
+    def detect(self, frame: np.ndarray) -> None:
+        pass
+
 

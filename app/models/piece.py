@@ -185,8 +185,11 @@ class Piece(PieceBase):
     def __init__(self, pieceA: PieceA, pieceN: PieceN) -> None: ...
 
     @overload
+    def __init__(self, pieceN: PieceN) -> None: ...
+    
+    @overload
     def __init__(self, pieceN2: PieceN2) -> None: ...
-
+    
 
     def __init__(self, *args: Union[PieceA, PieceN, PieceN2]) -> None:
         if len(args) == 2 and isinstance(args[0], PieceA) and isinstance(args[1], PieceN):
@@ -204,6 +207,25 @@ class Piece(PieceBase):
             self.corners = pieceA.corners
             self.T = pieceA.T
 
+            self.point3d = None
+            self.pose = None
+
+        elif len(args) == 1 and isinstance(args[0], PieceN):
+            self.pieceA = None
+            self.pieceN = args[0]
+            self.pieceN2 = None
+
+            pieceN = args[0]
+            super().__init__(pieceN.name, pieceN.color)
+
+            # bbox
+            self.bbox = pieceN.bbox
+
+            self.center= None
+            self.corners = None
+
+            # pointcloud + algebra
+            self.T = None
             self.point3d = None
             self.pose = None
         
@@ -239,10 +261,13 @@ class Piece(PieceBase):
         textb = super().__str__(title)
         textbbox = self.bbox.__str__()
         textcen =f'    - Center: {self.center}'
-        textc = '    - Corners: ['
-        for corner in self.corners:
-            textc += corner.__str__() + ' ,'
-        textc = textc[:-2] + ']'
+        if self.corners:
+            textc = '    - Corners: ['
+            for corner in self.corners:
+                textc += corner.__str__() + ' ,'
+            textc = textc[:-2] + ']'
+        else:
+            textc = f'    - Corners: {self.corners}'
         textT = f'    - Transformation matrix: {self.T}\n    - Point3d: {self.point3d}\n    - Pose: {self.pose}'
         textA = f'{textcen}\n{textc}\n{textT}'
 
@@ -263,10 +288,20 @@ class Piece(PieceBase):
             return True
         else:
             return False
-        
+
+    def calculate_center(self, frame: np.ndarray) -> bool:
+        if self.name == 'square':
+            pass
+        elif self.name == 'circle':
+            pass
+        elif self.name == 'hexagon':
+            pass
+        else:
+            return False
+        return True
 
     # Calculate pose modo 1
-    def calculatePose(self, ref: PieceA, t_ref_to_robot: np.ndarray = np.eye(4), verbose: bool = True, matplot_representation: bool = False):
+    def calculatePose(self, ref: PieceA, t_ref_to_robot: np.ndarray = np.eye(4), verbose: bool = True, matplot_representation: bool = False) -> None:
         # print(t_ref_to_robot)
         t_ref_to_cam = ref.T
         t_piece_to_cam = self.T
@@ -447,7 +482,7 @@ class Piece(PieceBase):
             print('Not pointcloud')
             return 
         
-        # PIXEL Y CLOUD -------------------------------------------------------------------------------------
+        # PIXEL to CLOUD -------------------------------------------------------------------------------------
         
         pref_cloud = hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=ref.center.get_array())
         ppiece_cloud = hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=self.center.get_array())
@@ -457,7 +492,7 @@ class Piece(PieceBase):
         pref_good = hf.point_tansf(t_ref_to_cam, np.array([0 ,0, 0])) # en m
         pref_good *= 1000 # se pasa a mm
 
-        ppiece_good_mm = hf.point_tansf(T=CameraCte.T_pointcloud_to_good_pointcloud, point=ppiece_cloud)
+        ppiece_good_mm = hf.point_tansf(T=CameraCte.T_pointcloud_to_good_pointcloud_2, point=ppiece_cloud)
         ppiece_good_m = ppiece_good_mm/1000
 
         # PASO AL SISTEMA DE REF DEL ROBOT ----------------------------------------------------------------
@@ -468,6 +503,7 @@ class Piece(PieceBase):
 
         ppiece_robot = hf.point_tansf(t_piece_to_robot, np.array([0,0,0]))
         pose_robot = hf.pose_transf(t_piece_to_robot, np.array([0,0,0]))
+
         pose_robot[3:] = [0.028,0,3.318]
 
         self.point3d = Vector3D(ppiece_robot)
@@ -485,6 +521,8 @@ class Piece(PieceBase):
         axes = hf.create_axes_with_lineSet()
 
         hf.o3d_visualization([pointcloud, cube, cube2,cube11, cube22, axes])
+
+        # --------------------------------------------------------------------------------------------------
 
         return
 
