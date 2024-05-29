@@ -68,6 +68,22 @@ class Robot():
         self.watchdog = None
         self.gripper = None
 
+     # funcion de transformacion inversa de la POSE
+    
+    def __del__(self) -> None:
+        print('Destructor de la instancia del robot')
+        if not self.con.send_start():
+            raise RobotException("Fallo en la instrucción de start")
+
+        self.watchdog.input_bit_register_127 = 0
+        self.con.send(self.watchdog)
+
+    # transformacion vector a rgi-stros de pose
+    def _list_to_setp(self, list):
+        for i in range(0, 6):
+            self.setp.__dict__["input_double_register_%i" % i] = list[i]
+        return
+    
     # Connection
     def connect(self)-> rtde.RTDE:
         try:
@@ -107,16 +123,27 @@ class Robot():
 
         # Setpoints to move the robot to
         # setp1 = [-0.13787, -0.29821, 0.03, -2.21176, -2.21104, 0.01494]
-        p_axis = [-0.1075, -0.3839, 0.0108, 2.035, 2.411, 0]
-        # reset
-        self.setp.input_double_register_0 = p_axis[0]
-        self.setp.input_double_register_1 = p_axis[1]
-        self.setp.input_double_register_2 = p_axis[2]
-        self.setp.input_double_register_3 = p_axis[3]
-        self.setp.input_double_register_4 = p_axis[4]
-        self.setp.input_double_register_5 = p_axis[5]
+        # p_axis = [-0.1075, -0.3839, 0.0108, 2.035, 2.411, 0]
+        # # reset
+        # self.setp.input_double_register_0 = p_axis[0]
+        # self.setp.input_double_register_1 = p_axis[1]
+        # self.setp.input_double_register_2 = p_axis[2]
+        # self.setp.input_double_register_3 = p_axis[3]
+        # self.setp.input_double_register_4 = p_axis[4]
+        # self.setp.input_double_register_5 = p_axis[5]
 
         print('Setup del robot completo')
+
+        # escribimos registros para indicar al robot que estamos conectados y seteados
+        if not self.con.send_start():
+            raise RobotException("Fallo en la instrucción de start")
+        # registros iniciales
+        self._list_to_setp([-0.128, -0.298, 0.180, 0.015, 0, 1.501]) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
+        self.con.send(self.setp)
+        # kick watchdog
+        self.watchdog.input_bit_register_127 = 1
+        self.con.send(self.watchdog)
+
         return
         
     # movimiento del robot
@@ -138,13 +165,6 @@ class Robot():
             if state is None:
                 raise RobotException('No se recibe el estado')
             
-
-            # funcion de transformacion inversa
-            def list_to_setp(sp, list):
-                for i in range(0, 6):
-                    sp.__dict__["input_double_register_%i" % i] = list[i]
-                return sp
-
             # list_to_setp(self.setp, vector) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
             # self.con.send(self.setp)
 
@@ -155,14 +175,14 @@ class Robot():
                 raise RobotException('No está activado el programa en PolyScope')
 
 
-            # comprobamos estado del robot (parado=0, en movimiento = 1)
+            # comprobamos estado del robot (parado=1, en movimiento = 0)
             robot_aviable = state.output_int_register_1
 
             # do something...
             if move_completed == False and robot_aviable == 1 and init == 1:
                 # print('inicio')
                 print('Robot en movimiento a pose: ', vector)
-                list_to_setp(self.setp, vector) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
+                self._list_to_setp(vector) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
                 self.con.send(self.setp)
                 time.sleep(0.5)
                 init = 0
@@ -174,8 +194,6 @@ class Robot():
                 move_completed = True
 
             time.sleep(0.2)
-            # kick watchdog
-            # self.con.send(self.watchdog)
         return
     
     # control del gripper del robot
@@ -216,6 +234,7 @@ class Robot():
 
 # robot.connect()
 # robot.setup()
+
 # POSE_STANDAR = np.array([-0.128, -0.298, 0.180, 0.025, 0, 2.879])
 # POSE_DISPLAY = np.array([-0.125, -0.166, 0.270, 1.454, -1.401, -4.095])
 # robot.move(POSE_STANDAR)
