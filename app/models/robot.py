@@ -55,7 +55,7 @@ class RobotException(Exception):
 
 
 class Robot():
-    # init
+    # Constructor
     def __init__(self, host: str, port: int, config_filename: str) -> None:
         self.host = host
         self.port = port 
@@ -70,6 +70,7 @@ class Robot():
 
      # funcion de transformacion inversa de la POSE
     
+    # Destructor
     def __del__(self) -> None:
         print('Destructor de la instancia del robot')
         if not self.con.send_start():
