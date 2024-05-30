@@ -175,7 +175,7 @@ square = np.array([[1070, 430], [1265, 720]])
 hexagon = np.array([[768,516], [910,765]])
 circle = np.array([[1346,511],[1544,767]])
 
-frame = crop_frame(img, circle)
+frame = crop_frame(img, square)
 
 frame_wb = filters(frame)
 
@@ -183,12 +183,15 @@ frame_wb = filters(frame)
 
 
 # 1. mejor
-# frame_with_detections = detect_corners_harris(frame_wb)
+frame_with_detections = detect_corners_harris(frame_wb)
+
+
+# HACER EL DEL CIRCULLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO (CENTRO)
 
 # frame_with_detections = detect_corners_shi_tomasi(frame_wb)
 # frame_with_detections = detect_contorns_1(frame_wb)
 
-frame_with_detections = detect_contorns_2(frame_wb)
+# frame_with_detections = detect_contorns_2(frame_wb)
 
 # Mostrar la imagen resultante
 cv2.imshow('Imagen con filtro', frame_with_detections)

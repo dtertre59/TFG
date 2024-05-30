@@ -252,21 +252,18 @@ def point_agrup(points: np.ndarray):
     return group_centroids
 
 # deteccion de corners
-def detect_corners_harris(frame: np.ndarray, block_size: float = 7, ksize: float = 7, k: float = 0.01) -> np.ndarray:
-
+def detect_corners_harris(frame: np.ndarray, block_size: float = 5, ksize: float = 5, k: float = 0.01) -> np.ndarray:
+    '''
     block_size = 5  # Tamaño del vecindario
     ksize = 5   # Tamaño del kernel de Sobel para derivadas
     k = 0.01  # Parámetro libre del detector de Harris
-
+'''
     # Aplicar el detector de esquinas de Harris; obtenemos matriz de respuesta de esquina
     dst = cv2.cornerHarris(frame, block_size,ksize, k)
     # Dilatar el resultado para marcar mejor las esquinas (opcional)
     dst = cv2.dilate(dst,None)
     
-    # frame[dst>0.01*dst.max()] = 0
-
     umbral = 0.01*dst.max()
-
     # posicion de los pixel corners hay muchos. hay que agruparlos en zonas
     corners = np.argwhere(dst > umbral)
     print('corners: ', len(corners))
