@@ -22,7 +22,7 @@ from models.detection import Apriltag, YoloObjectDetection, YoloPoseEstimation
 from models.coordinator import Coordinator
 
 # QUITAR
-from models.piece import PieceA
+from models.piece import PieceA, Piece
 from models.constants import CameraCte, RobotCte
 
 
@@ -79,14 +79,31 @@ def main_camera_detect():
     # 1. para el modo 2 encesitamos sacar la pointcloud. o por lo menos el punto 3d del centro de la pieza
 
     ref = r_kwargs['ref']
-    piece = r_kwargs['pieces'][0]
+    pieces: list[Piece] = r_kwargs['pieces']
     frame = r_kwargs['frame']
+    
+    piece = None
 
-    print(ref)
-    for piece in r_kwargs['pieces']:
-        print(piece)
+    for p in pieces:
+        if p.name == 'square':
+            piece = p
+            break
+
+
+    print(piece)
+    frame = piece.calculate_center(frame)
+
+    cv2.imshow('a', frame)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
+    # print(ref)
+    # for piece in r_kwargs['pieces']:
+    #     print(piece)
 
     # hf.o3d_visualization([pointcloud])
+
 
 # CALIBRATE pointcloud
 def main_camera_calibrate_pointcloud():

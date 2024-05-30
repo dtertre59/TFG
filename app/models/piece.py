@@ -36,6 +36,9 @@ class BoundingBox():
         cv2.rectangle(img=frame, pt1=(int(self.p1.x), int(self.p1.y)),
                     pt2=(int(self.p2.x), int(self.p2.y)), color=color, thickness=2)
         return
+    
+    def get_array(self):
+        return np.array([self.p1.get_array(), self.p2.get_array()]).astype(int)
 
 
 class PieceBase():
@@ -289,9 +292,14 @@ class Piece(PieceBase):
         else:
             return False
 
+
     def calculate_center(self, frame: np.ndarray) -> bool:
+        frame = hf.process_frame_wb(frame)
+        crop_frame = hf.crop_frame_2(frame, corners=self.bbox.get_array())
         if self.name == 'square':
-            pass
+            frame = hf.detect_corners_harris(crop_frame)
+            return frame
+      
         elif self.name == 'circle':
             pass
         elif self.name == 'hexagon':
