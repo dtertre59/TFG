@@ -141,6 +141,32 @@ def angle_between_vectors(v1: np.ndarray, v2: np.ndarray) -> float:
     
     return theta_degrees
 
+# CENTROIDE de una serie de puntos
+def calculate_centroid(points: np.ndarray) -> np.ndarray:
+    """
+    Calculates the centroid of a list of 2D points.
+
+    :param points: List of tuples (x, y) representing the 2D points.
+    :return: A tuple (C_x, C_y) representing the centroid.
+    """
+    if len(points) == 0:
+        raise ValueError("The list of points cannot be empty")
+    
+    sum_x = 0
+    sum_y = 0
+    num_points = len(points)
+
+    for (x, y) in points:
+        # print(x,y)
+        sum_x += x
+        sum_y += y
+
+    C_x = sum_x / num_points
+    C_y = sum_y / num_points
+
+    return np.array([C_x, C_y])
+
+
 # METODO de Procrustes. ajuste de puntos:
 def procrustes_method(P, P_prime, verbose: bool = False) -> np.ndarray:
     """
@@ -216,11 +242,12 @@ def crop_frame_2(frame: np.ndarray, corners: np.ndarray) -> np.ndarray:
     new_frame = frame[corners[0][1]:corners[1][1], corners[0][0]:corners[1][0]]
     return new_frame
 
-# En escala de grises la imagen
+# En escala de grises la imagen ----------- DEPRECATED
 def process_frame_wb(frame: np.ndarray):
     # Verificar el número de canales en la imagen
     if len(frame.shape) == 3 and frame.shape[2] == 3:
         # La imagen es en color (BGR), convertir a escala de grises
+        print('frame conertido a escala de grises')
         frame_wb = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     elif len(frame.shape) == 2:
         # La imagen ya está en escala de grises
@@ -232,7 +259,7 @@ def process_frame_wb(frame: np.ndarray):
     return frame_wb
 
 # agrupar puntos
-def point_agrup(points: np.ndarray):
+def point_agroup(points: np.ndarray) -> list[np.ndarray]:
     # Ahora, vamos a aplicar DBSCAN para agrupar las esquinas
     epsilon = 10  # Radio de la vecindad
     min_samples = 5  # Número mínimo de puntos para formar un cluster
@@ -248,47 +275,35 @@ def point_agrup(points: np.ndarray):
 
     # Calcular los centroides de cada grupo
     group_centroids = [np.mean(group, axis=0) for group in grouped_points]
-    print('Centroides: ', group_centroids)
-    return group_centroids
+    # invertimos coordenadas (y,x) -> (x,y)
+    centroids = [centroid[::-1] for centroid in group_centroids]
+    # print('Centroides: ', centroids)
+    return centroids
 
-# deteccion de corners
-def detect_corners_harris(frame: np.ndarray, block_size: float = 5, ksize: float = 5, k: float = 0.01) -> np.ndarray:
+# deteccion de corners por el metodo de harris
+def detect_corners_harris(frame: np.ndarray, block_size: float = 5, ksize: float = 5, k: float = 0.01, paint_frame: bool = False) -> np.ndarray:
     '''
     block_size = 5  # Tamaño del vecindario
     ksize = 5   # Tamaño del kernel de Sobel para derivadas
     k = 0.01  # Parámetro libre del detector de Harris
 '''
-    # Aplicar el detector de esquinas de Harris; obtenemos matriz de respuesta de esquina
+    # 1. Aplicar el detector de esquinas de Harris; obtenemos matriz de respuesta de esquina
     dst = cv2.cornerHarris(frame, block_size,ksize, k)
-    # Dilatar el resultado para marcar mejor las esquinas (opcional)
+    # 2. Dilatar el resultado para marcar mejor las esquinas (opcional)
     dst = cv2.dilate(dst,None)
-    
+    # 3. establecemos umbral y filtramos
     umbral = 0.01*dst.max()
     # posicion de los pixel corners hay muchos. hay que agruparlos en zonas
-    corners = np.argwhere(dst > umbral)
-    print('corners: ', len(corners))
+    corners_position = np.argwhere(dst > umbral)
+    corners = point_agroup(corners_position)
 
-    # frame_with_detections = frame.copy()
-    # for corner in corners:
-    #     # Invertir las coordenadas para que coincidan con (x, y)
-    #     x, y = corner[::-1]
-    #     cv2.circle(frame_with_detections, (x,y), 3, 0, 1)
-    # return frame_with_detections
+    # Dibujar círculos en las esquinas
+    if paint_frame:
+        for corner in corners:
+            corner = corner.astype(int)
+            cv2.circle(frame, (corner[0],corner[1]), 3, 0, -1)
 
-    corns = point_agrup(corners)
-    print(corns)
-
-    # Dibujar círculos en los centroides de los grupos de esquinas
-    frame_with_detections = frame.copy()
-
-    for corner in corns:
-        corner = corner.astype(int)
-        # Invertir las coordenadas para que coincidan con (x, y)
-        x, y = corner[::-1]
-
-        cv2.circle(frame_with_detections, (x,y), 3, 0, -1)
-
-    return frame_with_detections
+    return corners
 
 
 # -------------------- MATPLOT ------------------------------------------------------------------------------------------- #

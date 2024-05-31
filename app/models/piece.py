@@ -10,6 +10,7 @@ import numpy as np
 import cv2
 import open3d as o3d
 from typing import overload, Union
+import copy
 
 from models.vectors import Vector2D, Vector3D, Vector6D
 from models.constants import ColorBGR, CameraCte
@@ -39,6 +40,13 @@ class BoundingBox():
     
     def get_array(self):
         return np.array([self.p1.get_array(), self.p2.get_array()]).astype(int)
+    
+    def expand(self, pixels: int) -> None:
+        self.p1.x -= pixels
+        self.p1.y -= pixels
+        self.p2.x += pixels
+        self.p2.y += pixels
+        
 
 
 class PieceBase():
@@ -294,18 +302,41 @@ class Piece(PieceBase):
 
 
     def calculate_center(self, frame: np.ndarray) -> bool:
-        frame = hf.process_frame_wb(frame)
-        crop_frame = hf.crop_frame_2(frame, corners=self.bbox.get_array())
+        
+        # 1. Ampliamos boundig box del objeto para prevenir el corte de esquinas ajustadas
+        expand_pixels = 10
+        bbox_modified = copy.deepcopy(self.bbox)
+        bbox_modified.expand(expand_pixels)
+        # 2. recortamos la imagen por la boundingbox
+        crop_frame = hf.crop_frame_2(frame, corners=bbox_modified.get_array())
+        # 3. Pasamos a escala de grises para la detección
+        crop_frame = cv2.cvtColor(crop_frame, cv2.COLOR_BGR2GRAY)
+
+        # 4. deteccion. obtenemos corners
         if self.name == 'square':
-            frame = hf.detect_corners_harris(crop_frame)
-            return frame
+            corners_crop = hf.detect_corners_harris(crop_frame)
+            corners = []
+            for corner_crop in corners_crop:
+                corners.append(bbox_modified.p1.get_array() + corner_crop)
+            # seleccionamos los 4 esquinas que estan mas arriba: cara superior
+            self.corners = np.array(corners[:4]).astype(int)
+            # el centroide de los 4 puntos superiores es el centro de la cara
+            self.center = hf.calculate_centroid(self.corners).astype(int)
       
-        elif self.name == 'circle':
-            pass
         elif self.name == 'hexagon':
+            corners_crop = hf.detect_corners_harris(crop_frame)
+            corners = []
+            for corner_crop in corners_crop:
+                corners.append(bbox_modified.p1.get_array() + corner_crop)
+            # seleccionamos los 6 esquinas que estan mas arriba: cara superior
+            self.corners = np.array(corners[:6]).astype(int)
+            # el centroide de los 6 puntos superiores es el centro de la cara
+            self.center = hf.calculate_centroid(self.corners).astype(int)
+        elif self.name == 'circle':
             pass
         else:
             return False
+        
         return True
 
     # Calculate pose modo 1

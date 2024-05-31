@@ -69,7 +69,8 @@ def main_camera_detect():
     
     try:
         # camera.run_with_condition(Coordinator.detections, nn_od_model, apriltag, paint_frame = True)
-        # r_kwargs = camera.run_with_pointcloud_with_condition(show3d=False, trigger_func=Coordinator.detections, nn_model=nn_pose_model, apriltag=apriltag, paint_frame = True)
+        # r_kwargs = camera.run_with_pointcloud_with_condition(show3d=
+        # False, trigger_func=Coordinator.detections, nn_model=nn_pose_model, apriltag=apriltag, paint_frame = True)
         r_kwargs = camera.run_with_condition(trigger_func=Coordinator.detections, nn_model=nn_od_model, apriltag=apriltag, combine_pieces=False,paint_frame = True)
 
     except Exception as e:
@@ -87,13 +88,25 @@ def main_camera_detect():
     for p in pieces:
         if p.name == 'square':
             piece = p
-            break
+        if p.name == 'hexagon':
+            hexagon = p
 
-
+    print()
     print(piece)
-    frame = piece.calculate_center(frame)
+    piece.calculate_center(frame)
+    for corner in piece.corners:
+        cv2.circle(frame, (corner[0],corner[1]), 3, 0, -1)  
+    cv2.circle(frame, (piece.center[0],piece.center[1]), 3, color=(0,0,255), thickness=-1)
 
-    cv2.imshow('a', frame)
+    print()
+    print(hexagon)
+    hexagon.calculate_center(frame)
+    for corner in hexagon.corners:
+        cv2.circle(frame, (corner[0],corner[1]), 3, 0, -1)  
+    cv2.circle(frame, (hexagon.center[0],hexagon.center[1]), 3, (0,0,255), thickness=-1)
+
+
+    cv2.imshow('a', cv2.resize(frame, (1280, 720)))
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
