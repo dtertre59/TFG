@@ -93,14 +93,14 @@ def main_camera_detect():
 
     print()
     print(piece)
-    piece.calculate_center(frame)
+    piece.calculate_center_and_corners(frame)
     for corner in piece.corners:
         cv2.circle(frame, (corner[0],corner[1]), 3, 0, -1)  
     cv2.circle(frame, (piece.center[0],piece.center[1]), 3, color=(0,0,255), thickness=-1)
 
     print()
     print(hexagon)
-    hexagon.calculate_center(frame)
+    hexagon.calculate_center_and_corners(frame)
     for corner in hexagon.corners:
         cv2.circle(frame, (corner[0],corner[1]), 3, 0, -1)  
     cv2.circle(frame, (hexagon.center[0],hexagon.center[1]), 3, (0,0,255), thickness=-1)
@@ -315,8 +315,8 @@ def main3():
 if __name__ == '__main__':
     # correccion_error_nube()
     # main_camera()
-    main_camera_detect()
+    # main_camera_detect()
     # main_camera_calibrate_pointcloud()
     # main()
     # main2()
-    # main3()
+    main3()

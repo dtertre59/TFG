@@ -470,12 +470,13 @@ class Camera(CameraConfig):
 
                 if inColor and inPointCloud:
                      if trigger_func:
-                            results_kwargs = trigger_func(frame, self, *args, **kwargs)
+                            frame_modified = frame.copy()
+                            results_kwargs = trigger_func(frame_modified, self, *args, **kwargs)
                             flag = results_kwargs.get('flag')
-                            frame_resized = cv2.resize(frame, (1280, 720))
+                            frame_resized = cv2.resize(frame_modified, (1280, 720))
                             cv2.imshow("OAK-D-Lite", frame_resized)
 
-                            if flag and ((time.time()-start_time)>15): # ponemos 8 sergundos de enfoque
+                            if flag and ((time.time()-start_time)>20): # ponemos 20 sergundos de enfoque
                                 # añadir la nube de puntos en el retorno
                                 results_kwargs['frame'] = frame
                                 results_kwargs['pointcloud'] = hf.invert_pointcloud(pointcloud)

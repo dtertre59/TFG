@@ -272,7 +272,7 @@ class Piece(PieceBase):
         textb = super().__str__(title)
         textbbox = self.bbox.__str__()
         textcen =f'    - Center: {self.center}'
-        if self.corners:
+        if len(self.corners) != 0:
             textc = '    - Corners: ['
             for corner in self.corners:
                 textc += corner.__str__() + ' ,'
@@ -290,8 +290,15 @@ class Piece(PieceBase):
             self.pieceA.paint(frame)
         if self.pieceN:
             self.pieceN.paint(frame)
+            if self.center:
+                cv2.circle(frame, tuple(self.center.get_array_int()), 3, color=(0,0,255), thickness=-1)
+            if type(self.corners) == np.ndarray:
+                for corner in self.corners:
+                    cv2.circle(frame, (corner[0],corner[1]), 3, 0, -1)
+                     
         if self.pieceN2:
             self.pieceN2.paint(frame)
+
         return
 
     def validate(self) -> bool:
@@ -301,7 +308,7 @@ class Piece(PieceBase):
             return False
 
 
-    def calculate_center(self, frame: np.ndarray) -> bool:
+    def calculate_center_and_corners(self, frame: np.ndarray) -> bool:
         
         # 1. Ampliamos boundig box del objeto para prevenir el corte de esquinas ajustadas
         expand_pixels = 10
@@ -321,7 +328,8 @@ class Piece(PieceBase):
             # seleccionamos los 4 esquinas que estan mas arriba: cara superior
             self.corners = np.array(corners[:4]).astype(int)
             # el centroide de los 4 puntos superiores es el centro de la cara
-            self.center = hf.calculate_centroid(self.corners).astype(int)
+            center = hf.calculate_centroid(self.corners).astype(int)
+            self.center = Vector2D(center)
       
         elif self.name == 'hexagon':
             corners_crop = hf.detect_corners_harris(crop_frame)
@@ -331,7 +339,8 @@ class Piece(PieceBase):
             # seleccionamos los 6 esquinas que estan mas arriba: cara superior
             self.corners = np.array(corners[:6]).astype(int)
             # el centroide de los 6 puntos superiores es el centro de la cara
-            self.center = hf.calculate_centroid(self.corners).astype(int)
+            center = hf.calculate_centroid(self.corners).astype(int)
+            self.center = Vector2D(center)
         elif self.name == 'circle':
             pass
         else:
@@ -524,7 +533,8 @@ class Piece(PieceBase):
         # PIXEL to CLOUD -------------------------------------------------------------------------------------
         
         pref_cloud = hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=ref.center.get_array())
-        ppiece_cloud = hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=self.center.get_array())
+        print('center: ',self.center.get_array_int())
+        ppiece_cloud = hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=self.center.get_array_int())
 
         # MATRIZ TRANSFORMACION APRIL ----------------------------------------------------------------------
         t_ref_to_cam = ref.T
@@ -535,7 +545,17 @@ class Piece(PieceBase):
         ppiece_good_m = ppiece_good_mm/1000
 
         # PASO AL SISTEMA DE REF DEL ROBOT ----------------------------------------------------------------
-        rot_piece_to_cam = hf.rotation_matrix_z(0)
+        # rotacion de la pieza en comparcacion con la referencia
+        ref_x = ref.corners[1] - ref.corners[0]
+        ref_x = ref_x.get_array()
+        piece_x = self.corners[1] - self.corners[0]
+        angle = hf.angle_between_vectors(ref_x, piece_x)
+        print('Angulo: ', angle)
+        
+        rot_piece_to_ref = hf.rotation_matrix_z(angle)
+        rot_ref_to_cam = t_ref_to_cam[:3,:3]
+        rot_piece_to_cam = np.dot(rot_ref_to_cam, rot_piece_to_ref)
+
         t_piece_to_cam = hf.transformation_matrix(rot_piece_to_cam, ppiece_good_m)
         t_piece_to_ref = np.dot(np.linalg.inv(t_ref_to_cam), t_piece_to_cam)
         t_piece_to_robot = np.dot(t_ref_to_robot,t_piece_to_ref)
@@ -543,7 +563,7 @@ class Piece(PieceBase):
         ppiece_robot = hf.point_tansf(t_piece_to_robot, np.array([0,0,0]))
         pose_robot = hf.pose_transf(t_piece_to_robot, np.array([0,0,0]))
 
-        pose_robot[3:] = [0.028,0,3.318]
+        # pose_robot[3:] = [0.028,0,3.318]
 
         self.point3d = Vector3D(ppiece_robot)
         self.pose = Vector6D(pose_robot)

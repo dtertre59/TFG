@@ -202,16 +202,16 @@ class Coordinator():
         # 1. posicion segura
     
         robot.move(RobotCte.POSE_SAFE_APRILTAG_REF)
-        secure_pose = pose
+        secure_pose = pose.copy()
         secure_pose[2] = RobotCte.SAFE_Z
         robot.move(secure_pose)
-        input('en posicion segura')
+        input(f'en posicion segura: {secure_pose}')
         # 2. encima de la pieza + rotation + gripper off
         robot.gripper_control(False)
         # 3. bajar para coger la pieza
-        take_pose = pose
+        take_pose = pose.copy()
         take_pose[2] = RobotCte.TAKE_PIECE_Z
-        robot.move(pose)
+        robot.move(take_pose)
         # 4. gripper on
         robot.gripper_control(True)
         # 5. levantar hasta posicion segura (no es la misma que la 2. debe estar al doble de altura para que no choque con ninguna pieza al desplazarla)
@@ -354,18 +354,25 @@ class Coordinator():
         frame = r_kwargs['frame']
         pointcloud = r_kwargs['pointcloud']
 
+    
+        # 3. calcular pose
+        # 3.1 Se elige la primera pieza para continuar el proceso ------------------------------------- 
+        piece: Piece = pieces[0]
+        # 3.2 Calcular centro con Vision artificial clasica -------------------------------------------
+        piece.calculate_center_and_corners(frame)
+        piece.paint(frame)
+        # añadir criculo estrella e irregular
+        # pintar mejor
+        # revisar funciones de corners y get arrays Vectors, ect
+        # ----------------------------------------------------------------------------------------------
+
         cv2.imshow('Detecciones',cv2.resize(frame, (1280, 720)))
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-        # 3. calcular pose
-        # 3.1 Se elige la primera pieza para continuar el proceso
-        piece: Piece = pieces[0]
-        # 3.2 Calcular centro con Vision artificial clasica
-        piece.calculate_center(frame)
-
         # 3.3 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot teniendo el centro en la imagen
         print(piece)
+        # FUNCIONA PERFECTAMENTE
         piece.calculatePose_v3(pointcloud, ref,t_ref_to_robot=RobotCte.T_REF_TO_ROBOT,  matplot_representation=False)
 
         # 4. movimiento combinado: coger la pieza y dejarla en su respectivo hoyo (posicion conocida)

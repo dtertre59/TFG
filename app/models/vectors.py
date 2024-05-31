@@ -34,7 +34,8 @@ class Vector2D():
     
     def get_array(self) -> np.ndarray:
         return np.array([self.x, self.y])
-    
+    def get_array_int(self) -> np.ndarray:
+        return np.array([self.x, self.y]).astype(int)
 
 class Vector3D(Vector2D):
     @overload
