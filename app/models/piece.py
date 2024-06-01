@@ -23,37 +23,54 @@ from functions import helper_functions as hf
 
 # -------------------- CLASSES ------------------------------------------------------------------------------------------- #
 
+# -------------------- BOUNDING BOX -------------------------------------------------------------------------------------- #
+
 class BoundingBox():
+    # Constructor
     def __init__(self, p1: np.ndarray, p2: np.ndarray) -> None:
         self.p1 = Vector2D(p1)
         self.p2 = Vector2D(p2)
-    
-    def __str__(self) -> str:
-        text = f'    - Bounding Box: [p1: {self.p1}, p2: {self.p2}]'
-        return text
-    
-    def paint(self, frame: np.ndarray, color: tuple = ColorBGR.GREEN) -> None:
-        # Dibujar el rectángulo en la imagen
-        cv2.rectangle(img=frame, pt1=(int(self.p1.x), int(self.p1.y)),
-                    pt2=(int(self.p2.x), int(self.p2.y)), color=color, thickness=2)
         return
     
-    def get_array(self):
-        return np.array([self.p1.get_array(), self.p2.get_array()]).astype(int)
+    # Str
+    def __str__(self) -> str:
+        text = f'Bounding Box: [p1: {self.p1}, p2: {self.p2}]'
+        return text
     
+    # Pintar
+    def paint(self, frame: np.ndarray, color: tuple = ColorBGR.GREEN) -> None:
+        # Dibujar el rectángulo en la imagen
+        cv2.rectangle(img=frame, pt1=self.p1.get_tuple_int(),
+                    pt2=self.p2.get_tuple_int(), color=color, thickness=2)
+        return
+    
+    # As array 
+    def get_array(self) -> np.ndarray:
+        return np.array([self.p1.get_array(), self.p2.get_array()])
+
+    # As array int 
+    def get_array_int(self) -> np.ndarray:
+        return np.array([self.p1.get_array_int(), self.p2.get_array_int()])
+    
+    # Ampliar recuadro
     def expand(self, pixels: int) -> None:
         self.p1.x -= pixels
         self.p1.y -= pixels
         self.p2.x += pixels
         self.p2.y += pixels
+        return
         
 
+# -------------------- PIECE BASE ---------------------------------------------------------------------------------------- #
 
 class PieceBase():
+    # Constructor
     def __init__(self, name: str, color: tuple = ColorBGR.GREEN) -> None:
         self.name = name
         self.color = color
+        return
 
+    # Str
     def __str__(self, title: str = 'Pieza Base') -> str:
         text = f"""----- {title} -----
     - Nombre: {self.name}
@@ -61,74 +78,73 @@ class PieceBase():
         return text
 
 
+# -------------------- PIECE A - APRILTAG -------------------------------------------------------------------------------- #
 
 class PieceA(PieceBase):
+    # Constructor
     def __init__(self, name: str, color: tuple, center: Vector2D, corners: list[Vector2D], T: np.ndarray) -> None:
         super().__init__(name, color)
         self.center= center
         self.corners = corners
         self.T = T
+        return
 
+    # Str
     def __str__(self, title: str = 'Pieza tipo A') -> str:
-        textb = super().__str__(title)
+        textbase = super().__str__(title)
         textcen = f"""    - Center: {self.center}"""
         textc = """    - Corners: ["""
         for corner in self.corners:
             textc += corner.__str__() + ' ,'
         textc = textc[:-2] + ']'
         textT = f'    - Transformation matrix: {self.T}'
-        text = f'{textb}\n{textcen}\n{textc}\n{textT}'
+        text = f'{textbase}\n{textcen}\n{textc}\n{textT}'
         return text
     
+    # Pintar
     def paint(self, frame) -> None:
-        self.corners[0].x = int(self.corners[0].x)
-        self.corners[0].y = int(self.corners[0].y)
-        self.corners[1].x = int(self.corners[1].x)
-        self.corners[1].y = int(self.corners[1].y)
-        self.corners[2].x = int(self.corners[2].x)
-        self.corners[2].y = int(self.corners[2].y)
-        self.corners[3].x = int(self.corners[3].x)
-        self.corners[3].y = int(self.corners[3].y)
-
-        self.center.x = int(self.center.x)
-        self.center.y = int(self.center.y)
-
-
         # Dibujar el recuadro del AprilTag
-        cv2.line(frame, (self.corners[0].x, self.corners[0].y), (self.corners[1].x, self.corners[1].y), ColorBGR.WHITE, 2, cv2.LINE_AA, 0)
-        cv2.line(frame, (self.corners[1].x, self.corners[1].y), (self.corners[2].x, self.corners[2].y), ColorBGR.WHITE, 2, cv2.LINE_AA, 0)
-        cv2.line(frame, (self.corners[2].x, self.corners[2].y), (self.corners[3].x, self.corners[3].y), ColorBGR.WHITE, 2, cv2.LINE_AA, 0)
-        cv2.line(frame, (self.corners[3].x, self.corners[3].y), (self.corners[0].x, self.corners[0].y), ColorBGR.WHITE, 2, cv2.LINE_AA, 0)
+        cv2.line(frame, self.corners[0].get_tuple_int(), self.corners[1].get_tuple_int(), ColorBGR.WHITE, 2, cv2.LINE_AA, 0)
+        cv2.line(frame, self.corners[1].get_tuple_int(), self.corners[2].get_tuple_int(), ColorBGR.WHITE, 2, cv2.LINE_AA, 0)
+        cv2.line(frame, self.corners[2].get_tuple_int(), self.corners[3].get_tuple_int(), ColorBGR.WHITE, 2, cv2.LINE_AA, 0)
+        cv2.line(frame, self.corners[3].get_tuple_int(), self.corners[0].get_tuple_int(), ColorBGR.WHITE, 2, cv2.LINE_AA, 0)
         
-        # dibujar ejes de coordenadas
-        x_axis = np.array(((np.array([self.corners[1].x, self.corners[1].y]) + np.array([self.corners[2].x, self.corners[2].y]))/2), dtype=int)
-        y_axis = np.array(((np.array([self.corners[2].x, self.corners[2].y]) + np.array([self.corners[3].x, self.corners[3].y]))/2), dtype=int)
+        # Punto ejes de coordenadas
+        x_axis = Vector2D((self.corners[1] + self.corners[2]).get_array()/2)
+        y_axis = Vector2D((self.corners[2] + self.corners[3]).get_array()/2)
 
-        # print(x_axis)
-        cv2.line(frame, (self.center.x, self.center.y), x_axis, ColorBGR.RED, 2, cv2.LINE_AA, 0)
-        cv2.line(frame, (self.center.x, self.center.y), y_axis, ColorBGR.GREEN, 2, cv2.LINE_AA, 0)
+        # Pintar ejes
+        cv2.line(frame, self.center.get_tuple_int(), x_axis.get_tuple_int(), ColorBGR.RED, 2, cv2.LINE_AA, 0)
+        cv2.line(frame, self.center.get_tuple_int(), y_axis.get_tuple_int(), ColorBGR.GREEN, 2, cv2.LINE_AA, 0)
 
         #  Dibujar centro en la imagen
         cv2.circle(frame, (self.center.x, self.center.y), 3, ColorBGR.BLACK, -1)
 
-        # Escribir el número Id del taf solo si es el de referencia
+        # Escribir el número Id del tag solo si es el de referencia
         if self.name == '4':
             cv2.putText(frame, self.name, (self.center.x, self.center.y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
+        return
 
+
+# -------------------- PIECE N - OBJECT DETECTION ------------------------------------------------------------------------ #
 
 class PieceN(PieceBase):
     """La bounding box es el cuadrado delimitador de la pieza. Lo sacamos con la red neuronal object detection"""
+    # Constructor
     def __init__(self, name: str, color: tuple, bbox: BoundingBox) -> None:
         super().__init__(name, color)
         self.bbox = bbox
+        return
 
+    # Str
     def __str__(self, title: str = 'Pieza tipo N') -> str:
         textb = super().__str__(title)
         textbbox = self.bbox.__str__()
-        text = textb + '\n' + textbbox
+        text = textb + '\n    - ' + textbbox
         return text
     
+    # Pintar
     def paint(self, frame: np.ndarray) -> None:
         # Escribir el nombre encima de la pieza
         cv2.putText(frame, self.name, (int(self.bbox.p1.x), int(self.bbox.p1.y) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, self.color, 2)
@@ -136,7 +152,11 @@ class PieceN(PieceBase):
         self.bbox.paint(frame, self.color)
         return
 
+
+# -------------------- PIECE N2 - POSE ESTIMATION ------------------------------------------------------------------------ #
+
 class PieceN2(PieceBase):
+    # Constructor
     def __init__(self, name: str, color: tuple, bbox: BoundingBox, keypoints) -> None:
         super().__init__(name, color)
         self.bbox = bbox
@@ -144,13 +164,16 @@ class PieceN2(PieceBase):
 
         self.center = None
         self.corners = None
+        return
 
+    # Str
     def __str__(self, title: str = 'Pieza tipo N2') -> str:
         textb = super().__str__(title)
         textbbox = self.bbox.__str__()
-        text = textb + '\n' + textbbox + '\nCenter: ' + self.center.__str__() 
+        text = textb + '\n    - ' + textbbox + '\n    - Center: ' + self.center.__str__() 
         return text
 
+    # Paint
     def paint(self, frame: np.ndarray) -> None:
         # Escribir el nombre encima de la pieza
         cv2.putText(frame, self.name, (int(self.bbox.p1.x), int(self.bbox.p1.y) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, self.color, 2)
@@ -162,12 +185,6 @@ class PieceN2(PieceBase):
             # point
             cv2.circle(frame, tuple(keypoint), 3, ColorBGR.RED, -1)
         
-        
-        # corners
-        # cv2.circle(frame, tuple(self.corners[0]), 3, ColorBGR.BLACK, -1)
-        # cv2.circle(frame, tuple(self.corners[1]), 3, ColorBGR.BLACK, -1)
-        # cv2.circle(frame, tuple(self.corners[2]), 3, ColorBGR.BLACK, -1)
-        # cv2.circle(frame, tuple(self.corners[3]), 3, ColorBGR.BLACK, -1)
         # Dibujar esqueleto de la pieza
         for index, keypoint in enumerate(self.keypoints):
         #    print(index)
@@ -175,22 +192,15 @@ class PieceN2(PieceBase):
                 cv2.line(frame, (self.keypoints[index][0], self.keypoints[index][1]), (self.keypoints[index+1][0], self.keypoints[index+1][1]), ColorBGR.BLUE, 2, cv2.LINE_AA, 0)
            except:
                pass 
-           
-        # cv2.line(frame, (self.keypoints[0][0], self.keypoints[0][1]), (self.keypoints[1][0], self.keypoints[1][1]), ColorBGR.GREEN, 2, cv2.LINE_AA, 0)
-        # cv2.line(frame, (self.keypoints[1][0], self.keypoints[1][1]), (self.keypoints[2][0], self.keypoints[2][1]), ColorBGR.GREEN, 2, cv2.LINE_AA, 0)
-        # cv2.line(frame, (self.keypoints[2][0], self.keypoints[2][1]), (self.keypoints[3][0], self.keypoints[3][1]), ColorBGR.GREEN, 2, cv2.LINE_AA, 0)
-        # cv2.line(frame, (self.keypoints[3][0], self.keypoints[3][1]), (self.keypoints[0][0], self.keypoints[0][1]), ColorBGR.BLACK, 2, cv2.LINE_AA, 0)
-        
 
         return
 
 
-
-
+# -------------------- PIECE --------------------------------------------------------------------------------------------- #
 
 class Piece(PieceBase):
-    # @overload
-    # def __init__(self, name: str, color: tuple, bbox: BoundingBox, center: Vector2D, corners: list[Vector2D]) -> None: ...
+    @overload
+    def __init__(self, name: str, color: tuple, bbox: BoundingBox, center: Vector2D|None = None, corners: list[Vector2D]|None = None) -> None: ...
 
     @overload
     def __init__(self, pieceA: PieceA, pieceN: PieceN) -> None: ...
@@ -201,32 +211,57 @@ class Piece(PieceBase):
     @overload
     def __init__(self, pieceN2: PieceN2) -> None: ...
     
+    # Contructor
+    def __init__(self, *args: Union[str, tuple, BoundingBox, Vector2D, PieceA, PieceN, PieceN2]) -> None:
+        # Normal
+        if len(args) > 2 and isinstance(args[0], str) and isinstance(args[1], tuple) and isinstance(args[2], BoundingBox):
+            self.apriltag = None
+            super().__init__(args[0], args[1])
+            self.apriltag = None
+            self.bbox = args[2]
+            if len(args) > 3:
+                self.center = args[3]
+            else:
+                self.center = None
+            self.corners = None
+            self.T = None
+            self.point3d = None
+            self.pose = None
 
-    def __init__(self, *args: Union[PieceA, PieceN, PieceN2]) -> None:
-        if len(args) == 2 and isinstance(args[0], PieceA) and isinstance(args[1], PieceN):
+        # Union PieceA y PieceN
+        elif len(args) == 2 and isinstance(args[0], PieceA) and isinstance(args[1], PieceN):
+    
             pieceA = args[0]
             pieceN = args[1]
+
             # 1. el nombre y color lo sacamos de la red neuronal que nos diferencia el objeto
-            self.pieceA = pieceA
-            self.pieceN = pieceN
-            self.pieceN2 = None
+            self.apriltag = pieceA
 
             super().__init__(pieceN.name, pieceN.color)
-            self.bbox = pieceN.bbox
 
+            self.bbox = pieceN.bbox
             self.center= pieceA.center
-            self.corners = pieceA.corners
+
+            # Verificar que el apriltag se encuentra dentro de la boundingbox
+            if (self.bbox.p1.x < self.center.x) and (self.bbox.p1.y < self.center.y) and (self.bbox.p2.x > self.center.x) and (self.bbox.p2.y > self.center.y):
+                pass
+            else:
+                raise ValueError("Ariltag no perteneciente a la pieza")
+            
+            # No tenemos la informacion de las esquinas de la pieza, solo del apriltag
+            self.corners = None
+
             self.T = pieceA.T
 
             self.point3d = None
             self.pose = None
 
+        # Unicamente PieceN
         elif len(args) == 1 and isinstance(args[0], PieceN):
-            self.pieceA = None
-            self.pieceN = args[0]
-            self.pieceN2 = None
-
             pieceN = args[0]
+
+            self.apriltag = None
+
             super().__init__(pieceN.name, pieceN.color)
 
             # bbox
@@ -240,12 +275,12 @@ class Piece(PieceBase):
             self.point3d = None
             self.pose = None
         
+        # Unicamente PieceN2
         elif len(args) == 1 and isinstance(args[0], PieceN2):
-            self.pieceA = None
-            self.pieceN = None
-            self.pieceN2 = args[0]
-
             pieceN2 = args[0]
+
+            self.apriltag = None
+
             super().__init__(pieceN2.name, pieceN2.color)
 
             # bbox
@@ -266,13 +301,15 @@ class Piece(PieceBase):
 
         else:
             raise TypeError("Invalid arguments")
+        
+        return
 
-  
+    # Str
     def __str__(self, title: str = 'Pieza') -> str:
-        textb = super().__str__(title)
+        textbase = super().__str__(title)
         textbbox = self.bbox.__str__()
         textcen =f'    - Center: {self.center}'
-        if len(self.corners) != 0:
+        if type(self.corners) == np.ndarray:
             textc = '    - Corners: ['
             for corner in self.corners:
                 textc += corner.__str__() + ' ,'
@@ -282,32 +319,53 @@ class Piece(PieceBase):
         textT = f'    - Transformation matrix: {self.T}\n    - Point3d: {self.point3d}\n    - Pose: {self.pose}'
         textA = f'{textcen}\n{textc}\n{textT}'
 
-        text = f'{textb}\n{textbbox}\n{textA}'
+        text = f'{textbase}\n    - {textbbox}\n{textA}'
         return text
 
+    # Pintar
     def paint(self, frame) -> None:
-        if self.pieceA:
-            self.pieceA.paint(frame)
-        if self.pieceN:
-            self.pieceN.paint(frame)
-            if self.center:
-                cv2.circle(frame, tuple(self.center.get_array_int()), 3, color=(0,0,255), thickness=-1)
-            if type(self.corners) == np.ndarray:
-                for corner in self.corners:
-                    cv2.circle(frame, (corner[0],corner[1]), 3, 0, -1)
+        # Apriltag
+        if self.apriltag:
+            self.apriltag.paint(frame)
+
+        # ------------------------------------------------------------------------------------------------
+        # if self.pieceN:
+        #     self.pieceN.paint(frame)
+        #     if self.center:
+        #         cv2.circle(frame, tuple(self.center.get_array_int()), 3, color=(0,0,255), thickness=-1)
+        #     if type(self.corners) == np.ndarray:
+        #         for corner in self.corners:
+        #             cv2.circle(frame, (corner[0],corner[1]), 3, 0, -1)
                      
-        if self.pieceN2:
-            self.pieceN2.paint(frame)
+        # if self.pieceN2:
+        #     self.pieceN2.paint(frame)
+        # ------------------------------------------------------------------------------------------------
+
+        # Bounding box
+        self.bbox.paint(frame, self.color)
+
+        # Nombre
+        cv2.putText(frame, self.name, (int(self.bbox.p1.x), int(self.bbox.p1.y) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, self.color, 2)
+
+        # Centro
+        if isinstance(self.center, Vector2D):
+            center = self.center.get_array_int()
+            cv2.circle(frame, tuple(center), 3, ColorBGR.RED, -1)
+        
+        # Esquinas / elipse
+        if isinstance(self.corners, np.ndarray):
+            if self.name == 'square' or self.name == 'hexagon':
+                for corner in self.corners:
+                    # point
+                    cv2.circle(frame, tuple(corner), 3, ColorBGR.BLACK, -1)
+
+            if self.name == 'circle':     
+                cv2.ellipse(frame, (self.center.get_tuple_int(), (self.corners[0], self.corners[1]), self.corners[2]), (0, 255, 0), 2)
 
         return
 
-    def validate(self) -> bool:
-        if (self.bbox.p1.x < self.center.x) and (self.bbox.p1.y < self.center.y) and (self.bbox.p2.x > self.center.x) and (self.bbox.p2.y > self.center.y):
-            return True
-        else:
-            return False
 
-
+    # Calculate Center and corners/ellipse
     def calculate_center_and_corners(self, frame: np.ndarray) -> bool:
         
         # 1. Ampliamos boundig box del objeto para prevenir el corte de esquinas ajustadas
@@ -315,7 +373,7 @@ class Piece(PieceBase):
         bbox_modified = copy.deepcopy(self.bbox)
         bbox_modified.expand(expand_pixels)
         # 2. recortamos la imagen por la boundingbox
-        crop_frame = hf.crop_frame_2(frame, corners=bbox_modified.get_array())
+        crop_frame = hf.crop_frame_2(frame, corners=bbox_modified.get_array_int())
         # 3. Pasamos a escala de grises para la detección
         crop_frame = cv2.cvtColor(crop_frame, cv2.COLOR_BGR2GRAY)
 
@@ -324,7 +382,7 @@ class Piece(PieceBase):
             corners_crop = hf.detect_corners_harris(crop_frame)
             corners = []
             for corner_crop in corners_crop:
-                corners.append(bbox_modified.p1.get_array() + corner_crop)
+                corners.append(bbox_modified.p1.get_array_int() + corner_crop)
             # seleccionamos los 4 esquinas que estan mas arriba: cara superior
             self.corners = np.array(corners[:4]).astype(int)
             # el centroide de los 4 puntos superiores es el centro de la cara
@@ -335,14 +393,19 @@ class Piece(PieceBase):
             corners_crop = hf.detect_corners_harris(crop_frame)
             corners = []
             for corner_crop in corners_crop:
-                corners.append(bbox_modified.p1.get_array() + corner_crop)
+                corners.append(bbox_modified.p1.get_array_int() + corner_crop)
             # seleccionamos los 6 esquinas que estan mas arriba: cara superior
             self.corners = np.array(corners[:6]).astype(int)
             # el centroide de los 6 puntos superiores es el centro de la cara
             center = hf.calculate_centroid(self.corners).astype(int)
             self.center = Vector2D(center)
+
         elif self.name == 'circle':
-            pass
+            (xc, yc), (a, b), theta = hf.detect_ellipse(crop_frame)
+            center = bbox_modified.p1.get_array() + np.array([xc, yc])
+            self.center = Vector2D(center)
+            self.corners = np.array([a, b, theta])
+
         else:
             return False
         
@@ -525,16 +588,16 @@ class Piece(PieceBase):
         return
 
     # Calculate pose modo 3
-    def calculatePose_v3(self, pointcloud, ref: PieceA, t_ref_to_robot: np.ndarray = np.eye(4),verbose: bool = True, matplot_representation: bool = False):
+    def calculatePose_v3(self, pointcloud, ref: PieceA, t_ref_to_robot: np.ndarray = np.eye(4), resolution: Vector2D = Vector2D(1920, 1080),verbose: bool = True, matplot_representation: bool = False):
         if not pointcloud:
             print('Not pointcloud')
             return 
         
         # PIXEL to CLOUD -------------------------------------------------------------------------------------
         
-        pref_cloud = hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=ref.center.get_array())
+        pref_cloud = hf.pixel_to_point3d(pointcloud, resolution=resolution.get_array_int(), pixel=ref.center.get_array())
         print('center: ',self.center.get_array_int())
-        ppiece_cloud = hf.pixel_to_point3d(pointcloud, resolution=np.array([1920, 1080]), pixel=self.center.get_array_int())
+        ppiece_cloud = hf.pixel_to_point3d(pointcloud, resolution=resolution.get_array_int(), pixel=self.center.get_array_int())
 
         # MATRIZ TRANSFORMACION APRIL ----------------------------------------------------------------------
         t_ref_to_cam = ref.T
@@ -586,5 +649,4 @@ class Piece(PieceBase):
         return
 
 
-
-
+# -------------------- TRAINNING ----------------------------------------------------------------------------------------- #

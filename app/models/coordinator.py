@@ -17,7 +17,7 @@ from models.vectors import Vector2D
 from models.constants import RobotCte, ColorBGR
 from models.piece import BoundingBox, PieceA, PieceN, PieceN2, Piece
 from models.robot import Robot
-from models.detection import Apriltag, YoloObjectDetection, YoloPoseEstimation, ClassicAV
+from models.detection import Apriltag, YoloObjectDetection, YoloPoseEstimation
 
 # -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
 
@@ -28,67 +28,13 @@ from models.detection import Apriltag, YoloObjectDetection, YoloPoseEstimation, 
 
 class Coordinator():
 
-    """ ----- DETECCIONES ----- """
-
-    @staticmethod
-    def classicAV_detections(frame, classicAV: ClassicAV, paint_frame: bool) -> dict:
-        classicAV.detect(frame)
-        # 2. verificacion y paint
-        if classicAV.piece:
-            if paint_frame:
-                # classicAV.paint(frame)
-                pass
-            flag = True
-        else:
-            flag = False
-        return {'flag': flag, 'pieces': classicAV.piece}
-
-
-    @staticmethod
-    def apriltag_detections(frame, camera: Camera, apriltag: Apriltag, paint_frame: bool = True) -> dict:
-        # 1. Camera params
-        camera_params = [camera.f.x, camera.f.y, camera.c.x, camera.c.y]
-        # 2. deteccion
-        apriltag.detect(frame, camera_params)
-        # 3. verificacion y paint
-        if apriltag.pieces:
-            if paint_frame:
-                apriltag.paint(frame)
-            flag = True
-        else:
-            flag = False
-        return {'flag': flag, 'pieces': apriltag.pieces}
-  
-    @staticmethod
-    def nn_object_detections(frame, camera: Camera, nn_model: YoloObjectDetection, paint_frame: bool = True) -> dict:
-        # 1. deteccion
-        nn_model.detect(frame)
-        # 2. verificacion y paint
-        if nn_model.pieces:
-            if paint_frame:
-                nn_model.paint(frame)
-            flag = True
-        else:
-            flag = False
-        return {'flag': flag, 'pieces': nn_model.pieces}
-
-    @staticmethod
-    def nn_poseEstimation_detections(frame, camera: Camera, nn_model: YoloPoseEstimation, paint_frame: bool = True) -> dict:
-        nn_model.detect(frame)
-        # 2. verificacion y paint
-        if nn_model.pieces:
-            if paint_frame:
-                nn_model.paint(frame)
-            flag = True
-        else:
-            flag = False
-        return {'flag': flag, 'pieces': nn_model.pieces}
+    """ ----- COMBINAR PIEZAS ----- """
 
     @staticmethod
     def combined_pieces(piecesA: list[PieceA]|None, piecesN: list[PieceN]|None, piecesN2: list[PieceN2]|None, combine_pieces: bool = True) -> tuple[bool, PieceA|None|bool, list[Piece]]:
         """combinar detecciones en una sola"""
         flag = False
-        ref = None
+        ref = False
         pieces = []
 
         # No combinar piezas
@@ -109,6 +55,7 @@ class Coordinator():
                     pieces.append(Piece(pieceN2))
 
             # 4. # condicion de bandera
+            ref = True
             if (pieces != []) and (ref != None):
                 flag = True
 
@@ -126,10 +73,15 @@ class Coordinator():
                         ref = pieceA
                     else:
                         for pieceN in piecesN:
-                            piece = Piece(pieceA, pieceN)
-                            if piece.validate(): # se valida que el centro de la cara de la pieza se envcuentre dentro de la boundig box
+                            try:
+                                piece = Piece(pieceA, pieceN)
+                            except:
+                                pass
+                            else:
                                 # 2. piezas con aprils incluidos
                                 pieces.append(piece)
+
+                                
 
             # Modo 2 
             elif piecesN2 != None:
@@ -157,7 +109,54 @@ class Coordinator():
         if (pieces != []) and (ref != None):
             flag = True
         return flag, ref, pieces
-        
+
+
+    """ ----- DETECCIONES ----- """
+
+    # Detecciones apriltags
+    @staticmethod
+    def apriltag_detections(frame, camera: Camera, apriltag: Apriltag, paint_frame: bool = True) -> dict:
+        # 1. Camera params
+        camera_params = [camera.f.x, camera.f.y, camera.c.x, camera.c.y]
+        # 2. deteccion
+        apriltag.detect(frame, camera_params)
+        # 3. verificacion y paint
+        if apriltag.pieces:
+            if paint_frame:
+                apriltag.paint(frame)
+            flag = True
+        else:
+            flag = False
+        return {'flag': flag, 'pieces': apriltag.pieces}
+    
+    # Detecciones Yolo object detection
+    @staticmethod
+    def nn_object_detections(frame, camera: Camera, nn_model: YoloObjectDetection, paint_frame: bool = True) -> dict:
+        # 1. deteccion
+        nn_model.detect(frame)
+        # 2. verificacion y paint
+        if nn_model.pieces:
+            if paint_frame:
+                nn_model.paint(frame)
+            flag = True
+        else:
+            flag = False
+        return {'flag': flag, 'pieces': nn_model.pieces}
+
+    # Detecciones Yolo pose estimation
+    @staticmethod
+    def nn_poseEstimation_detections(frame, camera: Camera, nn_model: YoloPoseEstimation, paint_frame: bool = True) -> dict:
+        nn_model.detect(frame)
+        # 2. verificacion y paint
+        if nn_model.pieces:
+            if paint_frame:
+                nn_model.paint(frame)
+            flag = True
+        else:
+            flag = False
+        return {'flag': flag, 'pieces': nn_model.pieces}
+   
+    # Detecciones Totales
     @staticmethod
     def detections(frame: np.ndarray, camera: Camera, nn_model: YoloObjectDetection|YoloPoseEstimation, apriltag: Apriltag|None = None, combine_pieces: bool = True, paint_frame: bool = True) -> dict:
         at_kwargs = {'pieces': None}
@@ -173,8 +172,8 @@ class Coordinator():
         flag, ref, pieces = Coordinator.combined_pieces(at_kwargs['pieces'], od_kwargs['pieces'], pose_kwargs['pieces'], combine_pieces)
 
         if paint_frame:
-            if ref: # si la ref es False nos encotramos en el modo 3 donde no hay ref (conocemos la pos de la camara)
-                ref.paint(frame)
+            # if ref: # si la ref es False nos encotramos en el modo 3 donde no hay ref (conocemos la pos de la camara)
+            #     ref.paint(frame)
             for piece in pieces:
                 piece.paint(frame)
         
@@ -231,6 +230,7 @@ class Coordinator():
     
 
     """ ----- PRINCIPAL -----"""
+
     @staticmethod
     def the_whole_process(robot: Robot, camera: Camera, apriltag: Apriltag, nn_od_model: YoloObjectDetection) -> None:
         print()

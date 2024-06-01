@@ -40,7 +40,7 @@ def obtain_last_number(directory: str, name: str) -> int:
 # -------------------- OPERACIONES --------------------------------------------------------------------------------------- #
 
 
-# GERERAR matriz de transformacion
+# GENERAR matriz de transformacion
 def transformation_matrix(R: np.ndarray, t: np.ndarray) -> np.ndarray:
     T = np.eye(4)
     T[:3, :3] = R
@@ -217,7 +217,27 @@ def procrustes_method(P, P_prime, verbose: bool = False) -> np.ndarray:
 
     return T
 
+# agrupar puntos
+def points_agroup(points: np.ndarray) -> list[np.ndarray]:
+    # Ahora, vamos a aplicar DBSCAN para agrupar las esquinas
+    epsilon = 10  # Radio de la vecindad
+    min_samples = 5  # Número mínimo de puntos para formar un cluster
+    dbscan = DBSCAN(eps=epsilon, min_samples=min_samples)
+    dbscan.fit(points)
+    labels = dbscan.labels_
+    # Encontrar los índices de los puntos que pertenecen a cada grupo
+    unique_labels = np.unique(labels)
+    # print('unique labels: ',unique_labels)
 
+    grouped_points = [points[labels == label] for label in unique_labels if label != -1]  # Excluir el ruido (-1)
+    # print('grouped points: ', grouped_points)
+
+    # Calcular los centroides de cada grupo
+    group_centroids = [np.mean(group, axis=0) for group in grouped_points]
+    # invertimos coordenadas (y,x) -> (x,y)
+    centroids = [centroid[::-1] for centroid in group_centroids]
+    # print('Centroides: ', centroids)
+    return centroids
 
 # -------------------- OPENCV -------------------------------------------------------------------------------------------- #
 
@@ -258,27 +278,6 @@ def process_frame_wb(frame: np.ndarray):
 
     return frame_wb
 
-# agrupar puntos
-def point_agroup(points: np.ndarray) -> list[np.ndarray]:
-    # Ahora, vamos a aplicar DBSCAN para agrupar las esquinas
-    epsilon = 10  # Radio de la vecindad
-    min_samples = 5  # Número mínimo de puntos para formar un cluster
-    dbscan = DBSCAN(eps=epsilon, min_samples=min_samples)
-    dbscan.fit(points)
-    labels = dbscan.labels_
-    # Encontrar los índices de los puntos que pertenecen a cada grupo
-    unique_labels = np.unique(labels)
-    # print('unique labels: ',unique_labels)
-
-    grouped_points = [points[labels == label] for label in unique_labels if label != -1]  # Excluir el ruido (-1)
-    # print('grouped points: ', grouped_points)
-
-    # Calcular los centroides de cada grupo
-    group_centroids = [np.mean(group, axis=0) for group in grouped_points]
-    # invertimos coordenadas (y,x) -> (x,y)
-    centroids = [centroid[::-1] for centroid in group_centroids]
-    # print('Centroides: ', centroids)
-    return centroids
 
 # deteccion de corners por el metodo de harris
 def detect_corners_harris(frame: np.ndarray, block_size: float = 5, ksize: float = 5, k: float = 0.01, paint_frame: bool = False) -> np.ndarray:
@@ -295,7 +294,7 @@ def detect_corners_harris(frame: np.ndarray, block_size: float = 5, ksize: float
     umbral = 0.01*dst.max()
     # posicion de los pixel corners hay muchos. hay que agruparlos en zonas
     corners_position = np.argwhere(dst > umbral)
-    corners = point_agroup(corners_position)
+    corners = points_agroup(corners_position)
 
     # Dibujar círculos en las esquinas
     if paint_frame:
@@ -305,6 +304,45 @@ def detect_corners_harris(frame: np.ndarray, block_size: float = 5, ksize: float
 
     return corners
 
+
+def detect_ellipse(frame: np.ndarray) -> np.ndarray:
+    # 1. Filtros. ajustar parámetros
+    # Filtro de mediana para reducir el ruido
+    blur = cv2.medianBlur(frame, 11)
+    cv2.imshow('Imagen con filtro', blur)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    # Filtro; 
+    edge = cv2.Canny(blur,80,200)
+
+    cv2.imshow('Imagen con filtro', edge)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+  
+
+    # Encontrar contornos
+    contours, hierarchy = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+    frame2 = frame.copy()
+
+    # Iterar a través de los contornos
+    highest_y= float('inf')
+    for cnt in contours:
+        # Obtener el rectángulo delimitador (bounding box) del contorno
+        x, y, w, h = cv2.boundingRect(cnt)
+        # Verificar si este contorno está más arriba que el anterior TAMBIEN MIRAR EL CIRCULO MAS GRANDE
+        if y < highest_y:
+            highest_y = y
+            highest_contour = cnt
+
+    if len(highest_contour) >= 5:  # cv2.fitEllipse requiere al menos 5 puntos
+        (xc, yc), (a, b), theta = cv2.fitEllipse(highest_contour)
+        cv2.ellipse(frame2, ((xc, yc), (a, b), theta), (0, 255, 0), 2)
+    cv2.imshow('Imagen con filtro', frame2)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+  
+    return (xc, yc), (a, b), theta
 
 # -------------------- MATPLOT ------------------------------------------------------------------------------------------- #
 

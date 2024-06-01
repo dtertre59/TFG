@@ -46,6 +46,8 @@ import rtde.rtde_config as rtde_config
 
 # -------------------- CLASSES ------------------------------------------------------------------------------------------- #
 
+# -------------------- EXCEPTION ----------------------------------------------------------------------------------------- #
+
 class RobotException(Exception):
     """Excepcion del robot"""
     def __init__(self, msg: str):
@@ -53,6 +55,7 @@ class RobotException(Exception):
         super().__init__(msg)
 
 
+# -------------------- ROBOT --------------------------------------------------------------------------------------------- #
 
 class Robot():
     # Constructor
@@ -67,8 +70,6 @@ class Robot():
         self.setp = None
         self.watchdog = None
         self.gripper = None
-
-     # funcion de transformacion inversa de la POSE
     
     # Destructor
     def __del__(self) -> None:
@@ -79,13 +80,13 @@ class Robot():
         self.watchdog.input_bit_register_127 = 0
         self.con.send(self.watchdog)
 
-    # transformacion vector a rgi-stros de pose
+    # Transformacion pose a registro de pose
     def _list_to_setp(self, list):
         for i in range(0, 6):
             self.setp.__dict__["input_double_register_%i" % i] = list[i]
         return
     
-    # Connection
+    # Conexion
     def connect(self)-> rtde.RTDE:
         try:
             connection_state = self.con.connect()
@@ -139,7 +140,7 @@ class Robot():
         if not self.con.send_start():
             raise RobotException("Fallo en la instrucción de start")
         # registros iniciales
-        self._list_to_setp([-0.128, -0.298, 0.180, 0.015, 0, 1.501]) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
+        self._list_to_setp([-0.128, -0.298, 0.180, 0.015, 0, 1.501]) # cambiamos los inputs registers por el pose 6d a donde queremos movernos.
         self.con.send(self.setp)
         # kick watchdog
         self.watchdog.input_bit_register_127 = 1
@@ -147,8 +148,8 @@ class Robot():
 
         return
         
-    # movimiento del robot
-    def move(self, vector):
+    # Movimiento
+    def move(self, pose):
         # start data synchronization
         if not self.con.send_start():
             raise RobotException("Fallo en la instrucción de start")
@@ -166,7 +167,7 @@ class Robot():
             if state is None:
                 raise RobotException('No se recibe el estado')
             
-            # list_to_setp(self.setp, vector) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
+            # list_to_setp(self.setp, pose) # cambiamos los inputs registers por el pose 6d a donde queremos movernos.
             # self.con.send(self.setp)
 
 
@@ -182,8 +183,8 @@ class Robot():
             # do something...
             if move_completed == False and robot_aviable == 1 and init == 1:
                 # print('inicio')
-                print('Robot en movimiento a pose: ', vector)
-                self._list_to_setp(vector) # cambiamos los inputs registers por el vector 6d a donde queremos movernos.
+                print('Robot en movimiento a pose: ', pose)
+                self._list_to_setp(pose) # cambiamos los inputs registers por el pose 6d a donde queremos movernos.
                 self.con.send(self.setp)
                 time.sleep(0.5)
                 init = 0
@@ -197,7 +198,7 @@ class Robot():
             time.sleep(0.2)
         return
     
-    # control del gripper del robot
+    # Control del gripper
     def gripper_control(self, gripper_on: bool):
         # hace falta -> SI pero no se por qué para iniciar el envio
         if not self.con.send_start():
@@ -225,6 +226,7 @@ class Robot():
         return
     
 
+# -------------------- TRAINNING ----------------------------------------------------------------------------------------- #
 
 # pruebas
 # from pathlib import Path

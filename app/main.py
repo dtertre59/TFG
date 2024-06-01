@@ -83,27 +83,44 @@ def main_camera_detect():
     pieces: list[Piece] = r_kwargs['pieces']
     frame = r_kwargs['frame']
     
-    piece = None
+    square = None
+    hexagon = None
+    circle = None
+
 
     for p in pieces:
         if p.name == 'square':
-            piece = p
+            square = p
         if p.name == 'hexagon':
             hexagon = p
+        if p.name == 'circle':
+            circle = p
 
-    print()
-    print(piece)
-    piece.calculate_center_and_corners(frame)
-    for corner in piece.corners:
-        cv2.circle(frame, (corner[0],corner[1]), 3, 0, -1)  
-    cv2.circle(frame, (piece.center[0],piece.center[1]), 3, color=(0,0,255), thickness=-1)
+    # print()
+    # print(square)
+    # square.calculate_center_and_corners(frame)
+    # for corner in square.corners:
+    #     cv2.circle(frame, (corner[0],corner[1]), 3, 0, -1)  
+    # cv2.circle(frame, (square.center[0],square.center[1]), 3, color=(0,0,255), thickness=-1)
 
-    print()
-    print(hexagon)
-    hexagon.calculate_center_and_corners(frame)
-    for corner in hexagon.corners:
-        cv2.circle(frame, (corner[0],corner[1]), 3, 0, -1)  
-    cv2.circle(frame, (hexagon.center[0],hexagon.center[1]), 3, (0,0,255), thickness=-1)
+    # print()
+    # print(hexagon)
+    # hexagon.calculate_center_and_corners(frame)
+    # for corner in hexagon.corners:
+    #     cv2.circle(frame, (corner[0],corner[1]), 3, 0, -1)  
+    # cv2.circle(frame, (hexagon.center[0],hexagon.center[1]), 3, (0,0,255), thickness=-1)
+    if square:
+        print()
+        print(square)
+        square.calculate_center_and_corners(frame)
+        square.paint(frame)
+
+    if circle:
+        print()
+        print(circle)
+        circle.calculate_center_and_corners(frame)
+        circle.paint(frame)
+
 
 
     cv2.imshow('a', cv2.resize(frame, (1280, 720)))
@@ -315,8 +332,8 @@ def main3():
 if __name__ == '__main__':
     # correccion_error_nube()
     # main_camera()
-    # main_camera_detect()
+    main_camera_detect()
     # main_camera_calibrate_pointcloud()
     # main()
     # main2()
-    main3()
+    # main3()

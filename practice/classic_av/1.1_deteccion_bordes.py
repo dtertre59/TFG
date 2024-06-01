@@ -164,6 +164,65 @@ def detect_contorns_2(frame: np.ndarray):
     return imagen_con_contornos
 
 
+def detect_circles_v1(frame: np.ndarray) -> np.ndarray:
+    # filtro de mediana
+    blur = cv2.medianBlur(frame, 11) # blur out some of the edges; filtro de medriana: para eliminacion de puntos blancos aleatorios sin desenfocar contornos. reduccion de ruido
+
+    (threshold, binary) = cv2.threshold(blur, 180, 255, cv2.THRESH_BINARY_INV) # binarize
+    # Invertir la imagen binaria para cambiar de negro-blanco a blanco-negro
+    binary = cv2.bitwise_not(binary)
+
+    cv2.imshow('Imagen con filtro', binary)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    # return binary # imagen filtrada
+    (contours, hierarchy) = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+    # Convertir la imagen original a color (si no lo está) para dibujar las elipses en color
+    if len(frame.shape) == 2 or frame.shape[2] == 1:  # Si la imagen es en escala de grises
+        color_frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+    else:
+        color_frame = frame.copy()
+    
+    # adquirir elipse
+    for cnt in contours:
+        if len(cnt) >= 5:  # cv2.fitEllipse requiere al menos 5 puntos
+            (xc, yc), (a, b), theta = cv2.fitEllipse(cnt)
+            cv2.ellipse(color_frame, ((xc, yc), (a, b), theta), (0, 255, 0), 2)
+    
+    return color_frame
+
+
+def detect_circles_v2(frame: np.ndarray) -> np.ndarray:
+    # Filtro de mediana para reducir el ruido
+    blur = cv2.medianBlur(frame, 11)
+
+    edge = cv2.Canny(blur,30,200)
+    cv2.imshow('Imagen con filtro', edge)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+  
+    # Encontrar contornos
+    contours, hierarchy = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    
+    # Convertir la imagen original a color (si no lo está) para dibujar las elipses en color
+    if len(frame.shape) == 2 or frame.shape[2] == 1:  # Si la imagen es en escala de grises
+        color_frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+    else:
+        color_frame = frame.copy()
+    
+    # Iterar sobre cada contorno y ajustar una elipse si es posible
+    for cnt in contours:
+        if len(cnt) >= 5:  # cv2.fitEllipse requiere al menos 5 puntos
+            (xc, yc), (a, b), theta = cv2.fitEllipse(cnt)
+            cv2.ellipse(color_frame, ((xc, yc), (a, b), theta), (0, 255, 0), 2)
+    
+    return color_frame
+
+
+        
+
 
 
 img = cv2.imread('practice/classic_av/todas.png', cv2.IMREAD_GRAYSCALE)
@@ -173,9 +232,9 @@ assert img is not None, "file could not be read, check with os.path.exists()"
 
 square = np.array([[1070, 430], [1265, 720]])
 hexagon = np.array([[768,516], [910,765]])
-circle = np.array([[1346,511],[1544,767]])
+circle = np.array([[1346,511],[1550,770]])
 
-frame = crop_frame(img, square)
+frame = crop_frame(img, circle)
 
 frame_wb = filters(frame)
 
@@ -183,7 +242,7 @@ frame_wb = filters(frame)
 
 
 # 1. mejor
-frame_with_detections = detect_corners_harris(frame_wb)
+# frame_with_detections = detect_corners_harris(frame_wb)
 
 
 # HACER EL DEL CIRCULLOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO (CENTRO)
@@ -192,6 +251,8 @@ frame_with_detections = detect_corners_harris(frame_wb)
 # frame_with_detections = detect_contorns_1(frame_wb)
 
 # frame_with_detections = detect_contorns_2(frame_wb)
+
+frame_with_detections = detect_circles_v1(frame_wb)
 
 # Mostrar la imagen resultante
 cv2.imshow('Imagen con filtro', frame_with_detections)
