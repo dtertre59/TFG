@@ -332,8 +332,8 @@ def main3():
 if __name__ == '__main__':
     # correccion_error_nube()
     # main_camera()
-    main_camera_detect()
+    # main_camera_detect()
     # main_camera_calibrate_pointcloud()
     # main()
     # main2()
-    # main3()
+    main3()

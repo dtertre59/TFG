@@ -34,7 +34,7 @@ class Coordinator():
     def combined_pieces(piecesA: list[PieceA]|None, piecesN: list[PieceN]|None, piecesN2: list[PieceN2]|None, combine_pieces: bool = True) -> tuple[bool, PieceA|None|bool, list[Piece]]:
         """combinar detecciones en una sola"""
         flag = False
-        ref = False
+        ref = None
         pieces = []
 
         # No combinar piezas
@@ -55,10 +55,9 @@ class Coordinator():
                     pieces.append(Piece(pieceN2))
 
             # 4. # condicion de bandera
-            ref = True
             if (pieces != []) and (ref != None):
                 flag = True
-
+            print('Flag: ', flag)
             return flag, ref, pieces
 
 
@@ -172,8 +171,8 @@ class Coordinator():
         flag, ref, pieces = Coordinator.combined_pieces(at_kwargs['pieces'], od_kwargs['pieces'], pose_kwargs['pieces'], combine_pieces)
 
         if paint_frame:
-            # if ref: # si la ref es False nos encotramos en el modo 3 donde no hay ref (conocemos la pos de la camara)
-            #     ref.paint(frame)
+            if ref: # si la ref es False nos encotramos en el modo 4 donde no hay ref (conocemos la pos de la camara)
+                ref.paint(frame)
             for piece in pieces:
                 piece.paint(frame)
         
@@ -367,14 +366,13 @@ class Coordinator():
         # ----------------------------------------------------------------------------------------------
 
         cv2.imshow('Detecciones',cv2.resize(frame, (1280, 720)))
+        # cv2.imshow('Detecciones', frame)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
         # 3.3 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot teniendo el centro en la imagen
-        print(piece)
-        # FUNCIONA PERFECTAMENTE
         piece.calculatePose_v3(pointcloud, ref,t_ref_to_robot=RobotCte.T_REF_TO_ROBOT,  matplot_representation=False)
-
+        print(piece)
         # 4. movimiento combinado: coger la pieza y dejarla en su respectivo hoyo (posicion conocida)
         try:
             print()

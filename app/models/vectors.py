@@ -6,10 +6,10 @@
 """
 
 # -------------------- PACKAGES ------------------------------------------------------------------------------------------ #
-
+from __future__ import annotations  # Esto permite el uso de forward references en anotaciones de tipo
 import numpy as np
 from typing import overload, Union
-from __future__ import annotations  # Esto permite el uso de forward references en anotaciones de tipo
+
 
 
 # -------------------- VARIABLES ----------------------------------------------------------------------------------------- #

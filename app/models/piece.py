@@ -118,11 +118,11 @@ class PieceA(PieceBase):
         cv2.line(frame, self.center.get_tuple_int(), y_axis.get_tuple_int(), ColorBGR.GREEN, 2, cv2.LINE_AA, 0)
 
         #  Dibujar centro en la imagen
-        cv2.circle(frame, (self.center.x, self.center.y), 3, ColorBGR.BLACK, -1)
+        cv2.circle(frame, self.center.get_tuple_int(), 3, ColorBGR.BLACK, -1)
 
         # Escribir el número Id del tag solo si es el de referencia
         if self.name == '4':
-            cv2.putText(frame, self.name, (self.center.x, self.center.y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+            cv2.putText(frame, self.name, self.center.get_tuple_int(), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
         return
 
@@ -359,8 +359,9 @@ class Piece(PieceBase):
                     # point
                     cv2.circle(frame, tuple(corner), 3, ColorBGR.BLACK, -1)
 
-            if self.name == 'circle':     
-                cv2.ellipse(frame, (self.center.get_tuple_int(), (self.corners[0], self.corners[1]), self.corners[2]), (0, 255, 0), 2)
+            if self.name == 'circle':
+                print(self)     
+                cv2.ellipse(frame, self.center.get_tuple_int(), (int(self.corners[0]/2), int(self.corners[1]/2)), int(self.corners[2]), 0, 360, (0, 255, 0), 2)
 
         return
 
@@ -594,8 +595,7 @@ class Piece(PieceBase):
             return 
         
         # PIXEL to CLOUD -------------------------------------------------------------------------------------
-        
-        pref_cloud = hf.pixel_to_point3d(pointcloud, resolution=resolution.get_array_int(), pixel=ref.center.get_array())
+        pref_cloud = hf.pixel_to_point3d(pointcloud, resolution=resolution.get_array_int(), pixel=ref.center.get_array_int())
         print('center: ',self.center.get_array_int())
         ppiece_cloud = hf.pixel_to_point3d(pointcloud, resolution=resolution.get_array_int(), pixel=self.center.get_array_int())
 
@@ -609,10 +609,13 @@ class Piece(PieceBase):
 
         # PASO AL SISTEMA DE REF DEL ROBOT ----------------------------------------------------------------
         # rotacion de la pieza en comparcacion con la referencia
-        ref_x = ref.corners[1] - ref.corners[0]
-        ref_x = ref_x.get_array()
-        piece_x = self.corners[1] - self.corners[0]
-        angle = hf.angle_between_vectors(ref_x, piece_x)
+        if self.name == 'circle':
+            angle = 0
+        else:
+            ref_x = ref.corners[1] - ref.corners[0]
+            ref_x = ref_x.get_array()
+            piece_x = self.corners[1] - self.corners[0]
+            angle = hf.angle_between_vectors(ref_x, piece_x)
         print('Angulo: ', angle)
         
         rot_piece_to_ref = hf.rotation_matrix_z(angle)
