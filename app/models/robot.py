@@ -40,6 +40,8 @@ import numpy as np
 import rtde.rtde as rtde
 import rtde.rtde_config as rtde_config
 
+from models.constants import RobotCte
+
 
 # -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
 
@@ -140,7 +142,7 @@ class Robot():
         if not self.con.send_start():
             raise RobotException("Fallo en la instrucción de start")
         # registros iniciales
-        self._list_to_setp([-0.128, -0.298, 0.180, 0.015, 0, 1.501]) # cambiamos los inputs registers por el pose 6d a donde queremos movernos.
+        self._list_to_setp(RobotCte.POSE_STANDAR) # cambiamos los inputs registers por el pose 6d a donde queremos movernos.
         self.con.send(self.setp)
         # kick watchdog
         self.watchdog.input_bit_register_127 = 1
@@ -150,10 +152,15 @@ class Robot():
         
     # Movimiento
     def move(self, pose):
+        try:
+            start = self.con.send_start()
+        except Exception as e:
+            raise RobotException(str(e))
+
         # start data synchronization
-        if not self.con.send_start():
+        if not start:
             raise RobotException("Fallo en la instrucción de start")
-        
+
         move_completed = False
 
         # The function "rtde_set_watchdog" in the "rtde_control_loop.urp" creates a 1 Hz watchdog
@@ -230,6 +237,7 @@ class Robot():
 
 # pruebas
 # from pathlib import Path
+# from constants import RobotCte
 # ROBOT_HOST = '192.168.10.222' # "localhost"
 # ROBOT_PORT = 30004
 # robot_config_filename = config_filename = str(Path(__file__).resolve().parent.parent / 'assets' / 'ur3e' / 'configuration_1.xml')
@@ -239,8 +247,14 @@ class Robot():
 # robot.setup()
 
 # POSE_STANDAR = np.array([-0.128, -0.298, 0.180, 0.025, 0, 2.879])
-# POSE_DISPLAY = np.array([-0.125, -0.166, 0.270, 1.454, -1.401, -4.095])
-# robot.move(POSE_STANDAR)
+# # POSE_DISPLAY = np.array([-0.125, -0.166, 0.270, 1.454, -1.401, -4.095])
+# robot.move(RobotCte.POSE_STANDAR)
+
+# robot.move(RobotCte.POSE_APRILTAG_REF)
+
+
+
+
 # robot.move(POSE_DISPLAY)
 
 # def rx_ry_para(angulo_rotacion):

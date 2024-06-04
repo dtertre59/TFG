@@ -12,10 +12,10 @@ from pathlib import Path
 import numpy as np
 import open3d as o3d
 
-from functions import main_functions as mf
+
 from functions import helper_functions as hf
 
-# from models.robot import Robot
+
 from models.camera import Camera
 from models.robot import Robot
 from models.detection import Apriltag, YoloObjectDetection, YoloPoseEstimation
@@ -211,7 +211,9 @@ def main():
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
     # camera = Camera(width=1280, height=720, fx= 998.911548, fy=998.2517088)
     apriltag = Apriltag(family='tag36h11', size=0.015)
-    nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_od_v1.pt'))  
+    nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_od_v1.pt'))
+    # Tolerancia
+    tolerance = 15
 
     # 2. Init
     print('Inicio: ')
@@ -229,7 +231,7 @@ def main():
     
     # 3. Proceso completo de una pieza:
     while flag:
-        flag = Coordinator.the_whole_process(robot, camera, apriltag, nn_od_model)
+        flag = Coordinator.the_whole_process(robot, camera, apriltag, nn_od_model, tolerance=tolerance)
         if not flag:
             break
 

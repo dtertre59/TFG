@@ -203,7 +203,7 @@ class Camera(CameraConfig):
         return
 
     # Run with options
-    def run_with_options(self, directory: str|None = None, name: str = 'img', crop_size: int|bool = False) -> None:
+    def run_with_options(self, directory: str|None = None, name: str = 'img', crop_size: int|bool = False) -> None|dict:
         with dai.Device(self.pipeline) as self.device:
             print('Camara en funcionamiento')
             
@@ -282,7 +282,7 @@ class Camera(CameraConfig):
                             frame_resized = cv2.resize(modified_frame, (1280, 720))
                             cv2.imshow("OAK-D-Lite", frame_resized)
 
-                            if flag and ((time.time()-start_time)>15): # ponemos 8 sergundos de enfoque
+                            if flag and ((time.time()-start_time)>10): # ponemos 8 sergundos de enfoque
                                 results_kwargs['frame'] = frame
                                 cv2.destroyAllWindows()
                                 return results_kwargs

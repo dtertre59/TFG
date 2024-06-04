@@ -13,7 +13,7 @@ import numpy as np
 from functions import helper_functions as hf
 
 from models.camera import CameraConfig, Camera
-from models.vectors import Vector2D
+from models.vectors import Vector2D, Vector6D
 from models.constants import RobotCte, ColorBGR
 from models.piece import BoundingBox, PieceA, PieceN, PieceN2, Piece
 from models.robot import Robot
@@ -161,15 +161,18 @@ class Coordinator():
         at_kwargs = {'pieces': None}
         od_kwargs = {'pieces': None}
         pose_kwargs = {'pieces': None}
+
         if apriltag:
             at_kwargs = Coordinator.apriltag_detections(frame, camera, apriltag, paint_frame=False)
         if type(nn_model) == YoloObjectDetection:
+
             od_kwargs = Coordinator.nn_object_detections(frame, camera, nn_model, paint_frame=False)
+
         elif type(nn_model) == YoloPoseEstimation:
             pose_kwargs = Coordinator.nn_poseEstimation_detections(frame, camera, nn_model, paint_frame=False)
 
         flag, ref, pieces = Coordinator.combined_pieces(at_kwargs['pieces'], od_kwargs['pieces'], pose_kwargs['pieces'], combine_pieces)
-        print(flag)
+
         if paint_frame:
             if ref: # si la ref es False nos encotramos en el modo 4 donde no hay ref (conocemos la pos de la camara)
                 ref.paint(frame)
@@ -182,28 +185,34 @@ class Coordinator():
     """ ----- MOVIMIENTOS ----- """
 
     @staticmethod
-    def combinated_movement(robot: Robot, piece: Piece) -> None:
+    def combinated_movement(robot: Robot, piece: Piece, tolerance: int = 15) -> None:
+
         # 1. posicion de la pieza
-        if piece.pose:
+        if isinstance(piece.pose, Vector6D):
             pose = piece.pose.get_array()
         else:
-            # Exception?
+            print('No se conoce la pose de la pieza')
             return
 
-        # # posicion del hoyo
-        # name = piece.name
-        # hole_pose = RobotCte.get_hole_pose_by_name(piece.name)
-        # # VERIFICAR QUE SE PONE ASI
-        # if not hole_pose:
-        #     return
+        # 2. posicion del hoyo
+        hole_pose = RobotCte.get_hole_pose_by_name(piece.name, tolerance=tolerance)
+        # VERIFICAR QUE SE PONE ASI
+        if not isinstance(hole_pose, np.ndarray):
+            print('No se ha encontrado el hoyo')
+            return
+        print()
+        print('Pose Pieza: ', pose)
+        print('Hoyo: ', hole_pose)
+        print()
         
         # 1. posicion segura
-    
+        robot.move(RobotCte.POSE_STANDAR)
         robot.move(RobotCte.POSE_SAFE_APRILTAG_REF)
+
         secure_pose = pose.copy()
         secure_pose[2] = RobotCte.SAFE_Z
         robot.move(secure_pose)
-        input(f'en posicion segura: {secure_pose}')
+        # input(f'en posicion segura: {secure_pose}')
         # 2. encima de la pieza + rotation + gripper off
         robot.gripper_control(False)
         # 3. bajar para coger la pieza
@@ -216,22 +225,25 @@ class Coordinator():
         secure_pose[2] = RobotCte.SAFE_Z_2
         robot.move(secure_pose)
         # 6. ir a la posicion del hoyo ( un poco arriba)
+        secure_hole_pose = hole_pose.copy()
+        secure_hole_pose[2] = RobotCte.SAFE_Z_2
+        robot.move(secure_hole_pose)
+        a_hole_pose = hole_pose.copy()
         # 7. posicion del hoyo exacta + soltar gripper
-        # robot.move()
+        a_hole_pose[2] = RobotCte.TAKE_PIECE_Z
+        robot.move(a_hole_pose)
         robot.gripper_control(False)
-
         # 8. posicion segura un poco mas arriba
-
+        robot.move(secure_hole_pose)
         # 9. posicion reposo para visualizar piezas
-
-
+        robot.move(RobotCte.POSE_STANDAR)
         return
     
 
     """ ----- PRINCIPAL -----"""
 
     @staticmethod
-    def the_whole_process(robot: Robot, camera: Camera, apriltag: Apriltag, nn_od_model: YoloObjectDetection) -> None:
+    def the_whole_process(robot: Robot, camera: Camera, apriltag: Apriltag, nn_od_model: YoloObjectDetection, tolerance: int = 15) -> None:
         print()
         # 1. Movemos robot a la posicion de visualizacion de las piezas
         try:
@@ -246,12 +258,24 @@ class Coordinator():
         print()
         print('Inicio de detecciones:')
         try:
-            frame, ref, pieces = camera.run_with_condition(Coordinator.detections, apriltag, nn_od_model, paint_frame = True)
+            r_kwargs = camera.run_with_condition(Coordinator.detections, nn_model = nn_od_model, apriltag=apriltag, combine_pieces = True, paint_frame = True)
+            if not r_kwargs:
+                print()
+                print('Salida voluntaria desde camara')
+                return
         except:
             print()
             print('Salida desde camara')
             return
         
+        ref: PieceA = r_kwargs['ref']
+        pieces: list[Piece] = r_kwargs['pieces']
+        frame: np.ndarray = r_kwargs['frame']
+
+        ref.paint(frame)
+        for piece in pieces:
+            piece.paint(frame)
+
         cv2.imshow('Detecciones',cv2.resize(frame, (1280, 720)))
         cv2.waitKey(0)
         cv2.destroyAllWindows()
@@ -266,7 +290,7 @@ class Coordinator():
         try:
             print()
             print('Inicio de movimientos combinados:')
-            Coordinator.combinated_movement(robot, piece)
+            Coordinator.combinated_movement(robot, piece, tolerance=tolerance)
         except Exception as e:
             print(str(e))
             return False
@@ -330,7 +354,7 @@ class Coordinator():
         # 1. Movemos robot a la posicion de visualizacion de las piezas
         try:
             print('Movimientos iniciales:')
-            robot.move(RobotCte.POSE_STANDAR_2)
+            robot.move(RobotCte.POSE_STANDAR)
             robot.move(RobotCte.POSE_DISPLAY_2)
         except Exception as e:
             print(str(e))

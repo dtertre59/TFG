@@ -360,7 +360,7 @@ class Piece(PieceBase):
                     cv2.circle(frame, tuple(corner), 3, ColorBGR.BLACK, -1)
 
             if self.name == 'circle':
-                print(self)     
+                # print(self)     
                 cv2.ellipse(frame, self.center.get_tuple_int(), (int(self.corners[0]/2), int(self.corners[1]/2)), int(self.corners[2]), 0, 360, (0, 255, 0), 2)
 
         return
@@ -444,18 +444,22 @@ class Piece(PieceBase):
 
         ppiece_robot = hf.point_tansf(t_piece_to_robot, np.array([0,0,0]))
 
-        pose_robot = hf.pose_transf(t_piece_to_robot, np.array([0,0,0]))
+        # AJUSTE MANUAl:# ----------------------------------------------------
+        r_ajust = hf.rotation_matrix_z(-12)
+        t_ajust = hf.transformation_matrix(r_ajust, np.array([0,0,0]))
+        t_piece_to_robot_ajust = np.dot(t_piece_to_robot, t_ajust)
+        pose_robot = hf.pose_transf(t_piece_to_robot_ajust, np.array([0,0,0]))
+        # ---------------------------------------------------------------
         # print('Matriz de transicion de la pieza al robot: ', t_piece_to_robot)
         # print('Pose de la pieza respecto del robot: ', pose_robot)
         # input()
-        self.point3d = Vector3D(ppiece_robot[0], ppiece_robot[1], ppiece_robot[2]) # =  Vector6D(pose_robot[0], pose_robot[1], pose_robot[2])
+        self.point3d = Vector3D(ppiece_robot)
 
-        self.pose = Vector6D(pose_robot[0], pose_robot[1], pose_robot[2], pose_robot[3], pose_robot[4], pose_robot[5])
+        self.pose = Vector6D(pose_robot)
 
         if verbose:
             print()
-            print('Pieza seleccionada: ', self.name)
-            print('Pose: ', self.pose)
+            print(self)
 
         # 3D representation
         if matplot_representation:

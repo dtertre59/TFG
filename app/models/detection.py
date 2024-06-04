@@ -129,8 +129,8 @@ class YoloObjectDetection(YoloBaseModel):
                     piece_color = ColorBGR.get_piece_color(name=piece_name)
                     # creamos instancia de la pieza
                     bbox = BoundingBox(p1 = np.array([int(coordinates[0]), int(coordinates[1])]), p2=np.array([int(coordinates[2]), int(coordinates[3])]))
-                    print('Nombre: ', piece_name)
-                    print(bbox)
+                    # print('Nombre: ', piece_name)
+                    # print(bbox)
                     piece = PieceN(name=piece_name, color=piece_color, bbox=bbox)
                     # print(piece)
                     self.pieces.append(piece)
