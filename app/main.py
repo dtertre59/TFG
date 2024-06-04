@@ -334,6 +334,6 @@ if __name__ == '__main__':
     # main_camera()
     # main_camera_detect()
     # main_camera_calibrate_pointcloud()
-    # main()
+    main()
     # main2()
-    main3()
+    # main3()

@@ -169,7 +169,7 @@ class Coordinator():
             pose_kwargs = Coordinator.nn_poseEstimation_detections(frame, camera, nn_model, paint_frame=False)
 
         flag, ref, pieces = Coordinator.combined_pieces(at_kwargs['pieces'], od_kwargs['pieces'], pose_kwargs['pieces'], combine_pieces)
-
+        print(flag)
         if paint_frame:
             if ref: # si la ref es False nos encotramos en el modo 4 donde no hay ref (conocemos la pos de la camara)
                 ref.paint(frame)
@@ -237,8 +237,6 @@ class Coordinator():
         try:
             print('Movimientos iniciales:')
             robot.gripper_control(True)
-            robot.move(RobotCte.POSE_SAFE_APRILTAG_REF)
-            input('aaaaaaaaaa')
             robot.move(RobotCte.POSE_DISPLAY)
         except Exception as e:
             print(str(e))
