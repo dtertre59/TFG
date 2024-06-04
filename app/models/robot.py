@@ -250,7 +250,7 @@ class Robot():
 # # POSE_DISPLAY = np.array([-0.125, -0.166, 0.270, 1.454, -1.401, -4.095])
 # robot.move(RobotCte.POSE_STANDAR)
 
-# robot.move(RobotCte.POSE_APRILTAG_REF)
+# robot.move(RobotCte.POSE_PUZZLE_SQUARE_15)
 
 
 
