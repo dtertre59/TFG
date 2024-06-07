@@ -28,7 +28,18 @@ from models.piece import PieceA, Piece
 from functions import helper_functions as hf
 
 
-# -------------------- CLASSES ------------------------------------------------------------------------------------------- #       
+# -------------------- CLASSES ------------------------------------------------------------------------------------------- #
+
+# -------------------- EXCEPTION ----------------------------------------------------------------------------------------- #
+
+class CameraException(Exception):
+    """Excepcion de la camara"""
+    def __init__(self, msg: str):
+        msg = 'Excepcion Camera: ' + msg
+        super().__init__(msg)
+
+
+# -------------------- CAMERA -------------------------------------------------------------------------------------------- #
 
 class CameraConfig():
     # Constructor
@@ -86,7 +97,7 @@ class Camera(CameraConfig):
             if lensPosition:
                 camRgb.initialControl.setManualFocus(lensPosition)
         except:
-            raise
+            raise CameraException("Fallo en la calibracion de las lentes")
 
         camRgb.isp.link(sync.inputs["rgb"])
         sync.out.link(xOut.input)
@@ -106,13 +117,13 @@ class Camera(CameraConfig):
         parser.add_argument('calibJsonFile', nargs='?', help="Path to calibration file in json", default=calibJsonFile)
         args = parser.parse_args()
 
-
         # Cargar datos de calibración
         try:
             calibData = dai.CalibrationHandler(args.calibJsonFile)
         except RuntimeError as e:
             raise RuntimeError(f"Error loading calibrtion data: {e}")
-
+        except Exception as e:
+            raise CameraException(str(e))
 
         # Create pipeline
         self.pipeline = dai.Pipeline()
@@ -141,6 +152,8 @@ class Camera(CameraConfig):
             camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_4_K)
         elif self.resolution.y == 3120:
             camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_13_MP)
+        else:
+            raise CameraException("Fallo en el setup de la resolucion")
 
         camRgb.setFps(10)
 
@@ -248,7 +261,7 @@ class Camera(CameraConfig):
                         cv2.imwrite(filename=str(filename), img=frame)
                         # cv2.imwrite(filename='img.png', img=frameRGB)
                     except Exception as e:
-                        print(str(e))
+                        raise CameraException(str(e))
                     picture_counter += 1
                 if key == ord('q'):
                     break

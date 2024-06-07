@@ -23,7 +23,6 @@
 
         - Control del Gripper (send) -> name="input_bit_register_126" type="BOOL"
 
-        Sin utilidad todavia en el programa de polyscope
         - watchdog (send) -> name="input_bit_register_127" type="BOOL"/>
 
 
@@ -40,7 +39,7 @@ import numpy as np
 import rtde.rtde as rtde
 import rtde.rtde_config as rtde_config
 
-# from models.constants import RobotCte
+from models.constants import RobotCte
 
 
 # -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
@@ -235,22 +234,22 @@ class Robot():
 
 # -------------------- TRAINNING ----------------------------------------------------------------------------------------- #
 
-# pruebas
-from pathlib import Path
-from constants import RobotCte
-ROBOT_HOST = '192.168.10.222' # "localhost"
-ROBOT_PORT = 30004
-robot_config_filename = config_filename = str(Path(__file__).resolve().parent.parent / 'assets' / 'ur3e' / 'configuration_1.xml')
-robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
+# # pruebas
+# from pathlib import Path
+# from constants import RobotCte
+# ROBOT_HOST = '192.168.10.222' # "localhost"
+# ROBOT_PORT = 30004
+# robot_config_filename = config_filename = str(Path(__file__).resolve().parent.parent / 'assets' / 'ur3e' / 'configuration_1.xml')
+# robot = Robot(ROBOT_HOST, ROBOT_PORT, robot_config_filename)
 
-robot.connect()
-robot.setup()
+# robot.connect()
+# robot.setup()
 
-POSE_STANDAR = np.array([-0.128, -0.298, 0.180, 0.025, 0, 2.879])
-# POSE_DISPLAY = np.array([-0.125, -0.166, 0.270, 1.454, -1.401, -4.095])
-robot.move(RobotCte.POSE_STANDAR)
+# POSE_STANDAR = np.array([-0.128, -0.298, 0.180, 0.025, 0, 2.879])
+# # POSE_DISPLAY = np.array([-0.125, -0.166, 0.270, 1.454, -1.401, -4.095])
+# robot.move(RobotCte.POSE_STANDAR)
 
-robot.move(RobotCte.POSE_PUZZLE_SQUARE_15)
+# robot.move(RobotCte.POSE_PUZZLE_SQUARE_15)
 
 
 

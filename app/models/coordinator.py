@@ -17,7 +17,7 @@ from models.vectors import Vector2D, Vector6D
 from models.constants import RobotCte, ColorBGR
 from models.piece import BoundingBox, PieceA, PieceN, PieceN2, Piece
 from models.robot import Robot
-from models.detection import Apriltag, YoloObjectDetection, YoloPoseEstimation
+from models.detection import DetectorInterface, Apriltag, YoloObjectDetection, YoloPoseEstimation
 
 # -------------------- VARIABLES ----------------------------------------------------------------------------------------- #
 
@@ -116,9 +116,9 @@ class Coordinator():
     @staticmethod
     def apriltag_detections(frame, camera: Camera, apriltag: Apriltag, paint_frame: bool = True) -> dict:
         # 1. Camera params
-        camera_params = [camera.f.x, camera.f.y, camera.c.x, camera.c.y]
+        # camera_params = [camera.f.x, camera.f.y, camera.c.x, camera.c.y]
         # 2. deteccion
-        apriltag.detect(frame, camera_params)
+        apriltag.detect(frame)
         # 3. verificacion y paint
         if apriltag.pieces:
             if paint_frame:
@@ -154,8 +154,22 @@ class Coordinator():
         else:
             flag = False
         return {'flag': flag, 'pieces': nn_model.pieces}
-   
-    # Detecciones Totales
+    
+    # Detecciones con polimorfismo ------- SIN APLICAR
+    @staticmethod
+    def general_detections(frame: np.ndarray, camera: Camera, detector: DetectorInterface, paint_frame: bool = True) -> dict:
+        # 1. deteccion
+        detector.detect(frame)
+        # 2. verificacion y paint
+        if detector.pieces:
+            if paint_frame:
+                detector.paint(frame)
+            flag = True
+        else:
+            flag = False
+        return {'flag': flag, 'pieces': detector.pieces}
+
+    # Detecciones Totales 
     @staticmethod
     def detections(frame: np.ndarray, camera: Camera, nn_model: YoloObjectDetection|YoloPoseEstimation, apriltag: Apriltag|None = None, combine_pieces: bool = True, paint_frame: bool = True) -> dict:
         at_kwargs = {'pieces': None}

@@ -9,6 +9,7 @@
 
 import cv2
 import numpy as np
+from abc import ABC, abstractmethod
 # apriltags
 import pupil_apriltags
 # neuronal network
@@ -25,23 +26,45 @@ from models.robot import Robot
 
 # -------------------- FUNCTIONS ----------------------------------------------------------------------------------------- #
 
+class DetectorInterface(ABC):
+    @abstractmethod
+    def detect(self, frame: np.ndarray) -> None: ...
+
+
+    @abstractmethod
+    def paint(self, frame: np.ndarray) -> None: ...
+
+    @property
+    @abstractmethod
+    def detector(self): ...
+
+    @property
+    @abstractmethod
+    def detections(self): ...
+
+    @property
+    @abstractmethod
+    def pieces(self): ...
+
+
 # -------------------- APRILTAG ------------------------------------------------------------------------------------------ #
 
 class ApriltagConfig():
     """Configuracion del Apriltag"""
     # Constructor
-    def __init__(self, family: str, size: float) -> None:
+    def __init__(self, family: str, size: float, camera_params: list) -> None:
         self.family = family  # Familia del AprilTag
         self.size = size  # Tamaño del AprilTag
+        self.camera_params = camera_params
         return
 
         
-class Apriltag(ApriltagConfig):
+class Apriltag(ApriltagConfig, DetectorInterface):
     """Apriltag completo. configuracion mas funcionalidades
     formado por piezas de tipo A"""
     # Contructor
-    def __init__(self, family: str, size: float) -> None:
-        super().__init__(family, size)
+    def __init__(self, family: str, size: float, camera_params: list) -> None:
+        super().__init__(family, size, camera_params)
 
         self.detector = pupil_apriltags.Detector(families=family)
 
@@ -50,11 +73,11 @@ class Apriltag(ApriltagConfig):
         return
 
     # Deteccion
-    def detect(self, frame: np.ndarray, camera_params: list):
+    def detect(self, frame: np.ndarray):
         # 1. frame to grayscale
         frame_grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         # 2. detections
-        self.detections = self.detector.detect(frame_grayscale, True, camera_params=camera_params, tag_size=self.size)
+        self.detections = self.detector.detect(frame_grayscale, True, camera_params=self.camera_params, tag_size=self.size)
         # 3. instancias de piezas
         self.pieces = []
         for detection in self.detections:
@@ -86,6 +109,17 @@ class Apriltag(ApriltagConfig):
             piece.paint(frame)
         return
 
+    @property
+    def detector(self):
+        return self.detector
+
+    @property
+    def detections(self):
+        return self.detections
+
+    @property
+    def pieces(self):
+        return self.pieces
 
 # -------------------- NEURONAL NETWORKS --------------------------------------------------------------------------------- #
 
@@ -98,8 +132,8 @@ class YoloBaseModel():
 
 # -------------------- OBJECT DETECTION ---------------------------------------------------------------------------------- #
 
-class YoloObjectDetection(YoloBaseModel):
-    """Deteccion de objetos en una imagen con YOLOv8 OBJECT DETECTION
+class YoloObjectDetection(YoloBaseModel, DetectorInterface):
+    """Deteccion de objetos en una imagen con YOLOv8 Object-detection
     formado de piezas de tipoN"""
     # Constructor
     def __init__(self, filename: str) -> None:
@@ -144,10 +178,24 @@ class YoloObjectDetection(YoloBaseModel):
                 piece.paint(frame)
         return 
 
+    @property
+    def detector(self):
+        return self.model
+
+    @property
+    def detections(self):
+        return self.detections
+
+    @property
+    def pieces(self):
+        return self.pieces
+    
 
 # -------------------- POSE ESTIMATION ----------------------------------------------------------------------------------- #
 
-class YoloPoseEstimation(YoloBaseModel):
+class YoloPoseEstimation(YoloBaseModel, DetectorInterface):
+    """Deteccion de objetos en una imagen con YOLOv8 Pose-estimation
+    formado de piezas de tipoN2"""
     # Constructor
     def __init__(self, filename: str) -> None:
         super().__init__(filename)
@@ -186,5 +234,17 @@ class YoloPoseEstimation(YoloBaseModel):
                 piece.paint(frame)
         return 
 
+    @property
+    def detector(self):
+        return self.model
+
+    @property
+    def detections(self):
+        return self.detections
+
+    @property
+    def pieces(self):
+        return self.pieces
+    
 
 # -------------------- TRAINNING ----------------------------------------------------------------------------------------- #
