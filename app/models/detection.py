@@ -34,17 +34,10 @@ class DetectorInterface(ABC):
     @abstractmethod
     def paint(self, frame: np.ndarray) -> None: ...
 
-    @property
-    @abstractmethod
-    def detector(self): ...
 
-    @property
-    @abstractmethod
-    def detections(self): ...
-
-    @property
-    @abstractmethod
-    def pieces(self): ...
+    # @property
+    # @abstractmethod
+    # def pieces(self): ...
 
 
 # -------------------- APRILTAG ------------------------------------------------------------------------------------------ #
@@ -109,17 +102,10 @@ class Apriltag(ApriltagConfig, DetectorInterface):
             piece.paint(frame)
         return
 
-    @property
-    def detector(self):
-        return self.detector
 
-    @property
-    def detections(self):
-        return self.detections
-
-    @property
-    def pieces(self):
-        return self.pieces
+    # @property
+    # def get_pieces(self):
+    #     return self.pieces
 
 # -------------------- NEURONAL NETWORKS --------------------------------------------------------------------------------- #
 
@@ -178,17 +164,10 @@ class YoloObjectDetection(YoloBaseModel, DetectorInterface):
                 piece.paint(frame)
         return 
 
-    @property
-    def detector(self):
-        return self.model
 
-    @property
-    def detections(self):
-        return self.detections
-
-    @property
-    def pieces(self):
-        return self.pieces
+    # @property
+    # def pieces(self):
+    #     return self.pieces
     
 
 # -------------------- POSE ESTIMATION ----------------------------------------------------------------------------------- #
@@ -234,17 +213,10 @@ class YoloPoseEstimation(YoloBaseModel, DetectorInterface):
                 piece.paint(frame)
         return 
 
-    @property
-    def detector(self):
-        return self.model
 
-    @property
-    def detections(self):
-        return self.detections
-
-    @property
-    def pieces(self):
-        return self.pieces
+    # @property
+    # def pieces(self):
+    #     return self.pieces
     
 
 # -------------------- TRAINNING ----------------------------------------------------------------------------------------- #

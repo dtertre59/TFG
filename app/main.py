@@ -44,16 +44,17 @@ def main_camera():
     camera.init_rgb()
     # camera.init_rgb_and_pointcloud()
     
-    camera.run_with_options()
+    camera.run_with_options(crop_size=640)
     # camera.run_with_options(name='irregular', crop_size=640)
     # camera.run_with_pointcloud(show3d=False)
 
 # TEST Camera and Detections
 def main_camera_detect():
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563)
-    apriltag = Apriltag(family='tag36h11', size=0.015)
+    camera_params = [camera.f.x, camera.f.y, camera.c.x, camera.c.y]
+    apriltag = Apriltag(family='tag36h11', size=0.015, camera_params=camera_params)
     nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_od_v1.pt'))
-    nn_pose_model = YoloPoseEstimation(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8s_pose_irr_v2.pt'))
+    # nn_pose_model = YoloPoseEstimation(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8s_pose_irr_v2.pt'))
     
     
     camera.init_rgb()
@@ -120,8 +121,16 @@ def main_camera_detect():
         print(circle)
         circle.calculate_center_and_corners(frame)
         circle.paint(frame)
+    
 
 
+    if hexagon:
+        print()
+        print(hexagon)
+        hexagon.calculate_center_and_corners(frame)
+        hexagon.paint(frame)
+    
+    
 
     cv2.imshow('a', cv2.resize(frame, (1280, 720)))
     cv2.waitKey(0)
@@ -335,8 +344,8 @@ def main3():
 if __name__ == '__main__':
     # correccion_error_nube()
     # main_camera()
-    # main_camera_detect()
+    main_camera_detect()
     # main_camera_calibrate_pointcloud()
-    main()
+    # main()
     # main2()
     # main3()

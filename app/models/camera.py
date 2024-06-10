@@ -295,7 +295,7 @@ class Camera(CameraConfig):
                             frame_resized = cv2.resize(modified_frame, (1280, 720))
                             cv2.imshow("OAK-D-Lite", frame_resized)
 
-                            if flag and ((time.time()-start_time)>10): # ponemos 8 sergundos de enfoque
+                            if flag and ((time.time()-start_time)>18): # ponemos 8 sergundos de enfoque
                                 results_kwargs['frame'] = frame
                                 cv2.destroyAllWindows()
                                 return results_kwargs

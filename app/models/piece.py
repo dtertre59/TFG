@@ -77,6 +77,10 @@ class PieceBase():
     - Color: {self.color}"""
         return text
 
+    # paint
+    def paint(self, frame: np.ndarray) -> None:
+        cv2.putText(frame, self.name, (10,10), cv2.FONT_HERSHEY_SIMPLEX, 1, self.color, 2)
+        return 
 
 # -------------------- PIECE A - APRILTAG -------------------------------------------------------------------------------- #
 
@@ -162,8 +166,8 @@ class PieceN2(PieceBase):
         self.bbox = bbox
         self.keypoints = keypoints
 
-        self.center = None
-        self.corners = None
+        # self.center = None
+        # self.corners = None
         return
 
     # Str
@@ -413,7 +417,7 @@ class Piece(PieceBase):
         return True
 
     # Calculate pose modo 1
-    def calculatePose(self, ref: PieceA, t_ref_to_robot: np.ndarray = np.eye(4), verbose: bool = True, matplot_representation: bool = False) -> None:
+    def calculate_pose_m1(self, ref: PieceA, t_ref_to_robot: np.ndarray = np.eye(4), verbose: bool = True, matplot_representation: bool = False) -> None:
         # print(t_ref_to_robot)
         t_ref_to_cam = ref.T
         t_piece_to_cam = self.T
@@ -481,7 +485,7 @@ class Piece(PieceBase):
         return 
     
     # Calculate pose modo 2
-    def calculatePose_v2(self, pointcloud, ref: PieceA, t_ref_to_robot: np.ndarray = np.eye(4),verbose: bool = True, matplot_representation: bool = False):
+    def calculate_pose_m2(self, pointcloud, ref: PieceA, t_ref_to_robot: np.ndarray = np.eye(4),verbose: bool = True, matplot_representation: bool = False):
         if not pointcloud:
             print('Not pointcloud')
             return 
@@ -593,7 +597,7 @@ class Piece(PieceBase):
         return
 
     # Calculate pose modo 3
-    def calculatePose_v3(self, pointcloud, ref: PieceA, t_ref_to_robot: np.ndarray = np.eye(4), resolution: Vector2D = Vector2D(1920, 1080),verbose: bool = True, matplot_representation: bool = False):
+    def calculate_pose_m3(self, pointcloud, ref: PieceA, t_ref_to_robot: np.ndarray = np.eye(4), resolution: Vector2D = Vector2D(1920, 1080),verbose: bool = True, matplot_representation: bool = False):
         if not pointcloud:
             print('Not pointcloud')
             return 

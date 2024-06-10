@@ -298,7 +298,7 @@ class Coordinator():
         # 3.1 Se elige la primera pieza para continuar el proceso
         piece = pieces[0]
         # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
-        piece.calculatePose(ref, RobotCte.T_REF_TO_ROBOT, verbose=True, matplot_representation=False)
+        piece.calculate_pose_m1(ref, RobotCte.T_REF_TO_ROBOT, verbose=True, matplot_representation=False)
         
         # 4. movimiento combinado: coger la pieza y dejarla en su respectivo hoyo (posicion conocida)
         try:
@@ -349,7 +349,7 @@ class Coordinator():
         # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
         # 3.2 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot
         print(piece)
-        piece.calculatePose_v2(pointcloud, ref,t_ref_to_robot=RobotCte.T_REF_TO_ROBOT,  matplot_representation=False)
+        piece.calculate_pose_m2(pointcloud, ref,t_ref_to_robot=RobotCte.T_REF_TO_ROBOT,  matplot_representation=False)
 
         # 4. movimiento combinado: coger la pieza y dejarla en su respectivo hoyo (posicion conocida)
         try:
@@ -407,7 +407,7 @@ class Coordinator():
         cv2.destroyAllWindows()
 
         # 3.3 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot teniendo el centro en la imagen
-        piece.calculatePose_v3(pointcloud, ref,t_ref_to_robot=RobotCte.T_REF_TO_ROBOT,  matplot_representation=False)
+        piece.calculate_pose_m3(pointcloud, ref,t_ref_to_robot=RobotCte.T_REF_TO_ROBOT,  matplot_representation=False)
         print(piece)
         # 4. movimiento combinado: coger la pieza y dejarla en su respectivo hoyo (posicion conocida)
         try:
