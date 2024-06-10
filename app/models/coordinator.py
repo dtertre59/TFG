@@ -221,7 +221,7 @@ class Coordinator():
         
         # 1. posicion segura
         robot.move(RobotCte.POSE_STANDAR)
-        robot.move(RobotCte.POSE_SAFE_APRILTAG_REF)
+        # robot.move(RobotCte.POSE_SAFE_APRILTAG_REF)
 
         secure_pose = pose.copy()
         secure_pose[2] = RobotCte.SAFE_Z
@@ -290,9 +290,9 @@ class Coordinator():
         for piece in pieces:
             piece.paint(frame)
 
-        cv2.imshow('Detecciones',cv2.resize(frame, (1280, 720)))
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.imshow('Detecciones',cv2.resize(frame, (1280, 720)))
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
         # 3. calcular pose
         # 3.1 Se elige la primera pieza para continuar el proceso

@@ -223,7 +223,7 @@ def main():
     apriltag = Apriltag(family='tag36h11', size=0.015, camera_params=camera_params)
     nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_od_v1.pt'))
     # Tolerancia
-    tolerance = 15
+    tolerance = 5
 
     # 2. Init
     print('Inicio: ')
@@ -344,8 +344,8 @@ def main3():
 if __name__ == '__main__':
     # correccion_error_nube()
     # main_camera()
-    main_camera_detect()
+    # main_camera_detect()
     # main_camera_calibrate_pointcloud()
-    # main()
+    main()
     # main2()
     # main3()
