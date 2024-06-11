@@ -612,7 +612,7 @@ class Piece(PieceBase):
         pref_good = hf.point_tansf(t_ref_to_cam, np.array([0 ,0, 0])) # en m
         pref_good *= 1000 # se pasa a mm
 
-        ppiece_good_mm = hf.point_tansf(T=CameraCte.T_pointcloud_to_good_pointcloud_2, point=ppiece_cloud)
+        ppiece_good_mm = hf.point_tansf(T=CameraCte.T_pointcloud_to_good_pointcloud_4, point=ppiece_cloud)
         ppiece_good_m = ppiece_good_mm/1000
 
         # PASO AL SISTEMA DE REF DEL ROBOT ----------------------------------------------------------------
@@ -624,6 +624,8 @@ class Piece(PieceBase):
             ref_x = ref_x.get_array()
             piece_x = self.corners[1] - self.corners[0]
             angle = hf.angle_between_vectors(ref_x, piece_x)
+            #  AJUSTE MANUAL:
+            angle = angle -12
         print('Angulo: ', angle)
         
         rot_piece_to_ref = hf.rotation_matrix_z(angle)

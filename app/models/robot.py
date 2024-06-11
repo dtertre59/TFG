@@ -149,6 +149,17 @@ class Robot():
 
         return
         
+    # Leer registro TCP pose
+    def read_tcp_pose(self) -> np.ndarray:
+        state = self.con.receive()
+        if state is None:
+            raise RobotException('No se recibe el estado')
+        tcp_pose = state.actual_TCP_pose
+
+        return tcp_pose
+
+
+
     # Movimiento
     def move(self, pose):
         try:
@@ -245,9 +256,12 @@ class Robot():
 # robot.connect()
 # robot.setup()
 
+# a =robot.read()
+# print(a)
+
 # POSE_STANDAR = np.array([-0.128, -0.298, 0.180, 0.025, 0, 2.879])
 # # POSE_DISPLAY = np.array([-0.125, -0.166, 0.270, 1.454, -1.401, -4.095])
-# robot.move(RobotCte.POSE_STANDAR)
+# robot.move(RobotCte.POSE_DISPLAY_2)
 
 # robot.move(RobotCte.POSE_PUZZLE_SQUARE_15)
 

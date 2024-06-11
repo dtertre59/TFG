@@ -368,7 +368,7 @@ class Coordinator():
         # 1. Movemos robot a la posicion de visualizacion de las piezas
         try:
             print('Movimientos iniciales:')
-            robot.move(RobotCte.POSE_STANDAR)
+            robot.gripper_control(True)
             robot.move(RobotCte.POSE_DISPLAY_2)
         except Exception as e:
             print(str(e))

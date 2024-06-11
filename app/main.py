@@ -148,7 +148,8 @@ def main_camera_detect():
 def main_camera_calibrate_pointcloud():
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563)
     
-    apriltag = Apriltag(family='tag36h11', size=0.015)
+    camera_params = [camera.f.x, camera.f.y, camera.c.x, camera.c.y]
+    apriltag = Apriltag(family='tag36h11', size=0.015, camera_params=camera_params)
 
     camera.init_rgb_and_pointcloud()
 
@@ -175,7 +176,7 @@ def main_camera_calibrate_pointcloud():
     ps_april = np.empty((0, 3))
     
     for ref in refs:
-        ps_pointcloud = np.vstack((ps_pointcloud, hf.pixel_to_point3d(pointcloud=pointcloud, resolution=np.array([1920,1080]), pixel=ref.center.get_array())))
+        ps_pointcloud = np.vstack((ps_pointcloud, hf.pixel_to_point3d(pointcloud=pointcloud, resolution=np.array([1920,1080]), pixel=ref.center.get_array_int())))
         ps_april = np.vstack((ps_april, transf_to_cloud(ref)))
 
     cubesm = []
@@ -309,7 +310,8 @@ def main3():
     # camera = Camera(width=3840, height=2160, fx= 2996.7346441158315, fy=2994.755126405525) 
     camera = Camera(width=1920, height=1080, fx= 1498.367322, fy=1497.377563) 
     # camera = Camera(width=1280, height=720, fx= 998.911548, fy=998.2517088)
-    apriltag = Apriltag(family='tag36h11', size=0.015)
+    camera_params = [camera.f.x, camera.f.y, camera.c.x, camera.c.y]
+    apriltag = Apriltag(family='tag36h11', size=0.015, camera_params=camera_params)
     nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_od_v1.pt'))
 
     # 2. Init
@@ -346,6 +348,6 @@ if __name__ == '__main__':
     # main_camera()
     # main_camera_detect()
     # main_camera_calibrate_pointcloud()
-    main()
+    # main()
     # main2()
-    # main3()
+    main3()

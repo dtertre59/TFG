@@ -97,6 +97,27 @@ def rotation_transf(T: np.ndarray) -> np.ndarray:
     rz = math.atan2(r21, r11)
 
     return np.array([rx, ry, rz])
+
+def rotation_matrix_from_euler(angles: np.ndarray) -> np.ndarray:
+    rx, ry, rz = angles
+
+    # Matrices de rotación individuales
+    R_x = np.array([[1, 0, 0],
+                    [0, math.cos(rx), -math.sin(rx)],
+                    [0, math.sin(rx), math.cos(rx)]])
+
+    R_y = np.array([[math.cos(ry), 0, math.sin(ry)],
+                    [0, 1, 0],
+                    [-math.sin(ry), 0, math.cos(ry)]])
+
+    R_z = np.array([[math.cos(rz), -math.sin(rz), 0],
+                    [math.sin(rz), math.cos(rz), 0],
+                    [0, 0, 1]])
+
+    # Multiplicación de matrices de rotación
+    R = np.dot(R_z, np.dot(R_y, R_x))
+
+    return R
     
 # POSE reference system transformation
 def pose_transf(T: np.ndarray, point: np.ndarray) -> np.ndarray:
@@ -280,18 +301,30 @@ def process_frame_wb(frame: np.ndarray):
 
 
 # deteccion de corners por el metodo de harris
-def detect_corners_harris(frame: np.ndarray, block_size: float = 5, ksize: float = 5, k: float = 0.01, paint_frame: bool = False) -> np.ndarray:
+def detect_corners_harris(frame: np.ndarray, block_size: float = 8, ksize: float = 3, k: float = 0.05, paint_frame: bool = False) -> np.ndarray:
     '''
     block_size = 5  # Tamaño del vecindario
     ksize = 5   # Tamaño del kernel de Sobel para derivadas
     k = 0.01  # Parámetro libre del detector de Harris
 '''
+    # frame = cv2.GaussianBlur(frame, (5, 5), 0)
+    frame = cv2.bilateralFilter(frame, 9, 75, 75)
     # 1. Aplicar el detector de esquinas de Harris; obtenemos matriz de respuesta de esquina
     dst = cv2.cornerHarris(frame, block_size,ksize, k)
     # 2. Dilatar el resultado para marcar mejor las esquinas (opcional)
     dst = cv2.dilate(dst,None)
     # 3. establecemos umbral y filtramos
     umbral = 0.01*dst.max()
+    # 6. Crear una copia del frame para dibujar las esquinas detectadas
+    frameee = frame.copy()
+    # 7. Crear una máscara donde las esquinas sean verdaderas
+    corners = dst > umbral
+    
+    # 8. Marcar las esquinas detectadas en la copia del frame
+    frameee[corners] = 1  # Marcar en rojo las esquinas
+    cv2.imshow('Imagen con filtro', frameee)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
     # posicion de los pixel corners hay muchos. hay que agruparlos en zonas
     corners_position = np.argwhere(dst > umbral)
     corners = points_agroup(corners_position)
