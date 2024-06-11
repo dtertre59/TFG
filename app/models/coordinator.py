@@ -363,7 +363,7 @@ class Coordinator():
         return True
 
     @staticmethod
-    def the_whole_process_3(robot: Robot, camera: Camera, apriltag: Apriltag, nn_od_model: YoloObjectDetection) -> None:
+    def the_whole_process_3(robot: Robot, camera: Camera, apriltag: Apriltag, nn_od_model: YoloObjectDetection, tolerance: int = 15) -> None:
         print()
         # 1. Movemos robot a la posicion de visualizacion de las piezas
         try:
@@ -396,15 +396,11 @@ class Coordinator():
         # 3.2 Calcular centro con Vision artificial clasica -------------------------------------------
         piece.calculate_center_and_corners(frame)
         piece.paint(frame)
-        # añadir criculo estrella e irregular
-        # pintar mejor
-        # revisar funciones de corners y get arrays Vectors, ect
-        # ----------------------------------------------------------------------------------------------
 
-        cv2.imshow('Detecciones',cv2.resize(frame, (1280, 720)))
-        # cv2.imshow('Detecciones', frame)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # ----------------------------------------------------------------------------------------------
+        # cv2.imshow('Detecciones',cv2.resize(frame, (1280, 720)))
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
         # 3.3 Calculo de la pose de la pieza respecto al sistema de referencia de la base del robot teniendo el centro en la imagen
         piece.calculate_pose_m3(pointcloud, ref,t_ref_to_robot=RobotCte.T_REF_TO_ROBOT,  matplot_representation=False)
@@ -413,7 +409,7 @@ class Coordinator():
         try:
             print()
             print('Inicio de movimientos combinados:')
-            Coordinator.combinated_movement(robot, piece)
+            Coordinator.combinated_movement(robot, piece, tolerance=tolerance)
         except Exception as e:
             print(str(e))
             return False

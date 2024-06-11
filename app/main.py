@@ -313,6 +313,8 @@ def main3():
     camera_params = [camera.f.x, camera.f.y, camera.c.x, camera.c.y]
     apriltag = Apriltag(family='tag36h11', size=0.015, camera_params=camera_params)
     nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_od_v1.pt'))
+    # Tolerancia
+    tolerance = 5
 
     # 2. Init
     print('Inicio: ')
@@ -332,7 +334,7 @@ def main3():
     
     # 3. Proceso completo de una pieza:
     while flag:
-        flag = Coordinator.the_whole_process_3(robot, camera, apriltag, nn_od_model)
+        flag = Coordinator.the_whole_process_3(robot, camera, apriltag, nn_od_model, tolerance=tolerance)
         if not flag:
             break
 

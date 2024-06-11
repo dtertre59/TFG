@@ -321,10 +321,10 @@ def detect_corners_harris(frame: np.ndarray, block_size: float = 8, ksize: float
     corners = dst > umbral
     
     # 8. Marcar las esquinas detectadas en la copia del frame
-    frameee[corners] = 1  # Marcar en rojo las esquinas
-    cv2.imshow('Imagen con filtro', frameee)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # frameee[corners] = 1  # Marcar en rojo las esquinas
+    # cv2.imshow('Imagen con filtro', frameee)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
     # posicion de los pixel corners hay muchos. hay que agruparlos en zonas
     corners_position = np.argwhere(dst > umbral)
     corners = points_agroup(corners_position)
@@ -342,15 +342,15 @@ def detect_ellipse(frame: np.ndarray) -> np.ndarray:
     # 1. Filtros. ajustar parámetros
     # Filtro de mediana para reducir el ruido
     blur = cv2.medianBlur(frame, 11)
-    cv2.imshow('Imagen con filtro', blur)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.imshow('Imagen con filtro', blur)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
     # Filtro; 
     edge = cv2.Canny(blur,80,200)
 
-    cv2.imshow('Imagen con filtro', edge)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.imshow('Imagen con filtro', edge)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
   
 
     # Encontrar contornos
@@ -371,9 +371,9 @@ def detect_ellipse(frame: np.ndarray) -> np.ndarray:
     if len(highest_contour) >= 5:  # cv2.fitEllipse requiere al menos 5 puntos
         (xc, yc), (a, b), theta = cv2.fitEllipse(highest_contour)
         cv2.ellipse(frame2, ((xc, yc), (a, b), theta), (0, 255, 0), 2)
-    cv2.imshow('Imagen con filtro', frame2)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.imshow('Imagen con filtro', frame2)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
   
     return (xc, yc), (a, b), theta
 

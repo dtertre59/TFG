@@ -647,15 +647,15 @@ class Piece(PieceBase):
 
         # REPRESENTACION CON OPEN3D--------------------------------------------------------------------------
 
-        cube = hf.create_cube(point=pref_cloud, size = [5,5,5], color = np.array([0,0,1]))
-        cube2 = hf.create_cube(point=pref_good, size = [5,5,5], color = np.array([0,1,0]))
+        # cube = hf.create_cube(point=pref_cloud, size = [5,5,5], color = np.array([0,0,1]))
+        # cube2 = hf.create_cube(point=pref_good, size = [5,5,5], color = np.array([0,1,0]))
 
-        cube11 = hf.create_cube(point=ppiece_cloud, size = [5,5,5], color = np.array([0,0,1]))
-        cube22 = hf.create_cube(point=ppiece_good_mm, size = [5,5,5], color = np.array([0,1,0]))
+        # cube11 = hf.create_cube(point=ppiece_cloud, size = [5,5,5], color = np.array([0,0,1]))
+        # cube22 = hf.create_cube(point=ppiece_good_mm, size = [5,5,5], color = np.array([0,1,0]))
 
-        axes = hf.create_axes_with_lineSet()
+        # axes = hf.create_axes_with_lineSet()
 
-        hf.o3d_visualization([pointcloud, cube, cube2,cube11, cube22, axes])
+        # hf.o3d_visualization([pointcloud, cube, cube2,cube11, cube22, axes])
 
         # --------------------------------------------------------------------------------------------------
 
