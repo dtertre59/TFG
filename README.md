@@ -23,9 +23,9 @@ La integración del sistema incluye la coordinación entre el robot, la cámara 
 
 ## Objetivos
 
-•	Implementar un sistema de comunicación y control de movimiento del brazo robótico de Universal Robots desde Python y Linux. 
-•	Implementar un sistema de visión artificial que permita detectar, clasificar y situar en el espacio tridimensional una serie de objetos conocidos con distinta geometría. 
-•	Implementar un método que coja los objetos que se encuentran en una determinada zona del espacio de trabajo y los coloque en otro punto del espacio de trabajo preestablecido. 
+•	Implementar un sistema de comunicación y control de movimiento del brazo robótico de Universal Robots desde Python y Linux.  
+•	Implementar un sistema de visión artificial que permita detectar, clasificar y situar en el espacio tridimensional una serie de objetos conocidos con distinta geometría.  
+•	Implementar un método que coja los objetos que se encuentran en una determinada zona del espacio de trabajo y los coloque en otro punto del espacio de trabajo preestablecido.  
 
 
 ## Divisiones de Contenido
