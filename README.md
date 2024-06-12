@@ -8,6 +8,17 @@ David Tertre Boyé
 
 Trabajo de Fin de grado en Ingeniería Electrónica Industrial y Automática
 
+Desarrollo de un sistema de clasificación y colocación de objetos con un brazo robótico colaborativo
+
+# Resumen
+
+El presente proyecto de final de carrera realiza un sistema integral de clasificación y colocación de objetos con el brazo robótico UR3e. Se han desarrollado dos programas que actúan simultáneamente para cumplir los objetivos establecidos. El primero se ejecuta en el robot, programa de Universal Robots, y el segundo, programa en Python, en el ordenador con sistema operativo Linux.  
+El sistema resuelve el problema varias formas diferentes de formas diferentes, haciendo uso de métodos avanzados de procesamiento de imágenes, visión artificial y técnicas de aprendizaje automático para identificar, clasificar y posicionar los objetos presentes en el entorno. Estos métodos incluyen la detección mediante apriltags, el entrenamiento y uso de la red neuronal convolucional YOLOv8, y técnicas clásicas de visión artificial como el filtrado de imágenes y la detección de contornos y esquinas.  
+Una vez detectados y clasificados, el brazo robótico ejecuta operaciones de pick and place, recogiendo los objetos y ubicándolos en sus posiciones designadas.  
+El sistema ha sido diseñado para funcionar en un entorno controlado, optimizando la iluminación y el contraste entre los objetos y el fondo para mejorar la precisión de los métodos de detección. Además, se ha implementado un manejo robusto de excepciones para garantizar la estabilidad del sistema en caso de desconexiones o mal funcionamiento de los componentes.  
+La integración del sistema incluye la coordinación entre el robot, la cámara y los algoritmos de detección, permitiendo una operación fluida y eficiente.
+
+
 ## Objetivos
 
 Control de un brazo robotico utilizando registros más la implementación de una cámara de apoyo al robot en la tarea destinada.
