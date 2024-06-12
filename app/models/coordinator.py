@@ -199,7 +199,7 @@ class Coordinator():
     """ ----- MOVIMIENTOS ----- """
 
     @staticmethod
-    def combinated_movement(robot: Robot, piece: Piece, tolerance: int = 15) -> None:
+    def combined_movement(robot: Robot, piece: Piece, tolerance: int = 15) -> None:
 
         # 1. posicion de la pieza
         if isinstance(piece.pose, Vector6D):
@@ -304,7 +304,7 @@ class Coordinator():
         try:
             print()
             print('Inicio de movimientos combinados:')
-            Coordinator.combinated_movement(robot, piece, tolerance=tolerance)
+            Coordinator.combined_movement(robot, piece, tolerance=tolerance)
         except Exception as e:
             print(str(e))
             return False
@@ -355,7 +355,7 @@ class Coordinator():
         try:
             print()
             print('Inicio de movimientos combinados:')
-            Coordinator.combinated_movement(robot, piece)
+            Coordinator.combined_movement(robot, piece)
         except Exception as e:
             print(str(e))
             return False
@@ -409,7 +409,7 @@ class Coordinator():
         try:
             print()
             print('Inicio de movimientos combinados:')
-            Coordinator.combinated_movement(robot, piece, tolerance=tolerance)
+            Coordinator.combined_movement(robot, piece, tolerance=tolerance)
         except Exception as e:
             print(str(e))
             return False
