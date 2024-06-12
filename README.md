@@ -24,46 +24,52 @@ La integración del sistema incluye la coordinación entre el robot, la cámara 
 ## Objetivos
 
 - Implementar un sistema de comunicación y control de movimiento del brazo robótico de Universal Robots desde Python y Linux.
-
 - Implementar un sistema de visión artificial que permita detectar, clasificar y situar en el espacio tridimensional una serie de objetos conocidos con distinta geometría.
-
 - Implementar un método que coja los objetos que se encuentran en una determinada zona del espacio de trabajo y los coloque en otro punto del espacio de trabajo preestablecido.  
 
 
-## Divisiones de Contenido
+## Componentes
 
-1. Control del brazo robótico Ur3e.
+- UR3e, cobot fabricado por Universal Robots.
+- Cámara Luxonis OAK-D-Lite.
+- Ordenador con sistema operativo Linux o Windows.
 
-2. Control de la camara luxomis OAK-D litte.
 
-3. Implementación de un modelo de Red neuronal generativa para la detección de objetos con la camara.
+## Versiones
 
-4. Unión
+- Python==3.11
+- Pip==24.0
+- Biliotecas del proyecto en el archivo 'requirements txt'
 
-## Herramientas de trabajo
+## Bibliotecas más importantes
 
-1. Editor de código: Visual Studio Code + python extension
-2. Control de versiones: github
-3. Sistema Operativo: Ubuntu version
+- Comunicacion con el robot: RTDE
+- COmunicacion con la cámara: Depthai
+- Red neuronal: ultralytics YOLO
+- Manejo de imagenes: opencv
+- Manejo de nubes de puntos: open3d
+- Manejo de numeros: numpy
 
-## Configuración inicial
+## Estructura del repositorio
 
-1. python 3.11
-2. pip 24.0
-3. librerias en requirements txt
-4. entorno virtual venv
+En la carpeta app se encuentra el main y todas las dependencias y ficheros necesarios para que funcione el sistema.
 
-## Comandos iniciales python
+En la carpeta external_assets se enncuentra el modelo 3d del soporte de la cámara fabricado, el programa URP e instalación del robot, y los resultados obtenidos al probar los sistemas desarollados.
 
-1. Generación del entorno virtual: python -m venv venv
-2. Activacion del entorno virtual: 
-    1) Windows: venv\Scripts\activate
-    2) Linux: source venv/bin/activate
-3) Archivo con info de las librerias del proyecto: pip freeze > requirements.txt
+En la carpeta practice se encuentran todos los programas de pruebas, de testeo de librerias, programas modelos, etc.
+
+memoria del TFG en formato word y pdf, 
+
+
+
+
+
+
+
 
 ## Repositorios de interés
 
-1. Libreria conexion con brazo robótico: https://github.com/UniversalRobots/RTDE_Python_Client_Library.git
+1. Libreria de comunicacion con brazo robótico: https://github.com/UniversalRobots/RTDE_Python_Client_Library.git
 2. Camara:
     https://github.com/luxonis/depthai.git
     https://github.com/luxonis/depthai-python.git
@@ -74,32 +80,4 @@ La integración del sistema incluye la coordinación entre el robot, la cámara 
     
 4. procesamientode imagenes, show, modelos ai (sample/dnn)
 	https://github.com/opencv/opencv.git
-
-
-## OpenVINO toolkit
-
-OpenVINO™ is an open-source toolkit for optimizing and deploying AI inference.
-
-Open Model Zoo repository: This repository includes optimized deep learning models and a set of demos to expedite development of high-performance deep learning inference applications. Use these free pre-trained models instead of training your own models to speed-up the development and production deployment process.
-
-## Luxonis
-
-High‑resolution cameras with depth vision and on‑chip machine learning.
-
-https://docs.luxonis.com/projects/sdk/en/latest/features/ai_models/
-
-## Redes Neuronales
-YOLO_v8 de ukltralitics la que he entrenado con mis propo¡ias fotos
-he utilizado roboflow para el etiquetado y exportacion de imagenes
-Google colab para ejecutar el script de entrenado de la red
-
-
-## apriltag 
-
-la libreria apriltag no puede instalarse en windows
-
-
-# ---------- # 10
-# -------------------- # 20
-# ------------------------------------------------------------------------------------------------------------------------ # 120
 
