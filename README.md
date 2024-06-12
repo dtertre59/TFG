@@ -9,7 +9,7 @@
 David Tertre Boyé
 
 
-# Resumen
+## Resumen
 
 El presente proyecto de final de carrera realiza un sistema integral de clasificación y colocación de objetos con el brazo robótico UR3e. Se han desarrollado dos programas que actúan simultáneamente para cumplir los objetivos establecidos. El primero se ejecuta en el robot, programa de Universal Robots, y el segundo, programa en Python, en el ordenador con sistema operativo Linux.  
 
@@ -23,7 +23,10 @@ La integración del sistema incluye la coordinación entre el robot, la cámara 
 
 ## Objetivos
 
-Control de un brazo robotico utilizando registros más la implementación de una cámara de apoyo al robot en la tarea destinada.
+•	Implementar un sistema de comunicación y control de movimiento del brazo robótico de Universal Robots desde Python y Linux.
+•	Implementar un sistema de visión artificial que permita detectar, clasificar y situar en el espacio tridimensional una serie de objetos conocidos con distinta geometría.
+•	Implementar un método que coja los objetos que se encuentran en una determinada zona del espacio de trabajo y los coloque en otro punto del espacio de trabajo preestablecido.
+
 
 ## Divisiones de Contenido
 
