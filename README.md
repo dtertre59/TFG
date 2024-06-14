@@ -20,6 +20,8 @@ El sistema ha sido diseñado para funcionar en un entorno controlado, optimizand
 
 La integración del sistema incluye la coordinación entre el robot, la cámara y los algoritmos de detección, permitiendo una operación fluida y eficiente.
 
+Video de YouTube que muestra el funcionamiento: https://www.youtube.com/watch?v=vQbSdDP40Zg
+
 
 ## Objetivos
 
@@ -46,25 +48,18 @@ La integración del sistema incluye la coordinación entre el robot, la cámara 
 - Comunicacion con el robot: RTDE
 - COmunicacion con la cámara: Depthai
 - Red neuronal: ultralytics YOLO
+- Manejo de numeros: numpy
 - Manejo de imagenes: opencv
 - Manejo de nubes de puntos: open3d
-- Manejo de numeros: numpy
+
 
 ## Estructura del repositorio
 
 En la carpeta app se encuentra el main y todas las dependencias y ficheros necesarios para que funcione el sistema.
 
-En la carpeta external_assets se enncuentra el modelo 3d del soporte de la cámara fabricado, el programa URP e instalación del robot, y los resultados obtenidos al probar los sistemas desarollados.
+En la carpeta external_assets se enncuentra el modelo 3d del soporte de la cámara fabricado, el programa URP e instalación del robot, los resultados obtenidos al probar los sistemas desarollados y las tablas de presupuestos.
 
 En la carpeta practice se encuentran todos los programas de pruebas, de testeo de librerias, programas modelos, etc.
-
-memoria del TFG en formato word y pdf, 
-
-
-
-
-
-
 
 
 ## Repositorios de interés
@@ -75,7 +70,7 @@ memoria del TFG en formato word y pdf,
     https://github.com/luxonis/depthai-python.git
     https://github.com/luxonis/blobconverter.git
 
-3. deep learning, OpenVINO
+3. deep learning
     https://github.com/openvinotoolkit/open_model_zoo.git
     
 4. procesamientode imagenes, show, modelos ai (sample/dnn)

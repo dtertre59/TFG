@@ -209,10 +209,12 @@ def main_camera_calibrate_pointcloud():
     hf.o3d_visualization(geometries=geometries)
 
 
-# MAIN V1. Red neuronal object-detection | apriltags
+# Sistema 1. Red neuronal object-detection | apriltags | apriltag (referencia)
 def main():
     print()
-    print(' ----- Init ----- ')
+    print(' --------------------- ')
+    print(' ----- SISTEMA 1 ----- ')
+    print(' --------------------- ')
     print()
 
     # 1. Instancias
@@ -225,6 +227,8 @@ def main():
     nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_od_v1.pt'))
     # Tolerancia
     tolerance = 5
+    print('tolerancia: ', tolerance)
+    print()
 
     # 2. Init
     print('Inicio: ')
@@ -253,10 +257,12 @@ def main():
     return
 
 
-# MAIN V2. Red neuronal pose-estimation | pointcloud | apriltag (referencia)
+# Sistema 2. Red neuronal pose-estimation | pointcloud | apriltag (referencia)
 def main2():
     print()
-    print(' ----- Init ----- ')
+    print(' --------------------- ')
+    print(' ----- SISTEMA 2 ----- ')
+    print(' --------------------- ')
     print()
 
     # 1. Instancias
@@ -299,10 +305,12 @@ def main2():
     # 6 .(opcional) poner un apriltag en el madero de los hoyos y asi no es necesario saber la posicion exacta de cada hoyo, solo la relativa respecto al april2
 
 
-# MAIN V3. Red neuronal object-detection | vision artificial clásica | pointcloud | apriltag (referencia)
+# Sistema 3. Red neuronal object-detection | vision artificial clásica | pointcloud | apriltag (referencia)
 def main3():
     print()
-    print(' ----- Init ----- ')
+    print(' --------------------- ')
+    print(' ----- SISTEMA 3 ----- ')
+    print(' --------------------- ')
     print()
 
     # 1. Instancias
@@ -315,6 +323,8 @@ def main3():
     nn_od_model = YoloObjectDetection(filename=str(Path(__file__).resolve().parent / 'assets' / 'nn_models' /'yolov8n_od_v1.pt'))
     # Tolerancia
     tolerance = 5
+    print('tolerancia: ', tolerance)
+    print()
 
     # 2. Init
     print('Inicio: ')
