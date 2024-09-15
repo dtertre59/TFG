@@ -61,6 +61,39 @@ En la carpeta external_assets se enncuentra el modelo 3d del soporte de la cáma
 
 En la carpeta practice se encuentran todos los programas de pruebas, de testeo de librerias, programas modelos, etc.
 
+## Puesta en marcha del proyecto
+
+1. Clonar el repositorio: `git clone https://github.com/dtertre59/TFG.git`
+
+2. Desplazarnos a la carpeta root del proyecto clonado y crear el entorno virtual: `python -m venv venv`
+
+3. Activar el entorno virtual: 
+    En windows: `.\venv\Scripts\activate`
+    En linux: `source venv/bin/activate`
+
+4. Instalar las dependencias: `pip install -r requirements.txt`
+
+5. Una vez tenemos el proyecto en local, es necesario preparar el robot. Los archivos se encuentran en external_assets/robot.
+    - Encendemos el robot y cargamos el archivo de instalacion myInstallation.installation.
+    - Posteriormente se carga el programa program.urp y, una vez cargado, se le da a play.
+    - El robot hace una serie de movimientos y se queda a la espera de que se encienda el programa python en el PC.
+
+6. Antes de poner en funcionamiento del programa python, hay que recordar que dentro del app/main.py, hay unas variables que hay que ajustar. La más importante es ROBOT_HOST, que guarda la IP del robot. Es necerario que el robot se encuentre conectado a la misma red local que el ordenador.
+
+7. Dentro del archivo app/main.py es posible utilizar 3 Sistemas distintos. Para elegir el sistema unicamente hay que descometnarlo en la funcion. En el siguiente ejemplo esta activado el sistema 3:
+
+if __name__ == '__main__':
+    # correccion_error_nube()
+    # main_camera()
+    # main_camera_detect()
+    # main_camera_calibrate_pointcloud()
+    # main()
+    # main2()
+    main3()
+
+
+6. Poner el programa en funcionamiento: `python app/main.py`
+
 
 ## Repositorios de interés
 
