@@ -80,19 +80,20 @@ En la carpeta practice se encuentran todos los programas de pruebas, de testeo d
 
 6. Antes de poner en funcionamiento del programa python, hay que recordar que dentro del app/main.py, hay unas variables que hay que ajustar. La más importante es ROBOT_HOST, que guarda la IP del robot. Es necerario que el robot se encuentre conectado a la misma red local que el ordenador.
 
-7. Dentro del archivo app/main.py es posible utilizar 3 Sistemas distintos. Para elegir el sistema unicamente hay que descometnarlo en la funcion. En el siguiente ejemplo esta activado el sistema 3:
+7. Dentro del archivo app/main.py es posible utilizar 3 Sistemas distintos. Para elegir el sistema unicamente hay que descomentarlo en la funcion. 
 
-if __name__ == '__main__':
-    # correccion_error_nube()
-    # main_camera()
-    # main_camera_detect()
-    # main_camera_calibrate_pointcloud()
-    # main()
-    # main2()
-    main3()
+8. Poner el programa en funcionamiento: `python app/main.py`
 
 
-6. Poner el programa en funcionamiento: `python app/main.py`
+## Reentreno de la red
+
+Se ha utilizado roboflow para la preparacion de nuevas imagenes. 
+
+En esta pagina web se pueden subir imagenes, se pueden etiquetar y, por último, se pueden exportar en diferentes formatos, en nuestro caso en formato YOLOv8.
+
+Una vez tenemos la estructura de carpetas e imagenes etiquetadas, se puede entrenar la red desde el archivo `app/train/train.py`, donde se carga el modelo en una variable de tipo YOLO y posterirmente se reentrena con las imagenes etiquetadas. En este paso es necesario pasar como argumento la ubicacion del archivo `data.yaml` que se encuentra dentro de la estructura de carpetas y es la 'guia' para que el ordenador encuentre las imagenes y sus etiquetas.
+
+Una vez tenemos el modelo reentrenado se exporta.
 
 
 ## Repositorios de interés
